@@ -1,26 +1,48 @@
-import { useState, useCallback } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { ProgressIndicator } from './ProgressIndicator';
 import { TypeSelector } from './TypeSelector';
 import { SizeSelector } from './SizeSelector';
+import { SelectedTruckSummary } from './SelectedTruckSummary';
 import { EquipmentSelector } from './EquipmentSelector';
 import { ContactForm } from './ContactForm';
 import { SuccessScreen } from './SuccessScreen';
 import { foodTruckTypes } from '@/data/foodtrucks';
-import type { ConfiguratorState, ContactDetails } from '@/types/configurator';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import type { ContactDetails } from '@/types/configurator';
 import { cn } from '@/lib/utils';
 
-const initialState: ConfiguratorState = {
+interface StoredState {
+  step: number;
+  selectedType: string | null;
+  selectedSize: string | null;
+  selectedEquipment: Record<string, number>;
+  contactDetails: ContactDetails | null;
+  isSubmitted: boolean;
+}
+
+const initialState: StoredState = {
   step: 1,
   selectedType: null,
   selectedSize: null,
-  selectedEquipment: new Map(),
+  selectedEquipment: {},
   contactDetails: null,
+  isSubmitted: false,
 };
 
+const STORAGE_KEY = 'foodtruck-configurator';
+
 export const FoodTruckConfigurator = () => {
-  const [state, setState] = useState<ConfiguratorState>(initialState);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [state, setState, clearState] = useLocalStorage<StoredState>(
+    STORAGE_KEY,
+    initialState
+  );
+
+  // Convert stored equipment object to Map for component use
+  const selectedEquipmentMap = useMemo(
+    () => new Map(Object.entries(state.selectedEquipment)),
+    [state.selectedEquipment]
+  );
 
   const selectedTruckType = foodTruckTypes.find((t) => t.id === state.selectedType);
 
@@ -49,6 +71,10 @@ export const FoodTruckConfigurator = () => {
     }
   };
 
+  const handleGoToStep = (step: number) => {
+    setState((prev) => ({ ...prev, step }));
+  };
+
   const handleTypeSelect = (typeId: string) => {
     setState((prev) => ({
       ...prev,
@@ -63,36 +89,39 @@ export const FoodTruckConfigurator = () => {
 
   const handleEquipmentToggle = (equipmentId: string, quantity: number) => {
     setState((prev) => {
-      const newEquipment = new Map(prev.selectedEquipment);
+      const newEquipment = { ...prev.selectedEquipment };
       if (quantity <= 0) {
-        newEquipment.delete(equipmentId);
+        delete newEquipment[equipmentId];
       } else {
-        newEquipment.set(equipmentId, quantity);
+        newEquipment[equipmentId] = quantity;
       }
       return { ...prev, selectedEquipment: newEquipment };
     });
   };
 
   const handleContactSubmit = (details: ContactDetails) => {
-    setState((prev) => ({ ...prev, contactDetails: details }));
-    // Here you would typically send the data to a backend
     console.log('Submitting configuration:', {
       type: state.selectedType,
       size: state.selectedSize,
-      equipment: Object.fromEntries(state.selectedEquipment),
+      equipment: state.selectedEquipment,
       contact: details,
     });
-    setIsSubmitted(true);
+    setState((prev) => ({ 
+      ...prev, 
+      contactDetails: details,
+      isSubmitted: true 
+    }));
   };
 
   const handleReset = () => {
-    setState(initialState);
-    setIsSubmitted(false);
+    clearState();
   };
 
-  if (isSubmitted) {
+  if (state.isSubmitted) {
     return <SuccessScreen onReset={handleReset} />;
   }
+
+  const hasSelection = state.selectedType && state.selectedSize;
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,15 +174,26 @@ export const FoodTruckConfigurator = () => {
         {/* Step 2: Equipment Selection */}
         {state.step === 2 && (
           <div className="animate-fade-in">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת ציוד</h2>
               <p className="text-muted-foreground">
-                בחרו את הציוד הנוסף שתרצו להוסיף ל-{selectedTruckType?.nameHe}
+                בחרו את הציוד הנוסף שתרצו להוסיף
               </p>
             </div>
 
+            {/* Selected truck summary */}
+            {hasSelection && (
+              <div className="mb-6">
+                <SelectedTruckSummary
+                  selectedType={state.selectedType!}
+                  selectedSize={state.selectedSize!}
+                  onEdit={() => handleGoToStep(1)}
+                />
+              </div>
+            )}
+
             <EquipmentSelector
-              selectedEquipment={state.selectedEquipment}
+              selectedEquipment={selectedEquipmentMap}
               onToggle={handleEquipmentToggle}
             />
           </div>
@@ -162,9 +202,20 @@ export const FoodTruckConfigurator = () => {
         {/* Step 3: Contact Details */}
         {state.step === 3 && (
           <div className="animate-fade-in">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: פרטי התקשרות</h2>
             </div>
+
+            {/* Selected truck summary */}
+            {hasSelection && (
+              <div className="mb-6">
+                <SelectedTruckSummary
+                  selectedType={state.selectedType!}
+                  selectedSize={state.selectedSize!}
+                  onEdit={() => handleGoToStep(1)}
+                />
+              </div>
+            )}
 
             <ContactForm
               onSubmit={handleContactSubmit}
