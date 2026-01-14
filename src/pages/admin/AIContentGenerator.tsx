@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, FileText, ListChecks, Palette, Copy, Check, Save, Image, History, Trash2, RefreshCw } from 'lucide-react';
+import { Loader2, Sparkles, FileText, ListChecks, Palette, Copy, Check, Save, Image, History, Trash2, RefreshCw, Zap, Gauge, Crown } from 'lucide-react';
 
 type ContentType = 'text' | 'features' | 'description' | 'ux' | 'image';
 
@@ -43,6 +43,35 @@ interface HistoryItem {
   created_at: string;
 }
 
+type ModelTier = 'lite' | 'flash' | 'pro';
+
+const MODEL_OPTIONS: Record<ModelTier, { name: string; description: string; cost: string; recommended: ContentType[] }> = {
+  lite: {
+    name: 'Gemini Flash-Lite',
+    description: 'הכי מהיר וזול - לתוכן פשוט',
+    cost: '~$0.40/1M tokens',
+    recommended: ['text', 'description', 'features'],
+  },
+  flash: {
+    name: 'Gemini Flash',
+    description: 'איזון מהירות-איכות',
+    cost: '~$2.50/1M tokens',
+    recommended: ['ux'],
+  },
+  pro: {
+    name: 'Gemini Pro',
+    description: 'הכי מתקדם - למשימות מורכבות',
+    cost: '~$10/1M tokens',
+    recommended: [],
+  },
+};
+
+const getRecommendedModel = (contentType: ContentType): ModelTier => {
+  if (['text', 'description', 'features'].includes(contentType)) return 'lite';
+  if (contentType === 'ux') return 'flash';
+  return 'flash';
+};
+
 const AIContentGenerator = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,6 +83,7 @@ const AIContentGenerator = () => {
   const [targetType, setTargetType] = useState<string>('');
   const [targetId, setTargetId] = useState<string>('');
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ModelTier>('lite');
 
   // Get current user
   const { data: user } = useQuery({
@@ -131,11 +161,12 @@ const AIContentGenerator = () => {
   });
 
   const generateMutation = useMutation({
-    mutationFn: async ({ prompt, contentType }: { prompt: string; contentType: ContentType }) => {
+    mutationFn: async ({ prompt, contentType, modelTier }: { prompt: string; contentType: ContentType; modelTier: ModelTier }) => {
       const { data, error } = await supabase.functions.invoke('generate-content', {
         body: { 
           prompt, 
           contentType, 
+          modelTier,
           targetType,
           saveToHistory: true,
           userId: user?.id
@@ -283,7 +314,7 @@ const AIContentGenerator = () => {
     if (activeTab === 'image') {
       generateImageMutation.mutate(prompt);
     } else {
-      generateMutation.mutate({ prompt, contentType: activeTab });
+      generateMutation.mutate({ prompt, contentType: activeTab, modelTier: selectedModel });
     }
   };
 
@@ -494,9 +525,12 @@ const AIContentGenerator = () => {
         </Card>
       ) : (
         <Tabs value={activeTab} onValueChange={(v) => {
-          setActiveTab(v as ContentType);
+          const newTab = v as ContentType;
+          setActiveTab(newTab);
           setGeneratedContent(null);
           setGeneratedImage(null);
+          // Auto-select recommended model for this content type
+          setSelectedModel(getRecommendedModel(newTab));
         }}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="text" className="gap-2">
@@ -527,14 +561,48 @@ const AIContentGenerator = () => {
               <CardHeader>
                 <CardTitle>פרומפט</CardTitle>
                 <CardDescription>
-                  {activeTab === 'text' && 'מודל: Mistral Nemo - מתאים לתוכן שיווקי בעברית'}
-                  {activeTab === 'features' && 'מודל: Mistral Nemo - ליצירת רשימות תכונות'}
-                  {activeTab === 'description' && 'מודל: Mistral Nemo - לתיאורי מוצרים'}
-                  {activeTab === 'ux' && 'מודל: Claude 3 Haiku - להמלצות UX וארכיטקטורה'}
-                  {activeTab === 'image' && 'מודל: Gemini Flash Image - ליצירת תמונות'}
+                  {activeTab === 'image' 
+                    ? 'מודל: Gemini Flash Image - ליצירת תמונות'
+                    : `מודל: ${MODEL_OPTIONS[selectedModel].name} • ${MODEL_OPTIONS[selectedModel].cost}`}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Model Selector - only show for non-image tabs */}
+                {activeTab !== 'image' && (
+                  <div className="space-y-2">
+                    <Label>בחר מודל AI</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(Object.entries(MODEL_OPTIONS) as [ModelTier, typeof MODEL_OPTIONS[ModelTier]][]).map(([tier, model]) => {
+                        const isRecommended = model.recommended.includes(activeTab);
+                        const Icon = tier === 'lite' ? Zap : tier === 'flash' ? Gauge : Crown;
+                        return (
+                          <button
+                            key={tier}
+                            onClick={() => setSelectedModel(tier)}
+                            className={`relative p-3 rounded-lg border-2 text-right transition-all ${
+                              selectedModel === tier
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            {isRecommended && (
+                              <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-success">
+                                מומלץ
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-2 mb-1">
+                              <Icon className={`h-4 w-4 ${selectedModel === tier ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <span className="font-medium text-sm">{model.name.replace('Gemini ', '')}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">{model.description}</p>
+                            <p className="text-[10px] text-primary mt-1">{model.cost}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label>מה תרצה ליצור?</Label>
                   <Textarea

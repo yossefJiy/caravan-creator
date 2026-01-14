@@ -120,11 +120,13 @@ export const SummaryStep = ({
         )}
       </SummaryCard>
 
-      {/* Equipment */}
+      {/* Equipment - only show items with quantity > 0 */}
       <SummaryCard icon={Package} title="ציוד נוסף" editStep={4}>
-        {selectedEquipment.length > 0 ? (
+        {selectedEquipment.filter(item => item.quantity > 0).length > 0 ? (
           <div className="space-y-2">
-            {selectedEquipment.map((item) => (
+            {selectedEquipment
+              .filter(item => item.quantity > 0)
+              .map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between text-sm py-1 border-b border-border last:border-0"
@@ -136,7 +138,7 @@ export const SummaryStep = ({
               </div>
             ))}
             <p className="text-sm font-medium text-primary">
-              סה״כ {selectedEquipment.length} פריטי ציוד נבחרו
+              סה״כ {selectedEquipment.filter(item => item.quantity > 0).length} פריטי ציוד נבחרו
             </p>
           </div>
         ) : (
