@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ImageUpload } from '@/components/admin/ImageUpload';
 import { SortableItem } from '@/components/admin/SortableItem';
+import { FeaturesManager } from '@/components/admin/FeaturesManager';
 import {
   DndContext,
   closestCenter,
@@ -62,6 +63,7 @@ const TrucksManagement = () => {
   const [isSizeDialogOpen, setIsSizeDialogOpen] = useState(false);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
+  const [expandedSizeFeatures, setExpandedSizeFeatures] = useState<Set<string>>(new Set());
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -235,6 +237,16 @@ const TrucksManagement = () => {
     setExpandedTypes(newExpanded);
   };
 
+  const toggleSizeFeatures = (sizeId: string) => {
+    const newExpanded = new Set(expandedSizeFeatures);
+    if (newExpanded.has(sizeId)) {
+      newExpanded.delete(sizeId);
+    } else {
+      newExpanded.add(sizeId);
+    }
+    setExpandedSizeFeatures(newExpanded);
+  };
+
   const handleTypeDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id || !truckTypes) return;
@@ -372,42 +384,63 @@ const TrucksManagement = () => {
                         </div>
                         
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSizeDragEnd(type.id)}>
-                          <SortableContext items={truckSizes?.filter(s => s.truck_type_id === type.id).map((s) => s.id) || []} strategy={verticalListSortingStrategy}>
+                        <SortableContext items={truckSizes?.filter(s => s.truck_type_id === type.id).map((s) => s.id) || []} strategy={verticalListSortingStrategy}>
                             <div className="space-y-2">
                               {truckSizes?.filter(s => s.truck_type_id === type.id).map((size) => (
                                 <SortableItem key={size.id} id={size.id} className="p-3 bg-muted/50 rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <p className="font-medium">{size.name}</p>
-                                      <p className="text-sm text-muted-foreground">{size.dimensions} {size.chassis_type && `• ${size.chassis_type}`}</p>
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        {sizeFeatures?.filter(f => f.truck_size_id === size.id).map(f => f.feature_text).join(' • ')}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="font-medium">{size.name}</p>
+                                        <p className="text-sm text-muted-foreground">{size.dimensions} {size.chassis_type && `• ${size.chassis_type}`}</p>
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          {sizeFeatures?.filter(f => f.truck_size_id === size.id).map(f => f.feature_text).join(' • ')}
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => toggleSizeFeatures(size.id)}
+                                          title="ניהול תכונות"
+                                        >
+                                          <Settings className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedTypeId(type.id);
+                                            setEditingSize(size);
+                                            setIsSizeDialogOpen(true);
+                                          }}
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            if (confirm('האם למחוק את הגודל הזה?')) {
+                                              deleteSizeMutation.mutate(size.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
                                       </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedTypeId(type.id);
-                                          setEditingSize(size);
-                                          setIsSizeDialogOpen(true);
-                                        }}
-                                      >
-                                        <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          if (confirm('האם למחוק את הגודל הזה?')) {
-                                            deleteSizeMutation.mutate(size.id);
-                                          }
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
+                                    
+                                    {/* Features Manager - collapsible */}
+                                    {expandedSizeFeatures.has(size.id) && sizeFeatures && truckTypes && truckSizes && (
+                                      <FeaturesManager
+                                        sizeId={size.id}
+                                        sizeName={size.name}
+                                        features={sizeFeatures}
+                                        allSizes={truckSizes}
+                                        allTypes={truckTypes}
+                                      />
+                                    )}
                                   </div>
                                 </SortableItem>
                               ))}
