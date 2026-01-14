@@ -14,16 +14,249 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      equipment: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_he: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_he: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_he?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          content_key: string
+          content_type: string
+          content_value: string
+          description: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          content_key: string
+          content_type?: string
+          content_value: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          content_key?: string
+          content_type?: string
+          content_value?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      size_features: {
+        Row: {
+          created_at: string
+          feature_text: string
+          id: string
+          sort_order: number
+          truck_size_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature_text: string
+          id?: string
+          sort_order?: number
+          truck_size_id: string
+        }
+        Update: {
+          created_at?: string
+          feature_text?: string
+          id?: string
+          sort_order?: number
+          truck_size_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "size_features_truck_size_id_fkey"
+            columns: ["truck_size_id"]
+            isOneToOne: false
+            referencedRelation: "truck_sizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_sizes: {
+        Row: {
+          chassis_type: string | null
+          created_at: string
+          dimensions: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          truck_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          chassis_type?: string | null
+          created_at?: string
+          dimensions: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          truck_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          chassis_type?: string | null
+          created_at?: string
+          dimensions?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          truck_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_sizes_truck_type_id_fkey"
+            columns: ["truck_type_id"]
+            isOneToOne: false
+            referencedRelation: "truck_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_types: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          name_he: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          name_he: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          name_he?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +383,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
