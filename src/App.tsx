@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import TrucksManagement from "./pages/admin/TrucksManagement";
 import EquipmentManagement from "./pages/admin/EquipmentManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
+import LeadsManagement from "./pages/admin/LeadsManagement";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="leads" element={<LeadsManagement />} />
             <Route path="trucks" element={<TrucksManagement />} />
             <Route path="equipment" element={<EquipmentManagement />} />
             <Route path="content" element={<ContentManagement />} />

@@ -264,6 +264,9 @@ export const FoodTruckConfigurator = () => {
             <ContactForm
               onSubmit={handleContactSubmit}
               initialData={state.contactDetails}
+              selectedTruckType={selectedTruckType?.nameHe}
+              selectedTruckSize={selectedTruckType?.sizes.find(s => s.id === state.selectedSize)?.name}
+              selectedEquipment={Object.keys(state.selectedEquipment)}
             />
           </div>
         )}

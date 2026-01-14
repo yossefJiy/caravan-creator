@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
-import { Loader2, LayoutDashboard, Truck, Package, FileText, LogOut, Home } from 'lucide-react';
+import { Loader2, LayoutDashboard, Truck, Package, FileText, LogOut, Home, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/admin', label: 'דאשבורד', icon: LayoutDashboard, exact: true },
+  { path: '/admin/leads', label: 'לידים', icon: Users },
   { path: '/admin/trucks', label: 'סוגי טראקים', icon: Truck },
   { path: '/admin/equipment', label: 'ציוד', icon: Package },
   { path: '/admin/content', label: 'תוכן האתר', icon: FileText },
