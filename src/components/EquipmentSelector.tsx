@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Plus, Minus, Check, ChevronDown, ChevronUp, ZoomIn, X } from 'lucide-react';
+import { Plus, Minus, ChevronDown, ChevronUp, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { equipment, categoryNames } from '@/data/foodtrucks';
-import type { Equipment, EquipmentCategory } from '@/types/configurator';
+import type { Equipment, EquipmentCategory } from '@/hooks/useEquipmentData';
 import {
   Accordion,
   AccordionContent,
@@ -12,25 +11,29 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogClose,
 } from '@/components/ui/dialog';
 
 interface EquipmentSelectorProps {
+  categories: EquipmentCategory[];
+  equipment: Equipment[];
   selectedEquipment: Map<string, number>;
   onToggle: (equipmentId: string, quantity: number) => void;
 }
 
-export const EquipmentSelector = ({ selectedEquipment, onToggle }: EquipmentSelectorProps) => {
+export const EquipmentSelector = ({ 
+  categories, 
+  equipment, 
+  selectedEquipment, 
+  onToggle 
+}: EquipmentSelectorProps) => {
   const [expandedImage, setExpandedImage] = useState<Equipment | null>(null);
-  
-  const categories: EquipmentCategory[] = ['cooking', 'refrigeration', 'furniture', 'utilities', 'extras'];
 
-  const getEquipmentByCategory = (category: EquipmentCategory) => {
-    return equipment.filter(e => e.category === category);
+  const getEquipmentByCategory = (categoryId: string) => {
+    return equipment.filter(e => e.categoryId === categoryId);
   };
 
-  const getCategoryCount = (category: EquipmentCategory) => {
-    const items = getEquipmentByCategory(category);
+  const getCategoryCount = (categoryId: string) => {
+    const items = getEquipmentByCategory(categoryId);
     return items.reduce((count, item) => {
       return count + (selectedEquipment.get(item.id) || 0);
     }, 0);
@@ -41,19 +44,21 @@ export const EquipmentSelector = ({ selectedEquipment, onToggle }: EquipmentSele
       {/* All categories as accordion */}
       <Accordion type="multiple" className="space-y-3">
         {categories.map((category) => {
-          const categoryItems = getEquipmentByCategory(category);
-          const selectedCount = getCategoryCount(category);
+          const categoryItems = getEquipmentByCategory(category.id);
+          const selectedCount = getCategoryCount(category.id);
+          
+          if (categoryItems.length === 0) return null;
           
           return (
             <AccordionItem
-              key={category}
-              value={category}
+              key={category.id}
+              value={category.id}
               className="border border-border rounded-xl overflow-hidden bg-card"
             >
               <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30 [&[data-state=open]>div>.chevron]:rotate-180">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-foreground">{categoryNames[category]}</span>
+                    <span className="font-semibold text-foreground">{category.nameHe}</span>
                     {selectedCount > 0 && (
                       <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
                         {selectedCount}

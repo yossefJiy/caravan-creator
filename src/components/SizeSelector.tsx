@@ -1,28 +1,26 @@
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { foodTruckTypes } from '@/data/foodtrucks';
-import type { FoodTruckSize } from '@/types/configurator';
+import type { TruckSize } from '@/hooks/useTruckData';
 
 interface SizeSelectorProps {
-  selectedType: string;
+  sizes: TruckSize[];
   selectedSize: string | null;
   onSelect: (sizeId: string) => void;
+  truckImage: string;
 }
 
-export const SizeSelector = ({ selectedType, selectedSize, onSelect }: SizeSelectorProps) => {
-  const truckType = foodTruckTypes.find((t) => t.id === selectedType);
-  
-  if (!truckType) return null;
+export const SizeSelector = ({ sizes, selectedSize, onSelect, truckImage }: SizeSelectorProps) => {
+  if (!sizes.length) return null;
 
   return (
     <div className="stagger-children grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-      {truckType.sizes.map((size) => (
+      {sizes.map((size) => (
         <SizeCard
           key={size.id}
           size={size}
           isSelected={selectedSize === size.id}
           onClick={() => onSelect(size.id)}
-          truckImage={truckType.image}
+          truckImage={truckImage}
         />
       ))}
     </div>
@@ -30,7 +28,7 @@ export const SizeSelector = ({ selectedType, selectedSize, onSelect }: SizeSelec
 };
 
 interface SizeCardProps {
-  size: FoodTruckSize;
+  size: TruckSize;
   isSelected: boolean;
   onClick: () => void;
   truckImage: string;

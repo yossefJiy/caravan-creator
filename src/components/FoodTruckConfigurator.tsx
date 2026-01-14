@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { ProgressIndicator } from './ProgressIndicator';
 import { TypeSelector } from './TypeSelector';
 import { SizeSelector } from './SizeSelector';
@@ -7,10 +7,12 @@ import { SelectedTruckSummary } from './SelectedTruckSummary';
 import { EquipmentSelector } from './EquipmentSelector';
 import { ContactForm } from './ContactForm';
 import { SuccessScreen } from './SuccessScreen';
-import { foodTruckTypes } from '@/data/foodtrucks';
+import { useTruckData } from '@/hooks/useTruckData';
+import { useEquipmentData } from '@/hooks/useEquipmentData';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { ContactDetails } from '@/types/configurator';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StoredState {
   step: number;
@@ -38,13 +40,17 @@ export const FoodTruckConfigurator = () => {
     initialState
   );
 
+  // Fetch data from database
+  const { data: truckTypes = [], isLoading: truckLoading, error: truckError } = useTruckData();
+  const { categories, equipment, isLoading: equipmentLoading, error: equipmentError } = useEquipmentData();
+
   // Convert stored equipment object to Map for component use
   const selectedEquipmentMap = useMemo(
     () => new Map(Object.entries(state.selectedEquipment)),
     [state.selectedEquipment]
   );
 
-  const selectedTruckType = foodTruckTypes.find((t) => t.id === state.selectedType);
+  const selectedTruckType = truckTypes.find((t) => t.id === state.selectedType);
 
   const canProceed = useCallback(() => {
     switch (state.step) {
@@ -122,6 +128,19 @@ export const FoodTruckConfigurator = () => {
   }
 
   const hasSelection = state.selectedType && state.selectedSize;
+  const isLoading = truckLoading || equipmentLoading;
+  const error = truckError || equipmentError;
+
+  // Loading skeleton
+  const LoadingSkeleton = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-48 rounded-xl" />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,8 +157,21 @@ export const FoodTruckConfigurator = () => {
 
       {/* Main content */}
       <main className="container py-8 pb-32">
+        {/* Error state */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-destructive">שגיאה בטעינת הנתונים</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+            >
+              נסה שוב
+            </button>
+          </div>
+        )}
+
         {/* Step 1: Type & Size Selection */}
-        {state.step === 1 && (
+        {state.step === 1 && !error && (
           <div className="animate-fade-in">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-foreground mb-2">שלב 1: בחירת דגם</h2>
@@ -151,20 +183,26 @@ export const FoodTruckConfigurator = () => {
             {/* Type selection */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4">סוג פודטראק:</h3>
-              <TypeSelector
-                selectedType={state.selectedType}
-                onSelect={handleTypeSelect}
-              />
+              {truckLoading ? (
+                <LoadingSkeleton />
+              ) : (
+                <TypeSelector
+                  truckTypes={truckTypes}
+                  selectedType={state.selectedType}
+                  onSelect={handleTypeSelect}
+                />
+              )}
             </div>
 
             {/* Size selection - shows only after type is selected */}
-            {state.selectedType && (
+            {state.selectedType && selectedTruckType && (
               <div className="animate-fade-in">
                 <h3 className="text-lg font-semibold mb-4">בחר גודל:</h3>
                 <SizeSelector
-                  selectedType={state.selectedType}
+                  sizes={selectedTruckType.sizes}
                   selectedSize={state.selectedSize}
                   onSelect={handleSizeSelect}
+                  truckImage={selectedTruckType.image}
                 />
               </div>
             )}
@@ -172,7 +210,7 @@ export const FoodTruckConfigurator = () => {
         )}
 
         {/* Step 2: Equipment Selection */}
-        {state.step === 2 && (
+        {state.step === 2 && !error && (
           <div className="animate-fade-in">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת ציוד</h2>
@@ -182,36 +220,42 @@ export const FoodTruckConfigurator = () => {
             </div>
 
             {/* Selected truck summary */}
-            {hasSelection && (
+            {hasSelection && selectedTruckType && (
               <div className="mb-6">
                 <SelectedTruckSummary
-                  selectedType={state.selectedType!}
-                  selectedSize={state.selectedSize!}
+                  truckType={selectedTruckType}
+                  selectedSizeId={state.selectedSize!}
                   onEdit={() => handleGoToStep(1)}
                 />
               </div>
             )}
 
-            <EquipmentSelector
-              selectedEquipment={selectedEquipmentMap}
-              onToggle={handleEquipmentToggle}
-            />
+            {equipmentLoading ? (
+              <LoadingSkeleton />
+            ) : (
+              <EquipmentSelector
+                categories={categories}
+                equipment={equipment}
+                selectedEquipment={selectedEquipmentMap}
+                onToggle={handleEquipmentToggle}
+              />
+            )}
           </div>
         )}
 
         {/* Step 3: Contact Details */}
-        {state.step === 3 && (
+        {state.step === 3 && !error && (
           <div className="animate-fade-in">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: פרטי התקשרות</h2>
             </div>
 
             {/* Selected truck summary */}
-            {hasSelection && (
+            {hasSelection && selectedTruckType && (
               <div className="mb-6">
                 <SelectedTruckSummary
-                  selectedType={state.selectedType!}
-                  selectedSize={state.selectedSize!}
+                  truckType={selectedTruckType}
+                  selectedSizeId={state.selectedSize!}
                   onEdit={() => handleGoToStep(1)}
                 />
               </div>
@@ -226,7 +270,7 @@ export const FoodTruckConfigurator = () => {
       </main>
 
       {/* Fixed bottom navigation */}
-      {state.step !== 3 && (
+      {state.step !== 3 && !error && (
         <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-50">
           <div className="container flex items-center justify-between gap-4">
             {state.step > 1 ? (
@@ -243,16 +287,22 @@ export const FoodTruckConfigurator = () => {
 
             <button
               onClick={handleNext}
-              disabled={!canProceed()}
+              disabled={!canProceed() || isLoading}
               className={cn(
                 'flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-lg transition-all duration-200',
-                canProceed()
+                canProceed() && !isLoading
                   ? 'bg-primary text-primary-foreground shadow-gold hover:opacity-90'
                   : 'bg-muted text-muted-foreground cursor-not-allowed'
               )}
             >
-              <span>לשלב הבא</span>
-              <ArrowLeft className="w-5 h-5" />
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <span>לשלב הבא</span>
+                  <ArrowLeft className="w-5 h-5" />
+                </>
+              )}
             </button>
           </div>
         </div>
