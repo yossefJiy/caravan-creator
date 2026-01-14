@@ -136,6 +136,10 @@ export const FoodTruckConfigurator = () => {
     });
   };
 
+  const handleClearEquipment = () => {
+    setState((prev) => ({ ...prev, selectedEquipment: {} }));
+  };
+
   const handleContactSubmit = (details: ContactDetails) => {
     setState((prev) => ({ 
       ...prev, 
@@ -361,6 +365,7 @@ export const FoodTruckConfigurator = () => {
                   equipment={equipment}
                   selectedEquipment={selectedEquipmentMap}
                   onToggle={handleEquipmentToggle}
+                  onClearAll={handleClearEquipment}
                 />
               )}
             </motion.div>

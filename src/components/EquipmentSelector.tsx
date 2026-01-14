@@ -18,13 +18,15 @@ interface EquipmentSelectorProps {
   equipment: Equipment[];
   selectedEquipment: Map<string, number>;
   onToggle: (equipmentId: string, quantity: number) => void;
+  onClearAll?: () => void;
 }
 
 export const EquipmentSelector = ({ 
   categories, 
   equipment, 
   selectedEquipment, 
-  onToggle 
+  onToggle,
+  onClearAll
 }: EquipmentSelectorProps) => {
   const [expandedImage, setExpandedImage] = useState<Equipment | null>(null);
 
@@ -94,12 +96,20 @@ export const EquipmentSelector = ({
         })}
       </Accordion>
 
-      {/* Selected summary */}
+      {/* Selected summary with clear button */}
       {selectedEquipment.size > 0 && (
-        <div className="p-4 rounded-xl bg-accent border border-primary/20">
+        <div className="p-4 rounded-xl bg-accent border border-primary/20 flex items-center justify-between gap-4">
           <p className="text-sm font-medium text-accent-foreground">
             נבחרו {selectedEquipment.size} פריטים ({Array.from(selectedEquipment.values()).reduce((a, b) => a + b, 0)} יחידות)
           </p>
+          {onClearAll && (
+            <button
+              onClick={onClearAll}
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+            >
+              נקה הכל
+            </button>
+          )}
         </div>
       )}
 
