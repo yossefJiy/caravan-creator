@@ -3,18 +3,18 @@ import type { TruckType } from '@/hooks/useTruckData';
 
 interface SelectedTruckSummaryProps {
   truckType: TruckType;
-  selectedSizeId: string;
+  selectedSizeId: string | null;
   onEdit: () => void;
+  showSize?: boolean;
 }
 
 export const SelectedTruckSummary = ({ 
   truckType, 
   selectedSizeId, 
-  onEdit 
+  onEdit,
+  showSize = true,
 }: SelectedTruckSummaryProps) => {
   const size = truckType.sizes.find(s => s.id === selectedSizeId);
-
-  if (!size) return null;
 
   return (
     <button
@@ -33,9 +33,11 @@ export const SelectedTruckSummary = ({
       {/* Info */}
       <div className="flex-1 text-right">
         <h4 className="font-semibold text-foreground">{truckType.nameHe}</h4>
-        <p className="text-sm text-muted-foreground">
-          {size.name} • {size.dimensions}
-        </p>
+        {showSize && size && (
+          <p className="text-sm text-muted-foreground">
+            {size.name} • {size.dimensions}
+          </p>
+        )}
       </div>
 
       {/* Edit indicator */}

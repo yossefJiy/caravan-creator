@@ -44,8 +44,12 @@ export interface ContactDetails {
   notes: string;
 }
 
+// Updated steps for 6-step flow
 export const STEPS = [
-  { id: 1, title: 'בחירת דגם', icon: 'truck' },
-  { id: 2, title: 'בחירת ציוד', icon: 'utensils' },
-  { id: 3, title: 'פרטי התקשרות', icon: 'user' },
+  { id: 0, title: 'ברוכים הבאים', icon: 'sparkles' },
+  { id: 1, title: 'פרטים אישיים', icon: 'user' },
+  { id: 2, title: 'בחירת דגם', icon: 'truck' },
+  { id: 3, title: 'בחירת גודל', icon: 'maximize' },
+  { id: 4, title: 'בחירת ציוד', icon: 'utensils' },
+  { id: 5, title: 'סיכום ושליחה', icon: 'check' },
 ] as const;
