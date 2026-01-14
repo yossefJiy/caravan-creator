@@ -29,6 +29,10 @@ export const SummaryStep = ({
   isSubmitting,
 }: SummaryStepProps) => {
   const selectedSize = truckType.sizes.find((s) => s.id === selectedSizeId);
+  const totalEquipmentUnits = selectedEquipment.reduce(
+    (sum, item) => sum + (Number(item.quantity) || 0),
+    0
+  );
 
   const SummaryCard = ({
     icon: Icon,
@@ -136,7 +140,7 @@ export const SummaryStep = ({
               </div>
             ))}
             <p className="text-sm font-medium text-primary">
-              סה״כ {selectedEquipment.length} פריטי ציוד נבחרו
+              סה״כ {selectedEquipment.length} פריטים ({totalEquipmentUnits} יחידות)
             </p>
           </div>
         ) : (

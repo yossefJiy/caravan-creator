@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { ProgressIndicator } from './ProgressIndicator';
@@ -51,27 +51,61 @@ export const FoodTruckConfigurator = () => {
   const { data: truckTypes = [], isLoading: truckLoading, error: truckError } = useTruckData();
   const { categories, equipment, isLoading: equipmentLoading, error: equipmentError } = useEquipmentData();
 
-  // Convert stored equipment object to Map for component use
+  // Convert stored equipment object to Map for component use (normalize quantities to numbers)
   const selectedEquipmentMap = useMemo(
-    () => new Map(Object.entries(state.selectedEquipment)),
+    () =>
+      new Map(
+        Object.entries(state.selectedEquipment).map(([id, qty]) => [id, Number(qty)] as const)
+      ),
     [state.selectedEquipment]
   );
 
   const selectedTruckType = truckTypes.find((t) => t.id === state.selectedType);
 
-  // Get equipment items with names for summary - only items with quantity > 0
+  // Get equipment items with names for summary - only items with quantity > 0 and that exist in current equipment list
   const selectedEquipmentItems = useMemo(() => {
     return Object.entries(state.selectedEquipment)
-      .filter(([, quantity]) => quantity > 0)
-      .map(([id, quantity]) => {
+      .map(([id, quantity]) => ({ id, quantity: Number(quantity) }))
+      .filter(({ quantity }) => Number.isFinite(quantity) && quantity > 0)
+      .map(({ id, quantity }) => {
         const item = equipment.find((e) => e.id === id);
+        if (!item) return null;
         return {
           id,
-          name: item?.name || id,
+          name: item.name,
           quantity,
         };
-      });
+      })
+      .filter((x): x is { id: string; name: string; quantity: number } => x !== null);
   }, [state.selectedEquipment, equipment]);
+
+  // Normalize/cleanup legacy localStorage values (e.g., string quantities or items that no longer exist)
+  useEffect(() => {
+    if (equipmentLoading || equipmentError) return;
+    if (equipment.length === 0) return;
+
+    const validIds = new Set(equipment.map((e) => e.id));
+
+    setState((prev) => {
+      const cleaned: Record<string, number> = {};
+
+      for (const [id, rawQty] of Object.entries(prev.selectedEquipment)) {
+        if (!validIds.has(id)) continue;
+        const qty = Number(rawQty);
+        if (!Number.isFinite(qty) || qty <= 0) continue;
+        cleaned[id] = qty;
+      }
+
+      const serialize = (obj: Record<string, unknown>) =>
+        Object.entries(obj)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([k, v]) => `${k}:${Number(v)}`)
+          .join('|');
+
+      if (serialize(prev.selectedEquipment) === serialize(cleaned)) return prev;
+      return { ...prev, selectedEquipment: cleaned };
+    });
+  }, [equipment, equipmentError, equipmentLoading, setState]);
 
   const canProceed = useCallback(() => {
     switch (state.step) {
@@ -127,11 +161,14 @@ export const FoodTruckConfigurator = () => {
   const handleEquipmentToggle = (equipmentId: string, quantity: number) => {
     setState((prev) => {
       const newEquipment = { ...prev.selectedEquipment };
-      if (quantity <= 0) {
+      const safeQty = Number(quantity);
+
+      if (!Number.isFinite(safeQty) || safeQty <= 0) {
         delete newEquipment[equipmentId];
       } else {
-        newEquipment[equipmentId] = quantity;
+        newEquipment[equipmentId] = safeQty;
       }
+
       return { ...prev, selectedEquipment: newEquipment };
     });
   };
@@ -152,16 +189,18 @@ export const FoodTruckConfigurator = () => {
     if (!state.contactDetails) return;
     
     setIsSubmitting(true);
-    try {
-      const { error } = await supabase.from('leads').insert({
-        full_name: `${state.contactDetails.firstName} ${state.contactDetails.lastName}`,
-        email: state.contactDetails.email || '',
-        phone: state.contactDetails.phone,
-        notes: state.contactDetails.notes || null,
-        selected_truck_type: selectedTruckType?.nameHe || null,
-        selected_truck_size: selectedTruckType?.sizes.find(s => s.id === state.selectedSize)?.name || null,
-        selected_equipment: Object.keys(state.selectedEquipment),
-      });
+      try {
+        const { error } = await supabase.from('leads').insert({
+          full_name: `${state.contactDetails.firstName} ${state.contactDetails.lastName}`,
+          email: state.contactDetails.email || '',
+          phone: state.contactDetails.phone,
+          notes: state.contactDetails.notes || null,
+          selected_truck_type: selectedTruckType?.nameHe || null,
+          selected_truck_size: selectedTruckType?.sizes.find(s => s.id === state.selectedSize)?.name || null,
+          selected_equipment: Object.entries(state.selectedEquipment)
+            .filter(([, qty]) => Number(qty) > 0)
+            .map(([id]) => id),
+        });
       if (error) throw error;
       setState((prev) => ({ ...prev, isSubmitted: true }));
     } catch (error) {
