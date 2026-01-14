@@ -14,19 +14,18 @@ serve(async (req) => {
 
   try {
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-    if (!OPENROUTER_API_KEY) {
-      throw new Error('OPENROUTER_API_KEY is not configured');
-    }
-
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    
     const { prompt, contentType, targetType, model, saveToHistory, userId } = await req.json();
 
-    // Select model based on content type
+    // Select model and API based on content type
     let selectedModel = model || 'mistralai/mistral-nemo';
     let systemPrompt = '';
+    let useGemini = false; // Flag to use Lovable AI (Gemini) instead of OpenRouter
 
     switch (contentType) {
       case 'text':
-        // For text content - use mistral-nemo
+        // For text content - use mistral-nemo via OpenRouter
         selectedModel = 'mistralai/mistral-nemo';
         systemPrompt = `אתה כותב תוכן שיווקי מקצועי בעברית עבור אתר של חברה לייצור פודטראקים ומשאיות מזון.
 כתוב תוכן קצר, ברור ומשכנע. התמקד ביתרונות ובערך ללקוח.
@@ -34,7 +33,7 @@ serve(async (req) => {
         break;
       
       case 'features':
-        // For feature lists
+        // For feature lists - use mistral-nemo via OpenRouter
         selectedModel = 'mistralai/mistral-nemo';
         systemPrompt = `אתה מומחה לפודטראקים ומשאיות מזון בישראל.
 צור רשימת תכונות ויתרונות מקצועית בעברית.
@@ -43,7 +42,7 @@ serve(async (req) => {
         break;
       
       case 'description':
-        // For product descriptions
+        // For product descriptions - use mistral-nemo via OpenRouter
         selectedModel = 'mistralai/mistral-nemo';
         systemPrompt = `אתה כותב תיאורי מוצרים מקצועי בעברית.
 כתוב תיאור קצר (2-3 משפטים) שמדגיש את היתרונות הייחודיים של המוצר.
@@ -51,38 +50,78 @@ serve(async (req) => {
         break;
       
       case 'ux':
-        // For UX/architecture suggestions - use a more capable model
-        selectedModel = 'anthropic/claude-3-haiku';
-        systemPrompt = `אתה מומחה UX ופיתוח אתרים.
-נתח את הבקשה וספק המלצות מעשיות לשיפור חווית המשתמש.
-התמקד בשיפורים פרקטיים שניתן ליישם.
-ענה בעברית.`;
+        // For UX/architecture suggestions - use Google Gemini via Lovable AI
+        useGemini = true;
+        selectedModel = 'google/gemini-2.5-flash';
+        systemPrompt = `אתה מומחה UX ופיתוח אתרים מנוסה עם ידע נרחב בטכנולוגיות ווב מודרניות.
+        
+התפקיד שלך:
+- לנתח בקשות ולספק המלצות מעשיות לשיפור חווית המשתמש
+- להציע פתרונות טכנולוגיים מתקדמים ורלוונטיים
+- לזהות בעיות פוטנציאליות ולהציע פתרונות
+- להתמקד בשיפורים פרקטיים שניתן ליישם
+
+כללים:
+- ענה תמיד בעברית
+- התמקד בהמלצות קונקרטיות וברורות
+- הסבר את הסיבות מאחורי כל המלצה
+- התייחס להיבטים של נגישות, ביצועים וחווית משתמש
+- הצע קוד לדוגמה כשרלוונטי`;
         break;
       
       default:
         systemPrompt = 'אתה עוזר יצירתי בעברית. ענה בקצרה ובבהירות.';
     }
 
-    console.log(`Generating content with model: ${selectedModel}, contentType: ${contentType}`);
+    console.log(`Generating content with model: ${selectedModel}, contentType: ${contentType}, useGemini: ${useGemini}`);
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://lovable.dev',
-        'X-Title': 'Caravan Creator',
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
-    });
+    let response;
+    
+    if (useGemini) {
+      // Use Lovable AI Gateway for Gemini models
+      if (!LOVABLE_API_KEY) {
+        throw new Error('LOVABLE_API_KEY is not configured');
+      }
+      
+      response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+        }),
+      });
+    } else {
+      // Use OpenRouter for other models
+      if (!OPENROUTER_API_KEY) {
+        throw new Error('OPENROUTER_API_KEY is not configured');
+      }
+      
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://lovable.dev',
+          'X-Title': 'Caravan Creator',
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
