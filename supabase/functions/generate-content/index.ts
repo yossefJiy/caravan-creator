@@ -14,14 +14,14 @@ serve(async (req) => {
 
   try {
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GOOGLE_AI_STUDIO_API_KEY = Deno.env.get('GOOGLE_AI_STUDIO_API_KEY');
     
     const { prompt, contentType, targetType, model, saveToHistory, userId } = await req.json();
 
     // Select model and API based on content type
     let selectedModel = model || 'mistralai/mistral-nemo';
     let systemPrompt = '';
-    let useGemini = false; // Flag to use Lovable AI (Gemini) instead of OpenRouter
+    let useGoogleAI = false; // Flag to use Google AI Studio directly
 
     switch (contentType) {
       case 'text':
@@ -50,9 +50,9 @@ serve(async (req) => {
         break;
       
       case 'ux':
-        // For UX/architecture suggestions - use Google Gemini via Lovable AI
-        useGemini = true;
-        selectedModel = 'google/gemini-2.5-flash';
+        // For UX/architecture suggestions - use Google Gemini 2.5 Pro directly
+        useGoogleAI = true;
+        selectedModel = 'gemini-2.5-pro-preview-06-05';
         systemPrompt = `אתה מומחה UX ופיתוח אתרים מנוסה עם ידע נרחב בטכנולוגיות ווב מודרניות.
         
 התפקיד שלך:
@@ -73,37 +73,52 @@ serve(async (req) => {
         systemPrompt = 'אתה עוזר יצירתי בעברית. ענה בקצרה ובבהירות.';
     }
 
-    console.log(`Generating content with model: ${selectedModel}, contentType: ${contentType}, useGemini: ${useGemini}`);
+    console.log(`Generating content with model: ${selectedModel}, contentType: ${contentType}, useGoogleAI: ${useGoogleAI}`);
 
     let response;
+    let generatedContent = '';
     
-    if (useGemini) {
-      // Use Lovable AI Gateway for Gemini models
-      if (!LOVABLE_API_KEY) {
-        throw new Error('LOVABLE_API_KEY is not configured');
+    if (useGoogleAI) {
+      // Use Google AI Studio directly with Gemini 2.5 Pro
+      if (!GOOGLE_AI_STUDIO_API_KEY) {
+        throw new Error('GOOGLE_AI_STUDIO_API_KEY is not configured');
       }
       
-      response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const googleResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${GOOGLE_AI_STUDIO_API_KEY}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: selectedModel,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: `${systemPrompt}\n\n${prompt}` }]
+            }
           ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          }
         }),
       });
+
+      if (!googleResponse.ok) {
+        const errorText = await googleResponse.text();
+        console.error('Google AI Studio error:', googleResponse.status, errorText);
+        throw new Error(`Google AI Studio error: ${googleResponse.status}`);
+      }
+
+      const googleData = await googleResponse.json();
+      generatedContent = googleData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
     } else {
       // Use OpenRouter for other models
       if (!OPENROUTER_API_KEY) {
         throw new Error('OPENROUTER_API_KEY is not configured');
       }
       
-      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
@@ -121,16 +136,16 @@ serve(async (req) => {
           temperature: 0.7,
         }),
       });
-    }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
+      if (!openRouterResponse.ok) {
+        const errorText = await openRouterResponse.text();
+        console.error('OpenRouter API error:', openRouterResponse.status, errorText);
+        throw new Error(`OpenRouter API error: ${openRouterResponse.status}`);
+      }
 
-    const data = await response.json();
-    const generatedContent = data.choices?.[0]?.message?.content || '';
+      const data = await openRouterResponse.json();
+      generatedContent = data.choices?.[0]?.message?.content || '';
+    }
 
     // Optionally save to history
     if (saveToHistory && userId) {
