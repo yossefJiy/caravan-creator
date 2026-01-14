@@ -1,15 +1,16 @@
 import { cn } from '@/lib/utils';
-import { foodTruckTypes } from '@/data/foodtrucks';
+import type { TruckType } from '@/hooks/useTruckData';
 
 interface TypeSelectorProps {
+  truckTypes: TruckType[];
   selectedType: string | null;
   onSelect: (typeId: string) => void;
 }
 
-export const TypeSelector = ({ selectedType, onSelect }: TypeSelectorProps) => {
+export const TypeSelector = ({ truckTypes, selectedType, onSelect }: TypeSelectorProps) => {
   return (
     <div className="stagger-children grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {foodTruckTypes.map((type) => (
+      {truckTypes.map((type) => (
         <button
           key={type.id}
           onClick={() => onSelect(type.id)}

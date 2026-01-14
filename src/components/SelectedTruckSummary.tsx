@@ -1,21 +1,20 @@
 import { ChevronLeft } from 'lucide-react';
-import { foodTruckTypes } from '@/data/foodtrucks';
+import type { TruckType } from '@/hooks/useTruckData';
 
 interface SelectedTruckSummaryProps {
-  selectedType: string;
-  selectedSize: string;
+  truckType: TruckType;
+  selectedSizeId: string;
   onEdit: () => void;
 }
 
 export const SelectedTruckSummary = ({ 
-  selectedType, 
-  selectedSize, 
+  truckType, 
+  selectedSizeId, 
   onEdit 
 }: SelectedTruckSummaryProps) => {
-  const truckType = foodTruckTypes.find(t => t.id === selectedType);
-  const size = truckType?.sizes.find(s => s.id === selectedSize);
+  const size = truckType.sizes.find(s => s.id === selectedSizeId);
 
-  if (!truckType || !size) return null;
+  if (!size) return null;
 
   return (
     <button
