@@ -240,11 +240,10 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
               onClick={onStart}
               className={cn(
                 'group relative inline-flex items-center gap-3 px-12 sm:px-16 py-4 sm:py-5 rounded-2xl',
-                'text-slate-900 font-bold text-lg sm:text-xl',
+                'bg-primary text-primary-foreground font-bold text-lg sm:text-xl',
                 'shadow-xl hover:shadow-2xl transition-all duration-300',
-                'overflow-hidden border-2 border-amber-300/50'
+                'overflow-hidden border-2 border-primary/30'
               )}
-              style={{ backgroundColor: '#FDC10D' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
