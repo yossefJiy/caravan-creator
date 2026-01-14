@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,7 +18,7 @@ serve(async (req) => {
       throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
-    const { prompt, contentType, targetType, model } = await req.json();
+    const { prompt, contentType, targetType, model, saveToHistory, userId } = await req.json();
 
     // Select model based on content type
     let selectedModel = model || 'mistralai/mistral-nemo';
@@ -91,6 +92,22 @@ serve(async (req) => {
 
     const data = await response.json();
     const generatedContent = data.choices?.[0]?.message?.content || '';
+
+    // Optionally save to history
+    if (saveToHistory && userId) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      await supabase.from('ai_content_history').insert({
+        content_type: contentType,
+        prompt: prompt,
+        generated_content: generatedContent,
+        model_used: selectedModel,
+        target_type: targetType || null,
+        created_by: userId,
+      });
+    }
 
     return new Response(JSON.stringify({ 
       content: generatedContent,
