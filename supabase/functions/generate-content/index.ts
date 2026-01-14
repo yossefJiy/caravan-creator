@@ -7,34 +7,65 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Model tier configuration with cost estimates
+const MODEL_TIERS = {
+  lite: {
+    name: 'gemini-2.5-flash-lite',
+    maxTokens: 500,
+    costPer1MOutput: 0.40,
+  },
+  flash: {
+    name: 'gemini-2.5-flash',
+    maxTokens: 1000,
+    costPer1MOutput: 2.50,
+  },
+  pro: {
+    name: 'gemini-2.5-pro-preview-06-05',
+    maxTokens: 2048,
+    costPer1MOutput: 10.00,
+  },
+};
+
+// Smart default model tier based on content type
+const getDefaultModelTier = (contentType: string): 'lite' | 'flash' | 'pro' => {
+  switch (contentType) {
+    case 'text':
+    case 'description':
+    case 'features':
+      return 'lite'; // Simple content - use cheapest
+    case 'ux':
+      return 'flash'; // Complex but not critical
+    default:
+      return 'lite';
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
     const GOOGLE_AI_STUDIO_API_KEY = Deno.env.get('GOOGLE_AI_STUDIO_API_KEY');
+    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
     
-    const { prompt, contentType, targetType, model, saveToHistory, userId } = await req.json();
+    const { prompt, contentType, targetType, modelTier, saveToHistory, userId } = await req.json();
 
-    // Select model and API based on content type
-    let selectedModel = model || 'mistralai/mistral-nemo';
+    // Determine model tier - use provided or smart default
+    const tier = modelTier || getDefaultModelTier(contentType);
+    const modelConfig = MODEL_TIERS[tier as keyof typeof MODEL_TIERS] || MODEL_TIERS.lite;
+    
     let systemPrompt = '';
-    let useGoogleAI = false; // Flag to use Google AI Studio directly
+    let useGoogleAI = !!GOOGLE_AI_STUDIO_API_KEY; // Prefer Google AI if key exists
 
     switch (contentType) {
       case 'text':
-        // For text content - use mistral-nemo via OpenRouter
-        selectedModel = 'mistralai/mistral-nemo';
         systemPrompt = `אתה כותב תוכן שיווקי מקצועי בעברית עבור אתר של חברה לייצור פודטראקים ומשאיות מזון.
 כתוב תוכן קצר, ברור ומשכנע. התמקד ביתרונות ובערך ללקוח.
 סגנון: מקצועי אך נגיש, עם קריאות לפעולה ברורות.`;
         break;
       
       case 'features':
-        // For feature lists - use mistral-nemo via OpenRouter
-        selectedModel = 'mistralai/mistral-nemo';
         systemPrompt = `אתה מומחה לפודטראקים ומשאיות מזון בישראל.
 צור רשימת תכונות ויתרונות מקצועית בעברית.
 כל תכונה צריכה להיות קצרה (עד 6 מילים) וממוקדת ביתרון ללקוח.
@@ -42,17 +73,12 @@ serve(async (req) => {
         break;
       
       case 'description':
-        // For product descriptions - use mistral-nemo via OpenRouter
-        selectedModel = 'mistralai/mistral-nemo';
         systemPrompt = `אתה כותב תיאורי מוצרים מקצועי בעברית.
 כתוב תיאור קצר (2-3 משפטים) שמדגיש את היתרונות הייחודיים של המוצר.
 הימנע ממילות מילוי, התמקד בערך ללקוח.`;
         break;
       
       case 'ux':
-        // For UX/architecture suggestions - use Google Gemini 2.5 Pro directly
-        useGoogleAI = true;
-        selectedModel = 'gemini-2.5-pro-preview-06-05';
         systemPrompt = `אתה מומחה UX ופיתוח אתרים מנוסה עם ידע נרחב בטכנולוגיות ווב מודרניות.
         
 התפקיד שלך:
@@ -73,18 +99,14 @@ serve(async (req) => {
         systemPrompt = 'אתה עוזר יצירתי בעברית. ענה בקצרה ובבהירות.';
     }
 
-    console.log(`Generating content with model: ${selectedModel}, contentType: ${contentType}, useGoogleAI: ${useGoogleAI}`);
+    console.log(`Generating content - model: ${modelConfig.name}, tier: ${tier}, contentType: ${contentType}, useGoogleAI: ${useGoogleAI}`);
 
-    let response;
     let generatedContent = '';
+    let actualModel = modelConfig.name;
     
     if (useGoogleAI) {
-      // Use Google AI Studio directly with Gemini 2.5 Pro
-      if (!GOOGLE_AI_STUDIO_API_KEY) {
-        throw new Error('GOOGLE_AI_STUDIO_API_KEY is not configured');
-      }
-      
-      const googleResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${GOOGLE_AI_STUDIO_API_KEY}`, {
+      // Use Google AI Studio directly
+      const googleResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.name}:generateContent?key=${GOOGLE_AI_STUDIO_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +120,7 @@ serve(async (req) => {
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 2048,
+            maxOutputTokens: modelConfig.maxTokens,
           }
         }),
       });
@@ -112,12 +134,9 @@ serve(async (req) => {
       const googleData = await googleResponse.json();
       generatedContent = googleData.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
-    } else {
-      // Use OpenRouter for other models
-      if (!OPENROUTER_API_KEY) {
-        throw new Error('OPENROUTER_API_KEY is not configured');
-      }
-      
+    } else if (OPENROUTER_API_KEY) {
+      // Fallback to OpenRouter with Mistral
+      actualModel = 'mistralai/mistral-nemo';
       const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -127,12 +146,12 @@ serve(async (req) => {
           'X-Title': 'Caravan Creator',
         },
         body: JSON.stringify({
-          model: selectedModel,
+          model: actualModel,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 1000,
+          max_tokens: modelConfig.maxTokens,
           temperature: 0.7,
         }),
       });
@@ -145,6 +164,8 @@ serve(async (req) => {
 
       const data = await openRouterResponse.json();
       generatedContent = data.choices?.[0]?.message?.content || '';
+    } else {
+      throw new Error('No AI API key configured');
     }
 
     // Optionally save to history
@@ -157,7 +178,7 @@ serve(async (req) => {
         content_type: contentType,
         prompt: prompt,
         generated_content: generatedContent,
-        model_used: selectedModel,
+        model_used: actualModel,
         target_type: targetType || null,
         created_by: userId,
       });
@@ -165,7 +186,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       content: generatedContent,
-      model: selectedModel,
+      model: actualModel,
+      modelTier: tier,
       contentType 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
