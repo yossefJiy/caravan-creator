@@ -18,41 +18,45 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background">
-      {/* Background with parallax effect */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Background Image - More visible */}
       <motion.div 
         className="absolute inset-0"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
+        initial={{ scale: 1.1, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
       >
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${welcomeBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50" />
+        {/* Lighter overlay to show the image better */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-slate-900/60" />
       </motion.div>
 
-      {/* Animated particles */}
+      {/* Animated floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 rounded-full bg-primary/30"
+            className="absolute rounded-full"
             style={{
-              left: `${15 + i * 15}%`,
-              top: `${20 + (i % 3) * 25}%`,
+              left: `${5 + i * 8}%`,
+              top: `${10 + (i % 4) * 22}%`,
+              width: `${4 + (i % 3) * 4}px`,
+              height: `${4 + (i % 3) * 4}px`,
+              background: i % 2 === 0 ? 'rgba(234, 179, 8, 0.4)' : 'rgba(251, 191, 36, 0.3)',
             }}
             animate={{
-              y: [0, -30, 0],
-              opacity: [0.3, 0.7, 0.3],
-              scale: [1, 1.2, 1],
+              y: [0, -40, 0],
+              x: [0, (i % 2 === 0 ? 10 : -10), 0],
+              opacity: [0.2, 0.6, 0.2],
+              scale: [1, 1.3, 1],
             }}
             transition={{
-              duration: 3 + i * 0.5,
+              duration: 4 + i * 0.3,
               repeat: Infinity,
-              delay: i * 0.3,
+              delay: i * 0.2,
               ease: "easeInOut"
             }}
           />
@@ -111,7 +115,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             transition={{ delay: 0.4, duration: 0.6 }}
           >
             <motion.h1 
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -126,7 +130,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
               </motion.span>
             </motion.h1>
             <motion.h2 
-              className="text-xl sm:text-2xl lg:text-3xl font-semibold bg-gradient-to-l from-primary via-gold to-primary bg-clip-text text-transparent"
+              className="text-xl sm:text-2xl lg:text-3xl font-semibold text-amber-400 drop-shadow-md"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
@@ -137,15 +141,15 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
 
           {/* Company introduction */}
           <motion.div 
-            className="max-w-xl mx-auto space-y-3"
+            className="max-w-xl mx-auto space-y-3 bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-white/10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
           >
-            <p className="text-lg sm:text-xl text-foreground/90">
-              אנחנו <span className="font-bold text-primary">אליה קרוואנים</span>
+            <p className="text-lg sm:text-xl text-white">
+              אנחנו <span className="font-bold text-amber-400">אליה קרוואנים</span>
             </p>
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
               מומחים לייצור פודטראקים ומשאיות מזון יוקרתיות בישראל. 
               בתהליך קצר נתאים עבורכם את הפודטראק המושלם!
             </p>
@@ -158,12 +162,12 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            <div className="relative flex justify-center items-center gap-2 sm:gap-4">
+            <div className="relative flex justify-center items-center gap-3 sm:gap-5">
               {[
-                { step: 1, label: 'פרטים', icon: '👤', color: 'from-blue-500/20 to-blue-600/20' },
-                { step: 2, label: 'דגם', icon: '🚐', color: 'from-green-500/20 to-green-600/20' },
-                { step: 3, label: 'ציוד', icon: '🔧', color: 'from-orange-500/20 to-orange-600/20' },
-                { step: 4, label: 'סיכום', icon: '✅', color: 'from-purple-500/20 to-purple-600/20' },
+                { step: 1, label: 'פרטים', icon: '👤', color: 'from-blue-400/30 to-blue-500/30' },
+                { step: 2, label: 'דגם', icon: '🚐', color: 'from-emerald-400/30 to-emerald-500/30' },
+                { step: 3, label: 'ציוד', icon: '🔧', color: 'from-orange-400/30 to-orange-500/30' },
+                { step: 4, label: 'סיכום', icon: '✅', color: 'from-purple-400/30 to-purple-500/30' },
               ].map(({ step, label, icon, color }, index) => (
                 <motion.div 
                   key={step} 
@@ -175,7 +179,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
                   {/* Connector line */}
                   {index < 3 && (
                     <motion.div 
-                      className="absolute top-6 -left-3 sm:-left-5 w-4 sm:w-6 h-0.5 bg-gradient-to-l from-border to-transparent"
+                      className="absolute top-6 -left-4 sm:-left-6 w-5 sm:w-8 h-0.5 bg-gradient-to-l from-amber-400/50 to-transparent"
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
                       transition={{ delay: 1.1 + index * 0.12 }}
@@ -184,16 +188,16 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
                   
                   <motion.div 
                     className={cn(
-                      "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br backdrop-blur-sm",
-                      "border border-border/50 flex items-center justify-center text-xl sm:text-2xl",
-                      "shadow-lg hover:shadow-xl transition-shadow duration-300",
+                      "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br backdrop-blur-md",
+                      "border border-white/20 flex items-center justify-center text-2xl sm:text-3xl",
+                      "shadow-xl hover:shadow-2xl transition-all duration-300",
                       color
                     )}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileHover={{ scale: 1.15, rotate: 8 }}
                   >
                     {icon}
                   </motion.div>
-                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</span>
+                  <span className="text-xs sm:text-sm font-medium text-slate-300">{label}</span>
                 </motion.div>
               ))}
             </div>
@@ -207,17 +211,17 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             transition={{ delay: 1.2 }}
           >
             {[
-              { icon: Award, text: 'ייצור מקומי באיכות גבוהה', color: 'text-gold' },
-              { icon: ChefHat, text: 'ציוד מקצועי ביותר', color: 'text-primary' },
-              { icon: Truck, text: 'משלוח לכל הארץ', color: 'text-gold' },
+              { icon: Award, text: 'ייצור מקומי באיכות גבוהה', color: 'text-amber-400' },
+              { icon: ChefHat, text: 'ציוד מקצועי ביותר', color: 'text-amber-300' },
+              { icon: Truck, text: 'משלוח לכל הארץ', color: 'text-amber-400' },
             ].map((badge, index) => (
               <motion.div 
                 key={index} 
-                className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground bg-card/70 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full border border-border/50 shadow-sm"
+                className="flex items-center gap-2 text-xs sm:text-sm text-slate-200 bg-slate-800/70 backdrop-blur-md px-4 sm:px-5 py-2.5 rounded-full border border-white/10 shadow-lg"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.3 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, backgroundColor: 'rgba(30, 41, 59, 0.9)' }}
               >
                 <badge.icon className={cn("w-4 h-4", badge.color)} />
                 <span>{badge.text}</span>
@@ -235,25 +239,25 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             <motion.button
               onClick={onStart}
               className={cn(
-                'group relative inline-flex items-center gap-3 px-10 sm:px-14 py-4 sm:py-5 rounded-2xl',
-                'bg-gradient-to-l from-primary via-primary to-primary/90 text-primary-foreground font-bold text-lg sm:text-xl',
-                'shadow-xl hover:shadow-2xl transition-all duration-300',
-                'overflow-hidden'
+                'group relative inline-flex items-center gap-3 px-12 sm:px-16 py-4 sm:py-5 rounded-2xl',
+                'bg-gradient-to-l from-amber-500 via-amber-400 to-yellow-400 text-slate-900 font-bold text-lg sm:text-xl',
+                'shadow-xl shadow-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/40 transition-all duration-300',
+                'overflow-hidden border-2 border-amber-300/50'
               )}
-              whileHover={{ scale: 1.03 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
               {/* Shine effect */}
               <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full"
                 animate={{ translateX: ["100%", "-100%"] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
               />
               
               <span className="relative z-10">בואו נתחיל!</span>
               <motion.div
                 className="relative z-10"
-                animate={{ x: [0, -5, 0] }}
+                animate={{ x: [0, -8, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -263,12 +267,12 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
 
           {/* Security badge */}
           <motion.div 
-            className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
+            className="flex items-center justify-center gap-2 text-sm text-slate-400"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.6 }}
           >
-            <Shield className="w-4 h-4 text-green-500" />
+            <Shield className="w-4 h-4 text-emerald-400" />
             <span>הפרטים שלכם מאובטחים ונשמרים בסודיות מלאה</span>
           </motion.div>
         </div>
