@@ -39,10 +39,18 @@ export const EquipmentSelector = ({
     }, 0);
   };
 
+  // Find first category with items to auto-open
+  const firstCategoryWithItems = categories.find(c => getEquipmentByCategory(c.id).length > 0);
+
   return (
     <div className="space-y-4">
-      {/* All categories as accordion */}
-      <Accordion type="multiple" className="space-y-3">
+      {/* All categories as accordion - single open mode with first auto-opened */}
+      <Accordion 
+        type="single" 
+        collapsible 
+        defaultValue={firstCategoryWithItems?.id} 
+        className="space-y-3"
+      >
         {categories.map((category) => {
           const categoryItems = getEquipmentByCategory(category.id);
           const selectedCount = getCategoryCount(category.id);

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { ProgressIndicator } from './ProgressIndicator';
 import { TypeSelector } from './TypeSelector';
@@ -58,16 +59,18 @@ export const FoodTruckConfigurator = () => {
 
   const selectedTruckType = truckTypes.find((t) => t.id === state.selectedType);
 
-  // Get equipment items with names for summary
+  // Get equipment items with names for summary - only items with quantity > 0
   const selectedEquipmentItems = useMemo(() => {
-    return Object.entries(state.selectedEquipment).map(([id, quantity]) => {
-      const item = equipment.find((e) => e.id === id);
-      return {
-        id,
-        name: item?.name || id,
-        quantity,
-      };
-    });
+    return Object.entries(state.selectedEquipment)
+      .filter(([, quantity]) => quantity > 0)
+      .map(([id, quantity]) => {
+        const item = equipment.find((e) => e.id === id);
+        return {
+          id,
+          name: item?.name || id,
+          quantity,
+        };
+      });
   }, [state.selectedEquipment, equipment]);
 
   const canProceed = useCallback(() => {
@@ -228,124 +231,162 @@ export const FoodTruckConfigurator = () => {
           </div>
         )}
 
-        {/* Step 1: Contact Details */}
-        {state.step === 1 && !error && (
-          <div className="animate-fade-in">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">שלב 1: פרטים אישיים</h2>
-              <p className="text-muted-foreground">
-                ספרו לנו קצת על עצמכם כדי שנוכל ליצור איתכם קשר
-              </p>
-            </div>
-            <ContactForm
-              onSubmit={handleContactSubmit}
-              initialData={state.contactDetails}
-              hideSubmitButton={false}
-              submitButtonText="המשך לבחירת דגם"
-            />
-          </div>
-        )}
-
-        {/* Step 2: Type Selection */}
-        {state.step === 2 && !error && (
-          <div className="animate-fade-in">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת דגם</h2>
-              <p className="text-muted-foreground">
-                בחרו את סוג הפודטראק המתאים לעסק שלכם
-              </p>
-            </div>
-
-            {truckLoading ? (
-              <LoadingSkeleton />
-            ) : (
-              <TypeSelector
-                truckTypes={truckTypes}
-                selectedType={state.selectedType}
-                onSelect={handleTypeSelect}
+        <AnimatePresence mode="wait">
+          {/* Step 1: Contact Details */}
+          {state.step === 1 && !error && (
+            <motion.div
+              key="step-1"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 1: פרטים אישיים</h2>
+                <p className="text-muted-foreground">
+                  ספרו לנו קצת על עצמכם כדי שנוכל ליצור איתכם קשר
+                </p>
+              </div>
+              <ContactForm
+                onSubmit={handleContactSubmit}
+                initialData={state.contactDetails}
+                hideSubmitButton={false}
+                submitButtonText="המשך לבחירת דגם"
               />
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
 
-        {/* Step 3: Size Selection */}
-        {state.step === 3 && !error && (
-          <div className="animate-fade-in">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: בחירת גודל</h2>
-              <p className="text-muted-foreground">
-                בחרו את הגודל המתאים לצרכים שלכם
-              </p>
-            </div>
+          {/* Step 2: Type Selection */}
+          {state.step === 2 && !error && (
+            <motion.div
+              key="step-2"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת דגם</h2>
+                <p className="text-muted-foreground">
+                  {state.contactDetails?.firstName 
+                    ? `${state.contactDetails.firstName}, בחר/י את סוג הפודטראק המתאים לעסק שלכם` 
+                    : 'בחרו את סוג הפודטראק המתאים לעסק שלכם'}
+                </p>
+              </div>
 
-            {selectedTruckType && (
-              <>
+              {truckLoading ? (
+                <LoadingSkeleton />
+              ) : (
+                <TypeSelector
+                  truckTypes={truckTypes}
+                  selectedType={state.selectedType}
+                  onSelect={handleTypeSelect}
+                />
+              )}
+            </motion.div>
+          )}
+
+          {/* Step 3: Size Selection */}
+          {state.step === 3 && !error && (
+            <motion.div
+              key="step-3"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: בחירת גודל</h2>
+                <p className="text-muted-foreground">
+                  {state.contactDetails?.firstName 
+                    ? `${state.contactDetails.firstName}, בחר/י את הגודל המתאים לצרכים שלכם` 
+                    : 'בחרו את הגודל המתאים לצרכים שלכם'}
+                </p>
+              </div>
+
+              {selectedTruckType && (
+                <>
+                  <div className="mb-6">
+                    <SelectedTruckSummary
+                      truckType={selectedTruckType}
+                      selectedSizeId={state.selectedSize}
+                      onEdit={() => handleGoToStep(2)}
+                      showSize={false}
+                    />
+                  </div>
+                  <SizeSelector
+                    sizes={selectedTruckType.sizes}
+                    selectedSize={state.selectedSize}
+                    onSelect={handleSizeSelect}
+                    truckImage={selectedTruckType.image}
+                  />
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {/* Step 4: Equipment Selection */}
+          {state.step === 4 && !error && (
+            <motion.div
+              key="step-4"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 4: בחירת ציוד</h2>
+                <p className="text-muted-foreground">
+                  {state.contactDetails?.firstName 
+                    ? `${state.contactDetails.firstName} - בחר/י את הציוד הנוסף שתרצו להוסיף להצעה` 
+                    : 'בחרו את הציוד הנוסף שתרצו להוסיף'}
+                </p>
+              </div>
+
+              {hasSelection && selectedTruckType && (
                 <div className="mb-6">
                   <SelectedTruckSummary
                     truckType={selectedTruckType}
-                    selectedSizeId={state.selectedSize}
+                    selectedSizeId={state.selectedSize!}
                     onEdit={() => handleGoToStep(2)}
-                    showSize={false}
                   />
                 </div>
-                <SizeSelector
-                  sizes={selectedTruckType.sizes}
-                  selectedSize={state.selectedSize}
-                  onSelect={handleSizeSelect}
-                  truckImage={selectedTruckType.image}
+              )}
+
+              {equipmentLoading ? (
+                <LoadingSkeleton />
+              ) : (
+                <EquipmentSelector
+                  categories={categories}
+                  equipment={equipment}
+                  selectedEquipment={selectedEquipmentMap}
+                  onToggle={handleEquipmentToggle}
                 />
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </motion.div>
+          )}
 
-        {/* Step 4: Equipment Selection */}
-        {state.step === 4 && !error && (
-          <div className="animate-fade-in">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-foreground mb-2">שלב 4: בחירת ציוד</h2>
-              <p className="text-muted-foreground">
-                בחרו את הציוד הנוסף שתרצו להוסיף
-              </p>
-            </div>
-
-            {hasSelection && selectedTruckType && (
-              <div className="mb-6">
-                <SelectedTruckSummary
-                  truckType={selectedTruckType}
-                  selectedSizeId={state.selectedSize!}
-                  onEdit={() => handleGoToStep(2)}
-                />
-              </div>
-            )}
-
-            {equipmentLoading ? (
-              <LoadingSkeleton />
-            ) : (
-              <EquipmentSelector
-                categories={categories}
-                equipment={equipment}
-                selectedEquipment={selectedEquipmentMap}
-                onToggle={handleEquipmentToggle}
+          {/* Step 5: Summary */}
+          {state.step === 5 && !error && selectedTruckType && state.contactDetails && (
+            <motion.div
+              key="step-5"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <SummaryStep
+                truckType={selectedTruckType}
+                selectedSizeId={state.selectedSize!}
+                contactDetails={state.contactDetails}
+                selectedEquipment={selectedEquipmentItems}
+                onEditStep={handleGoToStep}
+                onSubmit={handleFinalSubmit}
+                isSubmitting={isSubmitting}
               />
-            )}
-          </div>
-        )}
-
-        {/* Step 5: Summary */}
-        {state.step === 5 && !error && selectedTruckType && state.contactDetails && (
-          <div className="animate-fade-in">
-            <SummaryStep
-              truckType={selectedTruckType}
-              selectedSizeId={state.selectedSize!}
-              contactDetails={state.contactDetails}
-              selectedEquipment={selectedEquipmentItems}
-              onEditStep={handleGoToStep}
-              onSubmit={handleFinalSubmit}
-              isSubmitting={isSubmitting}
-            />
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Fixed bottom navigation - show for steps 1-4 */}
