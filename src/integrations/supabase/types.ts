@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_content_history: {
+        Row: {
+          content_type: string
+          created_at: string
+          created_by: string | null
+          generated_content: string
+          id: string
+          is_saved: boolean | null
+          model_used: string | null
+          prompt: string
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          generated_content: string
+          id?: string
+          is_saved?: boolean | null
+          model_used?: string | null
+          prompt: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          generated_content?: string
+          id?: string
+          is_saved?: boolean | null
+          model_used?: string | null
+          prompt?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       equipment: {
         Row: {
           category_id: string
