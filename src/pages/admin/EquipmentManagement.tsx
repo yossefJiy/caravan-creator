@@ -13,6 +13,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImageUpload } from '@/components/admin/ImageUpload';
+import { SortableItem } from '@/components/admin/SortableItem';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 interface EquipmentCategory {
   id: string;
@@ -42,6 +59,13 @@ const EquipmentManagement = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   // Fetch categories
   const { data: categories, isLoading: loadingCategories } = useQuery({
     queryKey: ['admin-equipment-categories'],
@@ -65,6 +89,40 @@ const EquipmentManagement = () => {
         .order('sort_order');
       if (error) throw error;
       return data as Equipment[];
+    },
+  });
+
+  // Reorder mutation for categories
+  const reorderCategoriesMutation = useMutation({
+    mutationFn: async (cats: { id: string; sort_order: number }[]) => {
+      for (const cat of cats) {
+        const { error } = await supabase
+          .from('equipment_categories')
+          .update({ sort_order: cat.sort_order })
+          .eq('id', cat.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-equipment-categories'] });
+      toast({ title: 'הסדר עודכן' });
+    },
+  });
+
+  // Reorder mutation for equipment
+  const reorderEquipmentMutation = useMutation({
+    mutationFn: async (items: { id: string; sort_order: number }[]) => {
+      for (const item of items) {
+        const { error } = await supabase
+          .from('equipment')
+          .update({ sort_order: item.sort_order })
+          .eq('id', item.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-equipment'] });
+      toast({ title: 'הסדר עודכן' });
     },
   });
 
@@ -157,6 +215,31 @@ const EquipmentManagement = () => {
     },
   });
 
+  const handleCategoryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !categories) return;
+
+    const oldIndex = categories.findIndex((c) => c.id === active.id);
+    const newIndex = categories.findIndex((c) => c.id === over.id);
+
+    const newOrder = arrayMove(categories, oldIndex, newIndex);
+    const updates = newOrder.map((cat, index) => ({ id: cat.id, sort_order: index + 1 }));
+    reorderCategoriesMutation.mutate(updates);
+  };
+
+  const handleEquipmentDragEnd = (categoryId: string) => (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !equipment) return;
+
+    const categoryEquipment = equipment.filter((e) => e.category_id === categoryId);
+    const oldIndex = categoryEquipment.findIndex((e) => e.id === active.id);
+    const newIndex = categoryEquipment.findIndex((e) => e.id === over.id);
+
+    const newOrder = arrayMove(categoryEquipment, oldIndex, newIndex);
+    const updates = newOrder.map((item, index) => ({ id: item.id, sort_order: index + 1 }));
+    reorderEquipmentMutation.mutate(updates);
+  };
+
   if (loadingCategories || loadingEquipment) {
     return (
       <div className="p-6 space-y-4">
@@ -170,7 +253,7 @@ const EquipmentManagement = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">ניהול ציוד</h1>
-        <p className="text-muted-foreground">הוסף, ערוך ומחק קטגוריות ופריטי ציוד</p>
+        <p className="text-muted-foreground">גרור לשינוי סדר • הוסף, ערוך ומחק</p>
       </div>
 
       <Tabs defaultValue="equipment" className="space-y-4">
@@ -213,45 +296,51 @@ const EquipmentManagement = () => {
                   <CardTitle className="text-lg">{category.name_he}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {categoryEquipment.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                        {item.image_url && (
-                          <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{item.name}</p>
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground truncate">{item.description}</p>
-                          )}
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCategoryId(item.category_id);
-                              setEditingEquipment(item);
-                              setIsEquipmentDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (confirm('האם למחוק את הפריט הזה?')) {
-                                deleteEquipmentMutation.mutate(item.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleEquipmentDragEnd(category.id)}>
+                    <SortableContext items={categoryEquipment.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {categoryEquipment.map((item) => (
+                          <SortableItem key={item.id} id={item.id} className="p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              {item.image_url && (
+                                <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{item.name}</p>
+                                {item.description && (
+                                  <p className="text-sm text-muted-foreground truncate">{item.description}</p>
+                                )}
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCategoryId(item.category_id);
+                                    setEditingEquipment(item);
+                                    setIsEquipmentDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (confirm('האם למחוק את הפריט הזה?')) {
+                                      deleteEquipmentMutation.mutate(item.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </SortableItem>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 </CardContent>
               </Card>
             );
@@ -288,44 +377,50 @@ const EquipmentManagement = () => {
             </Dialog>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {categories?.map((category) => (
-              <Card key={category.id}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{category.name_he}</p>
-                    <p className="text-sm text-muted-foreground">{category.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {equipment?.filter(e => e.category_id === category.id).length || 0} פריטים
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingCategory(category);
-                        setIsCategoryDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm('האם למחוק את הקטגוריה הזו? כל הפריטים בה יימחקו גם.')) {
-                          deleteCategoryMutation.mutate(category.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+            <SortableContext items={categories?.map((c) => c.id) || []} strategy={verticalListSortingStrategy}>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {categories?.map((category) => (
+                  <SortableItem key={category.id} id={category.id}>
+                    <Card>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{category.name_he}</p>
+                          <p className="text-sm text-muted-foreground">{category.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {equipment?.filter(e => e.category_id === category.id).length || 0} פריטים
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingCategory(category);
+                              setIsCategoryDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm('האם למחוק את הקטגוריה הזו? כל הפריטים בה יימחקו גם.')) {
+                                deleteCategoryMutation.mutate(category.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           {categories?.length === 0 && (
             <Card>
@@ -435,10 +530,13 @@ const EquipmentForm = ({
         <Label>תיאור</Label>
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
-      <div className="space-y-2">
-        <Label>קישור לתמונה</Label>
-        <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-      </div>
+      <ImageUpload
+        value={imageUrl}
+        onChange={setImageUrl}
+        bucket="equipment-images"
+        folder="equipment"
+        label="תמונת הפריט"
+      />
       <div className="flex items-center gap-2">
         <Switch checked={isActive} onCheckedChange={setIsActive} />
         <Label>פעיל</Label>
