@@ -114,12 +114,10 @@ export const FoodTruckConfigurator = () => {
       case 1:
         return state.contactDetails !== null; // Contact details filled
       case 2:
-        return state.selectedType !== null; // Type selected
+        return state.selectedType !== null && state.selectedSize !== null; // Type AND size selected
       case 3:
-        return state.selectedSize !== null; // Size selected
-      case 4:
         return true; // Equipment is optional
-      case 5:
+      case 4:
         return true; // Summary - can always submit
       default:
         return false;
@@ -127,7 +125,7 @@ export const FoodTruckConfigurator = () => {
   }, [state.step, state.selectedType, state.selectedSize, state.contactDetails]);
 
   const handleNext = () => {
-    if (state.step < 5) {
+    if (state.step < 4) {
       setState((prev) => ({ ...prev, step: prev.step + 1 }));
     }
   };
@@ -181,7 +179,7 @@ export const FoodTruckConfigurator = () => {
     setState((prev) => ({ 
       ...prev, 
       contactDetails: details,
-      step: 2, // Move to truck type selection
+      step: 2, // Move to truck type + size selection
     }));
   };
 
@@ -253,7 +251,7 @@ export const FoodTruckConfigurator = () => {
             <span className="text-sm text-muted-foreground">בניית פודטראק</span>
             <h1 className="text-xl font-bold text-navy">אליה קרוואנים</h1>
           </div>
-          {state.step >= 1 && state.step <= 4 && (
+          {state.step >= 1 && state.step <= 3 && (
             <ProgressIndicator currentStep={state.step} />
           )}
         </div>
@@ -299,7 +297,7 @@ export const FoodTruckConfigurator = () => {
             </motion.div>
           )}
 
-          {/* Step 2: Type Selection */}
+          {/* Step 2: Type & Size Selection (Combined) */}
           {state.step === 2 && !error && (
             <motion.div
               key="step-2"
@@ -309,27 +307,46 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת דגם</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת דגם וגודל</h2>
                 <p className="text-muted-foreground">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, בחר/י את סוג הפודטראק המתאים לעסק שלכם` 
-                    : 'בחרו את סוג הפודטראק המתאים לעסק שלכם'}
+                    ? `${state.contactDetails.firstName}, בחר/י את סוג הפודטראק והגודל המתאים` 
+                    : 'בחרו את סוג הפודטראק והגודל המתאים לעסק שלכם'}
                 </p>
               </div>
 
               {truckLoading ? (
                 <LoadingSkeleton />
               ) : (
-                <TypeSelector
-                  truckTypes={truckTypes}
-                  selectedType={state.selectedType}
-                  onSelect={handleTypeSelect}
-                />
+                <>
+                  {/* Type Selection */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-foreground mb-4 text-right">סוג הפודטראק</h3>
+                    <TypeSelector
+                      truckTypes={truckTypes}
+                      selectedType={state.selectedType}
+                      onSelect={handleTypeSelect}
+                    />
+                  </div>
+
+                  {/* Size Selection - Show only when type is selected */}
+                  {selectedTruckType && (
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold text-foreground mb-4 text-right">בחירת גודל</h3>
+                      <SizeSelector
+                        sizes={selectedTruckType.sizes}
+                        selectedSize={state.selectedSize}
+                        onSelect={handleSizeSelect}
+                        truckImage={selectedTruckType.image}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
           )}
 
-          {/* Step 3: Size Selection */}
+          {/* Step 3: Equipment Selection */}
           {state.step === 3 && !error && (
             <motion.div
               key="step-3"
@@ -338,47 +355,8 @@ export const FoodTruckConfigurator = () => {
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: בחירת גודל</h2>
-                <p className="text-muted-foreground">
-                  {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, בחר/י את הגודל המתאים לצרכים שלכם` 
-                    : 'בחרו את הגודל המתאים לצרכים שלכם'}
-                </p>
-              </div>
-
-              {selectedTruckType && (
-                <>
-                  <div className="mb-6">
-                    <SelectedTruckSummary
-                      truckType={selectedTruckType}
-                      selectedSizeId={state.selectedSize}
-                      onEdit={() => handleGoToStep(2)}
-                      showSize={false}
-                    />
-                  </div>
-                  <SizeSelector
-                    sizes={selectedTruckType.sizes}
-                    selectedSize={state.selectedSize}
-                    onSelect={handleSizeSelect}
-                    truckImage={selectedTruckType.image}
-                  />
-                </>
-              )}
-            </motion.div>
-          )}
-
-          {/* Step 4: Equipment Selection */}
-          {state.step === 4 && !error && (
-            <motion.div
-              key="step-4"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 4: בחירת ציוד</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: בחירת ציוד</h2>
                 <p className="text-muted-foreground">
                   {state.contactDetails?.firstName 
                     ? `${state.contactDetails.firstName} - בחר/י את הציוד הנוסף שתרצו להוסיף להצעה` 
@@ -410,10 +388,10 @@ export const FoodTruckConfigurator = () => {
             </motion.div>
           )}
 
-          {/* Step 5: Summary */}
-          {state.step === 5 && !error && selectedTruckType && state.contactDetails && (
+          {/* Step 4: Summary */}
+          {state.step === 4 && !error && selectedTruckType && state.contactDetails && (
             <motion.div
-              key="step-5"
+              key="step-4"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
@@ -433,8 +411,8 @@ export const FoodTruckConfigurator = () => {
         </AnimatePresence>
       </main>
 
-      {/* Fixed bottom navigation - show for steps 1-4 */}
-      {state.step >= 1 && state.step <= 4 && !error && (
+      {/* Fixed bottom navigation - show for steps 1-3 */}
+      {state.step >= 1 && state.step <= 3 && !error && (
         <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-50">
           <div className="container flex items-center justify-between gap-4">
             <button
@@ -460,7 +438,7 @@ export const FoodTruckConfigurator = () => {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    <span>{state.step === 4 ? 'לסיכום' : 'לשלב הבא'}</span>
+                    <span>{state.step === 3 ? 'לסיכום' : 'לשלב הבא'}</span>
                     <ArrowLeft className="w-5 h-5" />
                   </>
                 )}

@@ -9,15 +9,22 @@ interface SizeSelectorProps {
   truckImage: string;
 }
 
+// Map size index to M/L/XL labels
+const getSizeLabel = (index: number): string => {
+  const labels = ['M', 'L', 'XL', 'XXL'];
+  return labels[index] || `${index + 1}`;
+};
+
 export const SizeSelector = ({ sizes, selectedSize, onSelect, truckImage }: SizeSelectorProps) => {
   if (!sizes.length) return null;
 
   return (
     <div className="stagger-children grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-      {sizes.map((size) => (
+      {sizes.map((size, index) => (
         <SizeCard
           key={size.id}
           size={size}
+          sizeLabel={getSizeLabel(index)}
           isSelected={selectedSize === size.id}
           onClick={() => onSelect(size.id)}
           truckImage={truckImage}
@@ -29,15 +36,17 @@ export const SizeSelector = ({ sizes, selectedSize, onSelect, truckImage }: Size
 
 interface SizeCardProps {
   size: TruckSize;
+  sizeLabel: string;
   isSelected: boolean;
   onClick: () => void;
   truckImage: string;
 }
 
-const SizeCard = ({ size, isSelected, onClick, truckImage }: SizeCardProps) => {
+const SizeCard = ({ size, sizeLabel, isSelected, onClick, truckImage }: SizeCardProps) => {
   return (
     <button
       onClick={onClick}
+      dir="rtl"
       className={cn(
         'selection-card text-right opacity-0',
         isSelected && 'selected'
@@ -46,13 +55,16 @@ const SizeCard = ({ size, isSelected, onClick, truckImage }: SizeCardProps) => {
       {/* Header with image */}
       <div className="flex items-start gap-4 mb-4">
         <div className="flex-1">
-          <h4 className="text-lg font-bold text-foreground">{size.name}</h4>
-          <p className="text-sm text-muted-foreground">מידות: {size.dimensions}</p>
+          <h4 className="text-2xl font-bold text-foreground">{sizeLabel}</h4>
+          <p className="text-sm text-muted-foreground mt-1" dir="rtl">מידות: {size.dimensions}</p>
+          {size.chassisType && (
+            <p className="text-sm text-primary font-medium mt-1" dir="rtl">{size.chassisType}</p>
+          )}
         </div>
         <div className="w-20 h-16 rounded-md overflow-hidden bg-secondary/30 flex-shrink-0">
           <img
             src={truckImage}
-            alt={size.name}
+            alt={sizeLabel}
             className="w-full h-full object-cover"
           />
         </div>
@@ -63,7 +75,7 @@ const SizeCard = ({ size, isSelected, onClick, truckImage }: SizeCardProps) => {
         <p className="text-sm font-medium text-foreground">מה כלול:</p>
         <ul className="space-y-1">
           {size.baseFeatures.map((feature, index) => (
-            <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+            <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground" dir="rtl">
               <Check className="w-4 h-4 text-success flex-shrink-0" />
               <span>{feature}</span>
             </li>

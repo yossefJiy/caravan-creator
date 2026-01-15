@@ -7,8 +7,8 @@ interface ProgressIndicatorProps {
 }
 
 export const ProgressIndicator = ({ currentStep }: ProgressIndicatorProps) => {
-  // Filter out step 0 (welcome) and step 5 (summary) from progress display
-  const displaySteps = STEPS.filter(step => step.id >= 1 && step.id <= 4);
+  // Filter out step 0 (welcome) and step 4 (summary) from progress display
+  const displaySteps = STEPS.filter(step => step.id >= 1 && step.id <= 3);
   
   return (
     <div className="flex items-center justify-center gap-1 sm:gap-2 py-4">
