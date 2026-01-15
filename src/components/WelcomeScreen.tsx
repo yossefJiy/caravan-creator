@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import welcomeBg from "@/assets/welcome-foodtruck-bg.jpg";
+import logo from "@/assets/eluya_nigrarim.svg";
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -22,16 +23,18 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
       {/* Content */}
       <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6">
         <div className="max-w-2xl mx-auto text-center space-y-6">
-          {/* Logo Icon */}
+          {/* Logo */}
           <motion.div
-            className="flex justify-center"
+            className="flex justify-center mb-2"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-800/80 backdrop-blur-sm flex items-center justify-center border border-slate-700">
-              <Truck className="w-12 h-12 sm:w-14 sm:h-14 text-primary" />
-            </div>
+            <img 
+              src={logo} 
+              alt="אליה נגררים" 
+              className="h-16 sm:h-20 object-contain"
+            />
           </motion.div>
 
           {/* Welcome Text */}

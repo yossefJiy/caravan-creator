@@ -1,7 +1,14 @@
-import { Edit2, Check, Truck, Package, User } from 'lucide-react';
+import { Edit2, Check, Truck, Package, User, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TruckType } from '@/hooks/useTruckData';
 import type { ContactDetails } from '@/types/configurator';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface EquipmentItem {
   id: string;
@@ -128,7 +135,8 @@ export const SummaryStep = ({
       <SummaryCard icon={Package} title="ציוד נוסף" editStep={4}>
         {selectedEquipment.length > 0 ? (
           <div className="space-y-2">
-            {selectedEquipment.map((item) => (
+            {/* Show first 3 items */}
+            {selectedEquipment.slice(0, 3).map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between text-sm py-1 border-b border-border last:border-0"
@@ -139,9 +147,44 @@ export const SummaryStep = ({
                 </span>
               </div>
             ))}
-            <p className="text-sm font-medium text-primary">
-              סה״כ {selectedEquipment.length} פריטים ({totalEquipmentUnits} יחידות)
-            </p>
+            
+            {/* Show "and X more..." if there are more than 3 */}
+            {selectedEquipment.length > 3 && (
+              <p className="text-xs text-muted-foreground">
+                ועוד {selectedEquipment.length - 3} פריטים...
+              </p>
+            )}
+            
+            {/* View all equipment button + dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-1 text-sm text-primary hover:underline mt-2">
+                  <Eye className="w-4 h-4" />
+                  <span>צפה בכל הציוד ({totalEquipmentUnits} יחידות)</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-right">רשימת הציוד הנבחר</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                  {selectedEquipment.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                    >
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-primary font-bold">×{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-4 border-t text-center">
+                  <p className="font-bold text-primary">
+                    סה״כ {selectedEquipment.length} פריטים ({totalEquipmentUnits} יחידות)
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">לא נבחר ציוד נוסף</p>
