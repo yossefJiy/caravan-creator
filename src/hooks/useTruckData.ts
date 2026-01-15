@@ -10,6 +10,7 @@ export interface TruckSize {
   id: string;
   name: string;
   dimensions: string;
+  chassisType: string;
   baseFeatures: string[];
 }
 
@@ -72,6 +73,7 @@ export const useTruckData = () => {
           id: size.id,
           name: size.name,
           dimensions: size.dimensions,
+          chassisType: size.chassis_type || '',
           baseFeatures: featuresMap.get(size.id) || [],
         };
         const existing = sizesMap.get(size.truck_type_id) || [];
