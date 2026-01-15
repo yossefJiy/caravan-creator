@@ -44,11 +44,12 @@ export interface ContactDetails {
   notes: string;
 }
 
-// Updated steps for 5-step flow (model + size combined)
+// Updated steps for 6-step flow (model and size separate)
 export const STEPS = [
   { id: 0, title: 'ברוכים הבאים', icon: 'sparkles' },
   { id: 1, title: 'פרטים אישיים', icon: 'user' },
-  { id: 2, title: 'בחירת דגם וגודל', icon: 'truck' },
-  { id: 3, title: 'בחירת ציוד', icon: 'utensils' },
-  { id: 4, title: 'סיכום ושליחה', icon: 'check' },
+  { id: 2, title: 'בחירת דגם', icon: 'truck' },
+  { id: 3, title: 'בחירת גודל', icon: 'ruler' },
+  { id: 4, title: 'בחירת ציוד', icon: 'utensils' },
+  { id: 5, title: 'סיכום ושליחה', icon: 'check' },
 ] as const;
