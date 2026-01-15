@@ -250,8 +250,8 @@ export const FoodTruckConfigurator = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-navy">אליה קרוואנים</h1>
             <span className="text-sm text-muted-foreground">בניית פודטראק</span>
+            <h1 className="text-xl font-bold text-navy">אליה קרוואנים</h1>
           </div>
           {state.step >= 1 && state.step <= 4 && (
             <ProgressIndicator currentStep={state.step} />
