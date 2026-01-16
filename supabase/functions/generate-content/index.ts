@@ -10,18 +10,18 @@ const corsHeaders = {
 // Model tier configuration with cost estimates
 const MODEL_TIERS = {
   lite: {
-    name: 'gemini-2.5-flash-lite',
-    maxTokens: 500,
+    name: 'gemini-2.5-flash-lite-preview-06-17',
+    maxTokens: 2048,
     costPer1MOutput: 0.40,
   },
   flash: {
-    name: 'gemini-2.5-flash',
-    maxTokens: 1000,
+    name: 'gemini-2.5-flash-preview-05-20',
+    maxTokens: 4096,
     costPer1MOutput: 2.50,
   },
   pro: {
-    name: 'gemini-2.5-pro-preview-06-05',
-    maxTokens: 2048,
+    name: 'gemini-2.5-pro-preview-05-06',
+    maxTokens: 8192,
     costPer1MOutput: 10.00,
   },
 };
