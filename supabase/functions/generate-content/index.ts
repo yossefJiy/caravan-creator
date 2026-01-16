@@ -8,19 +8,21 @@ const corsHeaders = {
 };
 
 // Model tier configuration with cost estimates
+// NOTE: Google AI Studio model IDs change over time. We keep stable, non-preview IDs here
+// and rely on a graceful fallback to OpenRouter if Google responds with an error.
 const MODEL_TIERS = {
   lite: {
-    name: 'gemini-2.5-flash-lite-preview-06-17',
+    name: 'gemini-2.5-flash-lite',
     maxTokens: 2048,
     costPer1MOutput: 0.40,
   },
   flash: {
-    name: 'gemini-2.5-flash-preview-05-20',
+    name: 'gemini-2.5-flash',
     maxTokens: 4096,
     costPer1MOutput: 2.50,
   },
   pro: {
-    name: 'gemini-2.5-pro-preview-05-06',
+    name: 'gemini-2.5-pro',
     maxTokens: 8192,
     costPer1MOutput: 10.00,
   },
@@ -105,37 +107,54 @@ serve(async (req) => {
     let actualModel = modelConfig.name;
     
     if (useGoogleAI) {
-      // Use Google AI Studio directly
-      const googleResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.name}:generateContent?key=${GOOGLE_AI_STUDIO_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n${prompt}` }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: modelConfig.maxTokens,
-          }
-        }),
-      });
+      // Prefer Google AI Studio, but gracefully fall back to OpenRouter on any error
+      try {
+        const googleResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.name}:generateContent?key=${GOOGLE_AI_STUDIO_API_KEY}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${systemPrompt}\n\n${prompt}` }],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: modelConfig.maxTokens,
+              },
+            }),
+          },
+        );
 
-      if (!googleResponse.ok) {
-        const errorText = await googleResponse.text();
-        console.error('Google AI Studio error:', googleResponse.status, errorText);
-        throw new Error(`Google AI Studio error: ${googleResponse.status}`);
+        if (!googleResponse.ok) {
+          const errorText = await googleResponse.text();
+          console.error('Google AI Studio error:', googleResponse.status, errorText);
+          throw new Error(`Google AI Studio error: ${googleResponse.status}`);
+        }
+
+        const googleData = await googleResponse.json();
+        generatedContent = googleData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } catch (googleError) {
+        if (OPENROUTER_API_KEY) {
+          console.warn('Google AI Studio failed, falling back to OpenRouter:', googleError);
+          useGoogleAI = false;
+        } else {
+          throw googleError;
+        }
+      }
+    }
+
+    if (!useGoogleAI) {
+      if (!OPENROUTER_API_KEY) {
+        throw new Error('No AI API key configured');
       }
 
-      const googleData = await googleResponse.json();
-      generatedContent = googleData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      
-    } else if (OPENROUTER_API_KEY) {
-      // Fallback to OpenRouter with Mistral
+      // Fallback to OpenRouter
       actualModel = 'mistralai/mistral-nemo';
       const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -149,7 +168,7 @@ serve(async (req) => {
           model: actualModel,
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
+            { role: 'user', content: prompt },
           ],
           max_tokens: modelConfig.maxTokens,
           temperature: 0.7,
@@ -164,8 +183,6 @@ serve(async (req) => {
 
       const data = await openRouterResponse.json();
       generatedContent = data.choices?.[0]?.message?.content || '';
-    } else {
-      throw new Error('No AI API key configured');
     }
 
     // Optionally save to history
