@@ -19,6 +19,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -69,7 +70,17 @@ const TrucksManagement = () => {
   const { toast } = useToast();
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // דורש תזוזה של 8px לפני שמתחיל גרירה
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // מחכה 200ms לפני שמפעיל גרירה במובייל
+        tolerance: 5, // סובלנות של 5px לתזוזה בזמן ההמתנה
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
