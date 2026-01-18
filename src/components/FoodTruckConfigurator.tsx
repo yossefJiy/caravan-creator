@@ -245,7 +245,7 @@ export const FoodTruckConfigurator = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-svh bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container py-4">
@@ -260,7 +260,7 @@ export const FoodTruckConfigurator = () => {
       </header>
 
       {/* Main content */}
-      <main className="container py-8 pb-32">
+      <main className="container py-8 pb-[calc(8rem+env(safe-area-inset-bottom))]">
         {/* Error state */}
         {error && (
           <div className="text-center py-12">
@@ -427,7 +427,7 @@ export const FoodTruckConfigurator = () => {
 
       {/* Fixed bottom navigation - show for steps 1-4 */}
       {state.step >= 1 && state.step <= 4 && !error && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-50">
           <div className="container flex items-center justify-between gap-4">
             <button
               onClick={handleBack}

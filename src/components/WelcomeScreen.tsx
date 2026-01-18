@@ -10,7 +10,7 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-900">
+    <div className="min-h-svh relative overflow-hidden bg-slate-900">
       {/* Background Image */}
       <div className="absolute inset-0">
         <div
@@ -21,7 +21,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
       </div>
 
       {/* Content */}
-      <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6">
+      <div className="relative min-h-svh flex items-center justify-center p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto text-center space-y-6">
           {/* Logo */}
           <motion.div
