@@ -11,7 +11,8 @@ export function useIsMobile() {
     // Some older Android browsers/WebViews may not support matchMedia at all
     if (typeof window.matchMedia !== "function") {
       const onResize = () => onChange();
-      window.addEventListener("resize", onResize, { passive: true });
+      // Avoid addEventListener options object for maximum legacy compatibility
+      window.addEventListener("resize", onResize);
       onChange();
       return () => window.removeEventListener("resize", onResize);
     }

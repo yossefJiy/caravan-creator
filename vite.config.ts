@@ -14,8 +14,10 @@ export default defineConfig(({ mode }) => ({
     react(),
     legacy({
       // Helps older Android “native” browsers / WebViews that struggle with modern syntax/polyfills
-      targets: ["defaults", "Android >= 5"],
+      targets: ["defaults", "Android >= 4.4"],
       modernPolyfills: true,
+      // Fetch() is missing in some older Android browsers
+      additionalLegacyPolyfills: ["whatwg-fetch"],
     }),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
