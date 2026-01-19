@@ -1,8 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { Loader2, LayoutDashboard, Truck, Package, FileText, LogOut, Home, Users, Sparkles } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Loader2,
+  LayoutDashboard,
+  Truck,
+  Package,
+  FileText,
+  LogOut,
+  Home,
+  Users,
+  Sparkles,
+  Menu,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -18,6 +31,8 @@ const AdminLayout = () => {
   const { user, isAdmin, loading, signOut } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -28,9 +43,63 @@ const AdminLayout = () => {
   }, [loading, user, isAdmin, navigate]);
 
   const handleSignOut = async () => {
+    setMenuOpen(false);
     await signOut();
     navigate('/admin/login');
   };
+
+  const isActivePath = useMemo(() => {
+    const current = location.pathname;
+    return (path: string, exact?: boolean) =>
+      exact ? current === path : current === path || current.startsWith(path + '/');
+  }, [location.pathname]);
+
+  const Nav = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <nav className="p-2 space-y-1">
+      {navItems.map((item) => {
+        const active = isActivePath(item.path, item.exact);
+
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={onNavigate}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              active
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  const FooterActions = ({ compact }: { compact?: boolean }) => (
+    <div className={cn('p-4 border-t bg-card', compact && 'p-3')}>
+      <div className="space-y-2">
+        <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+          <Link to="/" onClick={() => setMenuOpen(false)}>
+            <Home className="h-4 w-4 ml-2" />
+            חזרה לאתר
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-destructive hover:text-destructive"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4 ml-2" />
+          התנתק
+        </Button>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -44,61 +113,73 @@ const AdminLayout = () => {
     return null;
   }
 
+  // Mobile layout: hamburger + slide-in menu
+  if (isMobile) {
+    return (
+      <div className="min-h-svh flex flex-col bg-muted/30" dir="rtl">
+        <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b">
+          <div className="h-14 px-3 flex items-center justify-between gap-2">
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="פתח תפריט">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="p-0 w-72" dir="rtl">
+                <div className="p-4 border-b">
+                  <h1 className="text-lg font-bold text-primary">ניהול המערכת</h1>
+                  <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+                </div>
+
+                <div className="flex flex-col min-h-[calc(100svh-64px)]">
+                  <div className="flex-1 overflow-auto">
+                    <Nav onNavigate={() => setMenuOpen(false)} />
+                  </div>
+                  <FooterActions compact />
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <div className="flex-1 text-center">
+              <div className="text-sm font-semibold text-foreground">אדמין</div>
+              <div className="text-xs text-muted-foreground">אליה קרוואנים</div>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="התנתק"
+              onClick={handleSignOut}
+              className="text-destructive hover:text-destructive"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
     <div className="min-h-screen flex bg-muted/30" dir="rtl">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-l shadow-sm">
+      <aside className="w-64 bg-card border-l shadow-sm flex flex-col">
         <div className="p-4 border-b">
           <h1 className="text-xl font-bold text-primary">ניהול המערכת</h1>
           <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
         </div>
-        
-        <nav className="p-2 space-y-1">
-          {navItems.map((item) => {
-            const isActive = item.exact 
-              ? location.pathname === item.path
-              : location.pathname.startsWith(item.path);
-            
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-card w-64">
-          <div className="space-y-2">
-            <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-              <Link to="/">
-                <Home className="h-4 w-4 ml-2" />
-                חזרה לאתר
-              </Link>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full justify-start text-destructive hover:text-destructive"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-4 w-4 ml-2" />
-              התנתק
-            </Button>
-          </div>
+        <div className="flex-1 overflow-auto">
+          <Nav />
         </div>
+
+        <FooterActions />
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
