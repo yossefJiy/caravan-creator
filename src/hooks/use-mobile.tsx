@@ -6,8 +6,17 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
     const onChange = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+
+    // Some older Android browsers/WebViews may not support matchMedia at all
+    if (typeof window.matchMedia !== "function") {
+      const onResize = () => onChange();
+      window.addEventListener("resize", onResize, { passive: true });
+      onChange();
+      return () => window.removeEventListener("resize", onResize);
+    }
+
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
 
     // Support older Android WebView / Safari that may not have addEventListener
     if (typeof mql.addEventListener === "function") {
