@@ -43,7 +43,14 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: settings, error: settingsError } = await supabase
       .from("site_content")
       .select("content_key, content_value")
-      .in("content_key", ["notification_emails", "sender_email", "sender_name"]);
+      .in("content_key", [
+        "notification_emails", 
+        "sender_email", 
+        "sender_name",
+        "customer_sender_email",
+        "customer_sender_name",
+        "customer_notification_emails"
+      ]);
 
     if (settingsError) {
       console.error("Error fetching settings:", settingsError);
@@ -54,6 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
       (settings || []).map((s: { content_key: string; content_value: string }) => [s.content_key, s.content_value])
     );
 
+    // Business notification settings
     const notificationEmails = settingsMap.notification_emails
       ?.split(",")
       .map((e: string) => e.trim())
@@ -62,6 +70,16 @@ const handler = async (req: Request): Promise<Response> => {
     const senderEmail = settingsMap.sender_email || "noreply@storytell.co.il";
     const senderName = settingsMap.sender_name || "אליה קרוואנים";
 
+    // Customer email settings (separate sender for end customers)
+    const customerSenderEmail = settingsMap.customer_sender_email || senderEmail;
+    const customerSenderName = settingsMap.customer_sender_name || senderName;
+    
+    // Additional notification emails (customer side)
+    const customerNotificationEmails = settingsMap.customer_notification_emails
+      ?.split(",")
+      .map((e: string) => e.trim())
+      .filter((e: string) => e.length > 0) || [];
+
     // Build equipment list HTML
     const equipmentHtml = leadData.selectedEquipment?.length
       ? `<ul style="margin: 0; padding-right: 20px;">${leadData.selectedEquipment.map(
@@ -69,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
         ).join("")}</ul>`
       : "<em>לא נבחר ציוד</em>";
 
-    // Email to business
+    // Email to business (Eliya)
     const businessEmailHtml = `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #D4AF37; border-bottom: 2px solid #D4AF37; padding-bottom: 10px;">ליד חדש!</h1>
@@ -124,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Email to customer
+    // Email to end customer (the person who filled the form)
     const customerEmailHtml = `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #D4AF37;">שלום ${leadData.fullName.split(" ")[0]}!</h1>
@@ -167,7 +185,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailPromises: Promise<Response>[] = [];
 
-    // Send to business emails using Resend API directly
+    // Send to business emails (Eliya's addresses)
     if (notificationEmails.length > 0) {
       emailPromises.push(
         fetch("https://api.resend.com/emails", {
@@ -186,7 +204,26 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send confirmation to customer
+    // Send to customer notification emails (e.g., new_lead@converto.co.il)
+    if (customerNotificationEmails.length > 0) {
+      emailPromises.push(
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: `${customerSenderName} <${customerSenderEmail}>`,
+            to: customerNotificationEmails,
+            subject: `ליד חדש: ${leadData.fullName}`,
+            html: businessEmailHtml,
+          }),
+        })
+      );
+    }
+
+    // Send confirmation to end customer (the person who filled the form)
     if (leadData.email && leadData.email.includes("@")) {
       emailPromises.push(
         fetch("https://api.resend.com/emails", {
@@ -196,7 +233,7 @@ const handler = async (req: Request): Promise<Response> => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: `${senderName} <${senderEmail}>`,
+            from: `${customerSenderName} <${customerSenderEmail}>`,
             to: [leadData.email],
             subject: "קיבלנו את הבקשה שלך - אליה קרוואנים",
             html: customerEmailHtml,
