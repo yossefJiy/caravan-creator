@@ -254,13 +254,13 @@ const LeadsManagement = () => {
       )}
 
       {/* Lead Details Dialog */}
-      <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>פרטי ליד</DialogTitle>
-          </DialogHeader>
-          
-          {selectedLead && (
+      {selectedLead && (
+        <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>פרטי ליד</DialogTitle>
+            </DialogHeader>
+            
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -353,9 +353,9 @@ const LeadsManagement = () => {
                 </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
