@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+export type UserRole = 'admin' | 'client' | null;
+
 export const useAdminAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isClient, setIsClient] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,18 +52,28 @@ export const useAdminAuth = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .eq('role', 'admin')
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking admin role:', error);
+        console.error('Error checking role:', error);
         setIsAdmin(false);
+        setIsClient(false);
+        setUserRole(null);
+      } else if (data) {
+        const role = data.role as 'admin' | 'client';
+        setUserRole(role);
+        setIsAdmin(role === 'admin');
+        setIsClient(role === 'client');
       } else {
-        setIsAdmin(!!data);
+        setIsAdmin(false);
+        setIsClient(false);
+        setUserRole(null);
       }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('Error checking role:', error);
       setIsAdmin(false);
+      setIsClient(false);
+      setUserRole(null);
     } finally {
       setLoading(false);
     }
@@ -82,6 +96,8 @@ export const useAdminAuth = () => {
     user,
     session,
     isAdmin,
+    isClient,
+    userRole,
     loading,
     signIn,
     signOut,

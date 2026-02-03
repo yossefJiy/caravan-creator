@@ -13,6 +13,7 @@ import EquipmentManagement from "./pages/admin/EquipmentManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
 import LeadsManagement from "./pages/admin/LeadsManagement";
 import AIContentGenerator from "./pages/admin/AIContentGenerator";
+import UsersManagement from "./pages/admin/UsersManagement";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="equipment" element={<EquipmentManagement />} />
             <Route path="content" element={<ContentManagement />} />
             <Route path="ai" element={<AIContentGenerator />} />
+            <Route path="users" element={<UsersManagement />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
