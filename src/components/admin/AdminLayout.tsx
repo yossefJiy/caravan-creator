@@ -18,29 +18,36 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const navItems = [
-  { path: '/admin', label: 'דאשבורד', icon: LayoutDashboard, exact: true },
-  { path: '/admin/leads', label: 'לידים', icon: Users },
-  { path: '/admin/trucks', label: 'סוגי טראקים', icon: Truck },
-  { path: '/admin/equipment', label: 'ציוד', icon: Package },
-  { path: '/admin/content', label: 'תוכן האתר', icon: FileText },
-  { path: '/admin/ai', label: 'יצירת תוכן AI', icon: Sparkles },
+// Nav items with role requirements
+const allNavItems = [
+  { path: '/admin', label: 'דאשבורד', icon: LayoutDashboard, exact: true, roles: ['admin', 'client'] },
+  { path: '/admin/leads', label: 'לידים', icon: Users, roles: ['admin', 'client'] },
+  { path: '/admin/trucks', label: 'סוגי טראקים', icon: Truck, roles: ['admin', 'client'] },
+  { path: '/admin/equipment', label: 'ציוד', icon: Package, roles: ['admin', 'client'] },
+  { path: '/admin/content', label: 'תוכן האתר', icon: FileText, roles: ['admin'] },
+  { path: '/admin/ai', label: 'יצירת תוכן AI', icon: Sparkles, roles: ['admin'] },
+  { path: '/admin/users', label: 'ניהול משתמשים', icon: Users, roles: ['admin'] },
 ];
 
 const AdminLayout = () => {
-  const { user, isAdmin, loading, signOut } = useAdminAuth();
+  const { user, isAdmin, isClient, userRole, loading, signOut } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Filter nav items based on user role
+  const navItems = allNavItems.filter(item => 
+    item.roles.includes(userRole || '')
+  );
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/admin/login');
-    } else if (!loading && user && !isAdmin) {
+    } else if (!loading && user && !isAdmin && !isClient) {
       navigate('/admin/login');
     }
-  }, [loading, user, isAdmin, navigate]);
+  }, [loading, user, isAdmin, isClient, navigate]);
 
   const handleSignOut = async () => {
     setMenuOpen(false);
@@ -109,7 +116,7 @@ const AdminLayout = () => {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || (!isAdmin && !isClient)) {
     return null;
   }
 
