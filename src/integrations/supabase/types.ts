@@ -168,6 +168,7 @@ export type Database = {
       }
       site_content: {
         Row: {
+          category: string | null
           content_key: string
           content_type: string
           content_value: string
@@ -176,6 +177,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           content_key: string
           content_type?: string
           content_value: string
@@ -184,6 +186,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           content_key?: string
           content_type?: string
           content_value?: string
