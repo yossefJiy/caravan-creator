@@ -127,11 +127,14 @@ export type Database = {
       leads: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           full_name: string
           id: string
+          is_complete: boolean
           notes: string | null
           phone: string
+          privacy_accepted: boolean
+          privacy_accepted_at: string | null
           selected_equipment: string[] | null
           selected_truck_size: string | null
           selected_truck_type: string | null
@@ -140,11 +143,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           full_name: string
           id?: string
+          is_complete?: boolean
           notes?: string | null
           phone: string
+          privacy_accepted?: boolean
+          privacy_accepted_at?: string | null
           selected_equipment?: string[] | null
           selected_truck_size?: string | null
           selected_truck_type?: string | null
@@ -153,11 +159,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           full_name?: string
           id?: string
+          is_complete?: boolean
           notes?: string | null
           phone?: string
+          privacy_accepted?: boolean
+          privacy_accepted_at?: string | null
           selected_equipment?: string[] | null
           selected_truck_size?: string | null
           selected_truck_type?: string | null

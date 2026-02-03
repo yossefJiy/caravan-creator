@@ -15,13 +15,15 @@ import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2 } from 'lu
 interface Lead {
   id: string;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string;
   notes: string | null;
   selected_truck_type: string | null;
   selected_truck_size: string | null;
   selected_equipment: string[] | null;
   status: string;
+  is_complete: boolean;
+  privacy_accepted: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -188,16 +190,23 @@ const LeadsManagement = () => {
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-lg">{lead.full_name}</h3>
                       {getStatusBadge(lead.status)}
+                      {!lead.is_complete && (
+                        <Badge variant="outline" className="text-orange-600 border-orange-400">
+                          לא הושלם
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Phone className="h-4 w-4" />
                         {lead.phone}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Mail className="h-4 w-4" />
-                        {lead.email}
-                      </span>
+                      {lead.email && (
+                        <span className="flex items-center gap-1">
+                          <Mail className="h-4 w-4" />
+                          {lead.email}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {format(new Date(lead.created_at), 'dd/MM/yyyy HH:mm', { locale: he })}

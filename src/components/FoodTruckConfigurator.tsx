@@ -27,6 +27,7 @@ interface StoredState {
   selectedEquipment: Record<string, number>;
   contactDetails: ContactDetails | null;
   isSubmitted: boolean;
+  partialLeadId: string | null; // Track partial lead for updates
 }
 
 const initialState: StoredState = {
@@ -36,6 +37,7 @@ const initialState: StoredState = {
   selectedEquipment: {},
   contactDetails: null,
   isSubmitted: false,
+  partialLeadId: null,
 };
 
 const STORAGE_KEY = 'foodtruck-configurator';
@@ -183,12 +185,41 @@ export const FoodTruckConfigurator = () => {
     setState((prev) => ({ ...prev, selectedEquipment: {} }));
   };
 
-  const handleContactSubmit = (details: ContactDetails) => {
-    setState((prev) => ({ 
-      ...prev, 
-      contactDetails: details,
-      step: 2, // Move to truck type selection
-    }));
+  const handleContactSubmit = async (details: ContactDetails) => {
+    // Save partial lead immediately after collecting contact details
+    try {
+      const fullName = `${details.firstName} ${details.lastName}`;
+      
+      const { data: partialLead, error } = await supabase.from('leads').insert({
+        full_name: fullName,
+        email: details.email || null,
+        phone: details.phone,
+        notes: details.notes || null,
+        status: 'new',
+        is_complete: false,
+        privacy_accepted: true,
+        privacy_accepted_at: new Date().toISOString(),
+      }).select('id').single();
+      
+      if (error) {
+        console.error('Error saving partial lead:', error);
+      }
+      
+      setState((prev) => ({ 
+        ...prev, 
+        contactDetails: details,
+        step: 2, // Move to truck type selection
+        partialLeadId: partialLead?.id || null,
+      }));
+    } catch (error) {
+      console.error('Error saving partial lead:', error);
+      // Continue anyway - don't block the user
+      setState((prev) => ({ 
+        ...prev, 
+        contactDetails: details,
+        step: 2,
+      }));
+    }
   };
 
   const handleFinalSubmit = async () => {
@@ -205,23 +236,48 @@ export const FoodTruckConfigurator = () => {
         item.quantity > 1 ? `${item.name} (×${item.quantity})` : item.name
       );
 
-      const { data: insertedLead, error } = await supabase.from('leads').insert({
-        full_name: fullName,
-        email: state.contactDetails.email || '',
-        phone: state.contactDetails.phone,
-        notes: state.contactDetails.notes || null,
-        selected_truck_type: truckTypeName,
-        selected_truck_size: truckSizeName,
-        selected_equipment: equipmentNames,
-      }).select('id').single();
-      
-      if (error) throw error;
+      let leadId = state.partialLeadId;
+
+      if (leadId) {
+        // Update existing partial lead
+        const { error } = await supabase.from('leads')
+          .update({
+            full_name: fullName,
+            email: state.contactDetails.email || null,
+            phone: state.contactDetails.phone,
+            notes: state.contactDetails.notes || null,
+            selected_truck_type: truckTypeName,
+            selected_truck_size: truckSizeName,
+            selected_equipment: equipmentNames,
+            is_complete: true,
+          })
+          .eq('id', leadId);
+        
+        if (error) throw error;
+      } else {
+        // Create new lead if no partial exists
+        const { data: insertedLead, error } = await supabase.from('leads').insert({
+          full_name: fullName,
+          email: state.contactDetails.email || null,
+          phone: state.contactDetails.phone,
+          notes: state.contactDetails.notes || null,
+          selected_truck_type: truckTypeName,
+          selected_truck_size: truckSizeName,
+          selected_equipment: equipmentNames,
+          is_complete: true,
+          privacy_accepted: true,
+          privacy_accepted_at: new Date().toISOString(),
+        }).select('id').single();
+        
+        if (error) throw error;
+        leadId = insertedLead?.id;
+      }
 
       // Send email notifications (fire and forget - don't block submission)
-      if (insertedLead?.id) {
+      if (leadId) {
         supabase.functions.invoke('send-lead-notification', {
           body: {
-            leadId: insertedLead.id,
+            leadId,
             fullName,
             email: state.contactDetails.email || '',
             phone: state.contactDetails.phone,
