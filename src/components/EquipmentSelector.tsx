@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Minus, ChevronDown, ChevronUp, ZoomIn } from 'lucide-react';
+import { Plus, Minus, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Equipment, EquipmentCategory } from '@/hooks/useEquipmentData';
 import {
@@ -65,17 +65,14 @@ export const EquipmentSelector = ({
               value={category.id}
               className="border border-border rounded-xl overflow-hidden bg-card"
             >
-              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30 [&[data-state=open]>div>.chevron]:rotate-180">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-foreground">{category.nameHe}</span>
-                    {selectedCount > 0 && (
-                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
-                        {selectedCount}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown className="chevron w-5 h-5 text-muted-foreground transition-transform duration-200" />
+              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-foreground">{category.nameHe}</span>
+                  {selectedCount > 0 && (
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
+                      {selectedCount}
+                    </span>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
@@ -145,7 +142,6 @@ interface EquipmentCardProps {
 }
 
 const EquipmentCard = ({ item, quantity, onToggle, onExpandImage }: EquipmentCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const isSelected = quantity > 0;
 
   return (
@@ -157,7 +153,7 @@ const EquipmentCard = ({ item, quantity, onToggle, onExpandImage }: EquipmentCar
           : 'border-border bg-background hover:border-muted-foreground/30'
       )}
     >
-      {/* Main row - always visible */}
+      {/* Main row */}
       <div className="flex items-center gap-3 p-3">
         {/* Thumbnail */}
         <div 
@@ -211,50 +207,7 @@ const EquipmentCard = ({ item, quantity, onToggle, onExpandImage }: EquipmentCar
             </button>
           )}
         </div>
-
-        {/* Expand button */}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-        >
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          )}
-        </button>
       </div>
-
-      {/* Expanded details */}
-      {isExpanded && (
-        <div className="px-3 pb-3 pt-0 animate-fade-in">
-          <div className="flex gap-3 pt-3 border-t border-border/50">
-            <div 
-              className="w-24 h-24 rounded-lg overflow-hidden bg-secondary/30 flex-shrink-0 cursor-pointer"
-              onClick={onExpandImage}
-            >
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="flex-1">
-              <h5 className="font-bold text-foreground">{item.name}</h5>
-              {item.description && (
-                <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-              )}
-              <button
-                onClick={onExpandImage}
-                className="mt-2 text-xs text-primary font-medium flex items-center gap-1 hover:underline"
-              >
-                <ZoomIn className="w-3 h-3" />
-                צפה בתמונה מוגדלת
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
