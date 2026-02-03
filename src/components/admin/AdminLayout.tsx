@@ -13,7 +13,6 @@ import {
   LogOut,
   Home,
   Users,
-  Sparkles,
   Menu,
   Mail,
 } from 'lucide-react';
@@ -27,7 +26,6 @@ const allNavItems = [
   { path: '/admin/equipment', label: 'ציוד', icon: Package, roles: ['admin', 'client'] },
   { path: '/admin/content', label: 'תוכן האתר', icon: FileText, roles: ['admin'] },
   { path: '/admin/email-preview', label: 'תצוגת מיילים', icon: Mail, roles: ['admin'] },
-  { path: '/admin/ai', label: 'יצירת תוכן AI', icon: Sparkles, roles: ['admin'] },
   { path: '/admin/users', label: 'ניהול משתמשים', icon: Users, roles: ['admin'] },
 ];
 
