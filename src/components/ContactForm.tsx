@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { User, Phone, Mail, MessageSquare, Loader2, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ContactDetails } from '@/types/configurator';
@@ -25,7 +27,7 @@ export const ContactForm = ({
   selectedTruckSize,
   selectedEquipment,
   hideSubmitButton = false,
-  submitButtonText = 'שלח בקשה להצעת מחיר',
+  submitButtonText = 'המשך',
 }: ContactFormProps) => {
   const [formData, setFormData] = useState<ContactDetails>({
     firstName: initialData?.firstName || '',
@@ -34,12 +36,13 @@ export const ContactForm = ({
     email: initialData?.email || '',
     notes: initialData?.notes || '',
   });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof ContactDetails, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactDetails | 'privacy', string>>>({});
   const { toast } = useToast();
 
   const validate = () => {
-    const newErrors: Partial<Record<keyof ContactDetails, string>> = {};
+    const newErrors: Partial<Record<keyof ContactDetails | 'privacy', string>> = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'שם פרטי הוא שדה חובה';
     if (!formData.lastName.trim()) newErrors.lastName = 'שם משפחה הוא שדה חובה';
     if (!formData.phone.trim()) {
@@ -49,6 +52,9 @@ export const ContactForm = ({
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'כתובת אימייל לא תקינה';
+    }
+    if (!privacyAccepted) {
+      newErrors.privacy = 'יש לאשר את מדיניות הפרטיות';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -74,6 +80,8 @@ export const ContactForm = ({
         selected_truck_type: selectedTruckType || null,
         selected_truck_size: selectedTruckSize || null,
         selected_equipment: selectedEquipment || null,
+        privacy_accepted: true,
+        privacy_accepted_at: new Date().toISOString(),
       });
       if (error) throw error;
       onSubmit(formData);
@@ -161,6 +169,31 @@ export const ContactForm = ({
           rows={4} 
         />
       </div>
+
+      {/* Privacy Policy Checkbox */}
+      <div className="space-y-2">
+        <div className="flex items-start gap-3">
+          <Checkbox 
+            id="privacy" 
+            checked={privacyAccepted}
+            onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+            className={errors.privacy ? 'border-destructive' : ''}
+          />
+          <Label htmlFor="privacy" className="text-sm leading-relaxed cursor-pointer">
+            קראתי ואני מסכים/ה ל
+            <Link 
+              to="/privacy-policy" 
+              target="_blank" 
+              className="text-primary hover:underline mx-1"
+            >
+              מדיניות הפרטיות
+            </Link>
+            ולשמירת הפרטים שלי לצורך יצירת קשר *
+          </Label>
+        </div>
+        {errors.privacy && <p className="text-xs text-destructive mr-7">{errors.privacy}</p>}
+      </div>
+
       <button 
         onClick={handleSubmit} 
         disabled={isSubmitting} 
