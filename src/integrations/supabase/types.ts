@@ -53,6 +53,30 @@ export type Database = {
         }
         Relationships: []
       }
+      email_config: {
+        Row: {
+          config_key: string
+          config_value: string
+          description: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       equipment: {
         Row: {
           category_id: string

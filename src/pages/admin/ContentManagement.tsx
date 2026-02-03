@@ -23,9 +23,17 @@ interface SiteContent {
   updated_at: string;
 }
 
+interface EmailConfig {
+  id: string;
+  config_key: string;
+  config_value: string;
+  description: string | null;
+  updated_at: string;
+}
+
 // Category definitions with icons and labels
 const CATEGORIES = {
-  emails: { label: 'הגדרות מיילים', icon: Mail, description: 'כתובות ושמות שולח להתראות' },
+  emails: { label: 'הגדרות מיילים', icon: Mail, description: 'כתובות מייל רגישות (מוגנות)' },
   welcome: { label: 'מסך פתיחה', icon: Layout, description: 'תוכן מסך הפתיחה והברכה' },
   configurator: { label: 'קונפיגורטור', icon: Settings, description: 'כותרות וטקסטים בשלבי הבחירה' },
   general: { label: 'כללי', icon: Type, description: 'תוכן כללי נוסף' },
@@ -33,12 +41,15 @@ const CATEGORIES = {
 
 const ContentManagement = () => {
   const [editingContent, setEditingContent] = useState<SiteContent | null>(null);
+  const [editingEmailConfig, setEditingEmailConfig] = useState<EmailConfig | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('emails');
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch site_content
   const { data: contents, isLoading } = useQuery({
     queryKey: ['admin-site-content'],
     queryFn: async () => {
@@ -48,6 +59,19 @@ const ContentManagement = () => {
         .order('content_key');
       if (error) throw error;
       return data as SiteContent[];
+    },
+  });
+
+  // Fetch email_config (protected table)
+  const { data: emailConfigs, isLoading: isLoadingEmails } = useQuery({
+    queryKey: ['admin-email-config'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_config')
+        .select('*')
+        .order('config_key');
+      if (error) throw error;
+      return data as EmailConfig[];
     },
   });
 
@@ -95,6 +119,31 @@ const ContentManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-site-content'] });
       setIsDialogOpen(false);
       setEditingContent(null);
+      toast({ title: 'נשמר בהצלחה' });
+    },
+    onError: (error) => {
+      toast({ title: 'שגיאה', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Email config mutations
+  const saveEmailMutation = useMutation({
+    mutationFn: async (config: Partial<EmailConfig> & { id?: string }) => {
+      if (config.id) {
+        const { error } = await supabase
+          .from('email_config')
+          .update({ 
+            config_value: config.config_value,
+            description: config.description 
+          })
+          .eq('id', config.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-email-config'] });
+      setIsEmailDialogOpen(false);
+      setEditingEmailConfig(null);
       toast({ title: 'נשמר בהצלחה' });
     },
     onError: (error) => {
@@ -172,16 +221,73 @@ const ContentManagement = () => {
             >
               <Icon className="h-4 w-4" />
               <span>{label}</span>
-              {contentsByCategory[key]?.length > 0 && (
-                <span className="text-xs bg-muted-foreground/20 px-1.5 py-0.5 rounded-full">
-                  {contentsByCategory[key].length}
-                </span>
+              {key === 'emails' ? (
+                emailConfigs && emailConfigs.length > 0 && (
+                  <span className="text-xs bg-muted-foreground/20 px-1.5 py-0.5 rounded-full">
+                    {emailConfigs.length}
+                  </span>
+                )
+              ) : (
+                contentsByCategory[key]?.length > 0 && (
+                  <span className="text-xs bg-muted-foreground/20 px-1.5 py-0.5 rounded-full">
+                    {contentsByCategory[key].length}
+                  </span>
+                )
               )}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {Object.entries(CATEGORIES).map(([key, { label, description }]) => (
+        {/* Special tab for emails - uses email_config table */}
+        <TabsContent value="emails" className="mt-4">
+          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              כתובות מייל רגישות (מוגנות) - משמשות לשליחת התראות
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            {isLoadingEmails ? (
+              <Skeleton className="h-20 w-full" />
+            ) : (
+              emailConfigs?.map((config) => (
+                <Card key={config.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <code className="text-sm bg-muted px-2 py-0.5 rounded">{config.config_key}</code>
+                          <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">
+                            מייל
+                          </span>
+                        </div>
+                        {config.description && (
+                          <p className="text-sm text-muted-foreground mb-2">{config.description}</p>
+                        )}
+                        <p className="text-sm line-clamp-2 font-medium">{config.config_value}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setEditingEmailConfig(config);
+                            setIsEmailDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Other categories - use site_content table */}
+        {Object.entries(CATEGORIES).filter(([key]) => key !== 'emails').map(([key, { description }]) => (
           <TabsContent key={key} value={key} className="mt-4">
             <div className="mb-4 p-3 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">{description}</p>
@@ -227,6 +333,41 @@ const ContentManagement = () => {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Email config edit dialog */}
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>עריכת הגדרת מייל</DialogTitle>
+          </DialogHeader>
+          {editingEmailConfig && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>מפתח</Label>
+                <Input value={editingEmailConfig.config_key} disabled className="font-mono" />
+              </div>
+              <div className="space-y-2">
+                <Label>ערך</Label>
+                <Textarea 
+                  value={editingEmailConfig.config_value}
+                  onChange={(e) => setEditingEmailConfig({
+                    ...editingEmailConfig,
+                    config_value: e.target.value
+                  })}
+                  rows={3}
+                />
+              </div>
+              <Button 
+                onClick={() => saveEmailMutation.mutate(editingEmailConfig)}
+                disabled={saveEmailMutation.isPending}
+                className="w-full"
+              >
+                {saveEmailMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

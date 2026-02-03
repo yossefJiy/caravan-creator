@@ -39,27 +39,38 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const leadData: LeadNotificationRequest = await req.json();
 
-    // Fetch email settings from site_content
-    const { data: settings, error: settingsError } = await supabase
+    // Fetch sensitive email settings from protected email_config table
+    const { data: emailSettings, error: emailError } = await supabase
+      .from("email_config")
+      .select("config_key, config_value");
+
+    if (emailError) {
+      console.error("Error fetching email config:", emailError);
+      throw new Error("Failed to fetch email settings");
+    }
+
+    // Fetch non-sensitive settings from site_content
+    const { data: siteSettings, error: siteError } = await supabase
       .from("site_content")
       .select("content_key, content_value")
       .in("content_key", [
-        "notification_emails", 
-        "sender_email", 
         "sender_name",
-        "customer_sender_email",
         "customer_sender_name",
         "customer_notification_emails"
       ]);
 
-    if (settingsError) {
-      console.error("Error fetching settings:", settingsError);
-      throw new Error("Failed to fetch email settings");
+    if (siteError) {
+      console.error("Error fetching site settings:", siteError);
     }
 
-    const settingsMap = Object.fromEntries(
-      (settings || []).map((s: { content_key: string; content_value: string }) => [s.content_key, s.content_value])
-    );
+    // Merge settings from both tables
+    const settingsMap: Record<string, string> = {};
+    emailSettings?.forEach((s: { config_key: string; config_value: string }) => {
+      settingsMap[s.config_key] = s.config_value;
+    });
+    siteSettings?.forEach((s: { content_key: string; content_value: string }) => {
+      settingsMap[s.content_key] = s.content_value;
+    });
 
     // Business notification settings
     const notificationEmails = settingsMap.notification_emails
