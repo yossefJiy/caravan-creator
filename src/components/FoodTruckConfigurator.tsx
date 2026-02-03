@@ -72,9 +72,13 @@ export const FoodTruckConfigurator = () => {
       .map(({ id, quantity }) => {
         const item = equipment.find((e) => e.id === id);
         if (!item) return null;
+        // Include description/notes in the display name if available
+        const displayName = item.description 
+          ? `${item.name} (${item.description})`
+          : item.name;
         return {
           id,
-          name: item.name,
+          name: displayName,
           quantity,
         };
       })

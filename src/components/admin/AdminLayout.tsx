@@ -15,6 +15,7 @@ import {
   Users,
   Sparkles,
   Menu,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,7 @@ const allNavItems = [
   { path: '/admin/trucks', label: 'סוגי טראקים', icon: Truck, roles: ['admin', 'client'] },
   { path: '/admin/equipment', label: 'ציוד', icon: Package, roles: ['admin', 'client'] },
   { path: '/admin/content', label: 'תוכן האתר', icon: FileText, roles: ['admin'] },
+  { path: '/admin/email-preview', label: 'תצוגת מיילים', icon: Mail, roles: ['admin'] },
   { path: '/admin/ai', label: 'יצירת תוכן AI', icon: Sparkles, roles: ['admin'] },
   { path: '/admin/users', label: 'ניהול משתמשים', icon: Users, roles: ['admin'] },
 ];
