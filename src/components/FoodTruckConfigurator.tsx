@@ -238,40 +238,23 @@ export const FoodTruckConfigurator = () => {
 
       let leadId = state.partialLeadId;
 
-      if (leadId) {
-        // Update existing partial lead
-        const { error } = await supabase.from('leads')
-          .update({
-            full_name: fullName,
-            email: state.contactDetails.email || null,
-            phone: state.contactDetails.phone,
-            notes: state.contactDetails.notes || null,
-            selected_truck_type: truckTypeName,
-            selected_truck_size: truckSizeName,
-            selected_equipment: equipmentNames,
-            is_complete: true,
-          })
-          .eq('id', leadId);
-        
-        if (error) throw error;
-      } else {
-        // Create new lead if no partial exists
-        const { data: insertedLead, error } = await supabase.from('leads').insert({
-          full_name: fullName,
-          email: state.contactDetails.email || null,
-          phone: state.contactDetails.phone,
-          notes: state.contactDetails.notes || null,
-          selected_truck_type: truckTypeName,
-          selected_truck_size: truckSizeName,
-          selected_equipment: equipmentNames,
-          is_complete: true,
-          privacy_accepted: true,
-          privacy_accepted_at: new Date().toISOString(),
-        }).select('id').single();
-        
-        if (error) throw error;
-        leadId = insertedLead?.id;
-      }
+      // Always create a new complete lead on final submit
+      // This avoids RLS issues with UPDATE and ensures we capture the final state
+      const { data: insertedLead, error } = await supabase.from('leads').insert({
+        full_name: fullName,
+        email: state.contactDetails.email || null,
+        phone: state.contactDetails.phone,
+        notes: state.contactDetails.notes || null,
+        selected_truck_type: truckTypeName,
+        selected_truck_size: truckSizeName,
+        selected_equipment: equipmentNames,
+        is_complete: true,
+        privacy_accepted: true,
+        privacy_accepted_at: new Date().toISOString(),
+      }).select('id').single();
+      
+      if (error) throw error;
+      leadId = insertedLead?.id;
 
       // Send email notifications (fire and forget - don't block submission)
       if (leadId) {
