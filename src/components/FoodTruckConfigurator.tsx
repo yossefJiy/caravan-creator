@@ -189,19 +189,46 @@ export const FoodTruckConfigurator = () => {
     if (!state.contactDetails) return;
     
     setIsSubmitting(true);
-      try {
-        const { error } = await supabase.from('leads').insert({
-          full_name: `${state.contactDetails.firstName} ${state.contactDetails.lastName}`,
-          email: state.contactDetails.email || '',
-          phone: state.contactDetails.phone,
-          notes: state.contactDetails.notes || null,
-          selected_truck_type: selectedTruckType?.nameHe || null,
-          selected_truck_size: selectedTruckType?.sizes.find(s => s.id === state.selectedSize)?.name || null,
-          selected_equipment: Object.entries(state.selectedEquipment)
-            .filter(([, qty]) => Number(qty) > 0)
-            .map(([id]) => id),
-        });
+    try {
+      const fullName = `${state.contactDetails.firstName} ${state.contactDetails.lastName}`;
+      const truckTypeName = selectedTruckType?.nameHe || null;
+      const truckSizeName = selectedTruckType?.sizes.find(s => s.id === state.selectedSize)?.name || null;
+      
+      // Build equipment list with names and quantities (human-readable)
+      const equipmentNames = selectedEquipmentItems.map(item => 
+        item.quantity > 1 ? `${item.name} (×${item.quantity})` : item.name
+      );
+
+      const { data: insertedLead, error } = await supabase.from('leads').insert({
+        full_name: fullName,
+        email: state.contactDetails.email || '',
+        phone: state.contactDetails.phone,
+        notes: state.contactDetails.notes || null,
+        selected_truck_type: truckTypeName,
+        selected_truck_size: truckSizeName,
+        selected_equipment: equipmentNames,
+      }).select('id').single();
+      
       if (error) throw error;
+
+      // Send email notifications (fire and forget - don't block submission)
+      if (insertedLead?.id) {
+        supabase.functions.invoke('send-lead-notification', {
+          body: {
+            leadId: insertedLead.id,
+            fullName,
+            email: state.contactDetails.email || '',
+            phone: state.contactDetails.phone,
+            notes: state.contactDetails.notes,
+            selectedTruckType: truckTypeName,
+            selectedTruckSize: truckSizeName,
+            selectedEquipment: equipmentNames,
+          }
+        }).catch(err => {
+          console.error('Failed to send notification emails:', err);
+        });
+      }
+
       setState((prev) => ({ ...prev, isSubmitted: true }));
     } catch (error) {
       console.error('Error submitting lead:', error);

@@ -273,11 +273,13 @@ const LeadsManagement = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Package className="h-4 w-4" />
-                    ציוד שנבחר
+                    ציוד שנבחר ({selectedLead.selected_equipment.length} פריטים)
                   </label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedLead.selected_equipment.map((item, index) => (
-                      <Badge key={index} variant="secondary">{item}</Badge>
+                      <Badge key={index} variant="secondary" className="text-sm">
+                        {item}
+                      </Badge>
                     ))}
                   </div>
                 </div>
