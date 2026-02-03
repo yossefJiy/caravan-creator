@@ -527,8 +527,12 @@ const EquipmentForm = ({
         <Input value={name} onChange={(e) => setName(e.target.value)} required />
       </div>
       <div className="space-y-2">
-        <Label>תיאור</Label>
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        <Label>הערות / מידות</Label>
+        <Input 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          placeholder="לדוגמה: מטר 1, 50x50, 2 ליטר"
+        />
       </div>
       <ImageUpload
         value={imageUrl}
