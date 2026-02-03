@@ -203,6 +203,12 @@ export const FoodTruckConfigurator = () => {
       
       if (error) {
         console.error('Error saving partial lead:', error);
+        toast({ 
+          title: 'שגיאה', 
+          description: 'לא הצלחנו לשמור את הפרטים. נסה שוב.', 
+          variant: 'destructive' 
+        });
+        return; // Block progress if partial lead save fails
       }
       
       setState((prev) => ({ 
@@ -213,12 +219,12 @@ export const FoodTruckConfigurator = () => {
       }));
     } catch (error) {
       console.error('Error saving partial lead:', error);
-      // Continue anyway - don't block the user
-      setState((prev) => ({ 
-        ...prev, 
-        contactDetails: details,
-        step: 2,
-      }));
+      toast({ 
+        title: 'שגיאה', 
+        description: 'לא הצלחנו לשמור את הפרטים. נסה שוב.', 
+        variant: 'destructive' 
+      });
+      // Block progress on error
     }
   };
 
@@ -238,23 +244,42 @@ export const FoodTruckConfigurator = () => {
 
       let leadId = state.partialLeadId;
 
-      // Always create a new complete lead on final submit
-      // This avoids RLS issues with UPDATE and ensures we capture the final state
-      const { data: insertedLead, error } = await supabase.from('leads').insert({
-        full_name: fullName,
-        email: state.contactDetails.email || null,
-        phone: state.contactDetails.phone,
-        notes: state.contactDetails.notes || null,
-        selected_truck_type: truckTypeName,
-        selected_truck_size: truckSizeName,
-        selected_equipment: equipmentNames,
-        is_complete: true,
-        privacy_accepted: true,
-        privacy_accepted_at: new Date().toISOString(),
-      }).select('id').single();
-      
-      if (error) throw error;
-      leadId = insertedLead?.id;
+      if (leadId) {
+        // Update existing partial lead via edge function (bypasses RLS)
+        const { data, error } = await supabase.functions.invoke('update-lead', {
+          body: {
+            leadId,
+            full_name: fullName,
+            email: state.contactDetails.email || null,
+            phone: state.contactDetails.phone,
+            notes: state.contactDetails.notes || null,
+            selected_truck_type: truckTypeName,
+            selected_truck_size: truckSizeName,
+            selected_equipment: equipmentNames,
+            is_complete: true,
+          }
+        });
+        
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      } else {
+        // Create new lead if no partial exists
+        const { data: insertedLead, error } = await supabase.from('leads').insert({
+          full_name: fullName,
+          email: state.contactDetails.email || null,
+          phone: state.contactDetails.phone,
+          notes: state.contactDetails.notes || null,
+          selected_truck_type: truckTypeName,
+          selected_truck_size: truckSizeName,
+          selected_equipment: equipmentNames,
+          is_complete: true,
+          privacy_accepted: true,
+          privacy_accepted_at: new Date().toISOString(),
+        }).select('id').single();
+        
+        if (error) throw error;
+        leadId = insertedLead?.id;
+      }
 
       // Send email notifications (fire and forget - don't block submission)
       if (leadId) {

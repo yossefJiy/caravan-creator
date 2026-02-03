@@ -2,3 +2,12 @@ project_id = "majiubnzoasfsmhgwqkz"
 
 [functions.send-lead-notification]
 verify_jwt = false
+
+[functions.update-lead]
+verify_jwt = false
+
+[functions.get-user-emails]
+verify_jwt = false
+
+[functions.create-client-user]
+verify_jwt = false
