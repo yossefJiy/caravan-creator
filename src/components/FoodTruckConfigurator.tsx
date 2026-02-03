@@ -187,10 +187,12 @@ export const FoodTruckConfigurator = () => {
 
   const handleContactSubmit = async (details: ContactDetails) => {
     // Save partial lead immediately after collecting contact details
+    console.log('[DEBUG] handleContactSubmit started', { details });
     try {
       const fullName = `${details.firstName} ${details.lastName}`;
+      console.log('[DEBUG] Inserting partial lead:', { fullName, email: details.email, phone: details.phone });
       
-      const { data: partialLead, error } = await supabase.from('leads').insert({
+      const insertData = {
         full_name: fullName,
         email: details.email || null,
         phone: details.phone,
@@ -199,18 +201,28 @@ export const FoodTruckConfigurator = () => {
         is_complete: false,
         privacy_accepted: true,
         privacy_accepted_at: new Date().toISOString(),
-      }).select('id').single();
+      };
+      console.log('[DEBUG] Insert data:', insertData);
+      
+      const { data: partialLead, error } = await supabase.from('leads').insert(insertData).select('id').single();
+      
+      console.log('[DEBUG] Insert result:', { partialLead, error });
       
       if (error) {
-        console.error('Error saving partial lead:', error);
+        console.error('[DEBUG] Error saving partial lead:', error);
+        console.error('[DEBUG] Error code:', error.code);
+        console.error('[DEBUG] Error message:', error.message);
+        console.error('[DEBUG] Error details:', error.details);
+        console.error('[DEBUG] Error hint:', error.hint);
         toast({ 
           title: 'שגיאה', 
-          description: 'לא הצלחנו לשמור את הפרטים. נסה שוב.', 
+          description: `לא הצלחנו לשמור את הפרטים: ${error.message}`, 
           variant: 'destructive' 
         });
         return; // Block progress if partial lead save fails
       }
       
+      console.log('[DEBUG] Partial lead saved successfully:', partialLead?.id);
       setState((prev) => ({ 
         ...prev, 
         contactDetails: details,
@@ -218,10 +230,10 @@ export const FoodTruckConfigurator = () => {
         partialLeadId: partialLead?.id || null,
       }));
     } catch (error) {
-      console.error('Error saving partial lead:', error);
+      console.error('[DEBUG] Catch block - Error saving partial lead:', error);
       toast({ 
         title: 'שגיאה', 
-        description: 'לא הצלחנו לשמור את הפרטים. נסה שוב.', 
+        description: `לא הצלחנו לשמור את הפרטים: ${error instanceof Error ? error.message : 'Unknown error'}`, 
         variant: 'destructive' 
       });
       // Block progress on error
@@ -229,7 +241,11 @@ export const FoodTruckConfigurator = () => {
   };
 
   const handleFinalSubmit = async () => {
-    if (!state.contactDetails) return;
+    console.log('[DEBUG] handleFinalSubmit called');
+    if (!state.contactDetails) {
+      console.log('[DEBUG] No contact details, returning');
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -237,14 +253,23 @@ export const FoodTruckConfigurator = () => {
       const truckTypeName = selectedTruckType?.nameHe || null;
       const truckSizeName = selectedTruckType?.sizes.find(s => s.id === state.selectedSize)?.name || null;
       
+      console.log('[DEBUG] handleFinalSubmit data:', { 
+        fullName, 
+        truckTypeName, 
+        truckSizeName, 
+        partialLeadId: state.partialLeadId 
+      });
+      
       // Build equipment list with names and quantities (human-readable)
       const equipmentNames = selectedEquipmentItems.map(item => 
         item.quantity > 1 ? `${item.name} (×${item.quantity})` : item.name
       );
+      console.log('[DEBUG] Equipment names:', equipmentNames);
 
       let leadId = state.partialLeadId;
 
       if (leadId) {
+        console.log('[DEBUG] Updating existing lead via edge function:', leadId);
         // Update existing partial lead via edge function (bypasses RLS)
         const { data, error } = await supabase.functions.invoke('update-lead', {
           body: {
@@ -260,11 +285,21 @@ export const FoodTruckConfigurator = () => {
           }
         });
         
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
+        console.log('[DEBUG] Edge function response:', { data, error });
+        
+        if (error) {
+          console.error('[DEBUG] Edge function error:', error);
+          throw error;
+        }
+        if (data?.error) {
+          console.error('[DEBUG] Edge function data error:', data.error);
+          throw new Error(data.error);
+        }
+        console.log('[DEBUG] Lead updated successfully');
       } else {
+        console.log('[DEBUG] Creating new lead (no partial exists)');
         // Create new lead if no partial exists
-        const { data: insertedLead, error } = await supabase.from('leads').insert({
+        const insertData = {
           full_name: fullName,
           email: state.contactDetails.email || null,
           phone: state.contactDetails.phone,
@@ -275,14 +310,24 @@ export const FoodTruckConfigurator = () => {
           is_complete: true,
           privacy_accepted: true,
           privacy_accepted_at: new Date().toISOString(),
-        }).select('id').single();
+        };
+        console.log('[DEBUG] Insert data:', insertData);
         
-        if (error) throw error;
+        const { data: insertedLead, error } = await supabase.from('leads').insert(insertData).select('id').single();
+        
+        console.log('[DEBUG] Insert result:', { insertedLead, error });
+        
+        if (error) {
+          console.error('[DEBUG] Insert error:', error);
+          throw error;
+        }
         leadId = insertedLead?.id;
+        console.log('[DEBUG] New lead created:', leadId);
       }
 
       // Send email notifications (fire and forget - don't block submission)
       if (leadId) {
+        console.log('[DEBUG] Sending email notifications for lead:', leadId);
         supabase.functions.invoke('send-lead-notification', {
           body: {
             leadId,
@@ -295,16 +340,17 @@ export const FoodTruckConfigurator = () => {
             selectedEquipment: equipmentNames,
           }
         }).catch(err => {
-          console.error('Failed to send notification emails:', err);
+          console.error('[DEBUG] Failed to send notification emails:', err);
         });
       }
 
+      console.log('[DEBUG] Final submit completed successfully');
       setState((prev) => ({ ...prev, isSubmitted: true }));
     } catch (error) {
-      console.error('Error submitting lead:', error);
+      console.error('[DEBUG] Final submit catch block:', error);
       toast({ 
         title: 'שגיאה', 
-        description: 'לא הצלחנו לשלוח את הבקשה. נסה שוב.', 
+        description: `לא הצלחנו להשלים את הבקשה: ${error instanceof Error ? error.message : 'Unknown error'}`, 
         variant: 'destructive' 
       });
     } finally {
