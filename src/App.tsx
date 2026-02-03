@@ -13,7 +13,6 @@ import TrucksManagement from "./pages/admin/TrucksManagement";
 import EquipmentManagement from "./pages/admin/EquipmentManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
 import LeadsManagement from "./pages/admin/LeadsManagement";
-import AIContentGenerator from "./pages/admin/AIContentGenerator";
 import UsersManagement from "./pages/admin/UsersManagement";
 import EmailPreview from "./pages/admin/EmailPreview";
 
@@ -37,7 +36,6 @@ const App = () => (
             <Route path="trucks" element={<TrucksManagement />} />
             <Route path="equipment" element={<EquipmentManagement />} />
             <Route path="content" element={<ContentManagement />} />
-            <Route path="ai" element={<AIContentGenerator />} />
             <Route path="users" element={<UsersManagement />} />
             <Route path="email-preview" element={<EmailPreview />} />
           </Route>
