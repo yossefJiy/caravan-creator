@@ -13,6 +13,7 @@ import { SummaryStep } from './SummaryStep';
 import { useTruckData } from '@/hooks/useTruckData';
 import { useEquipmentData } from '@/hooks/useEquipmentData';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useSiteContent } from '@/hooks/useSiteContent';
 import type { ContactDetails } from '@/types/configurator';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -50,6 +51,7 @@ export const FoodTruckConfigurator = () => {
   // Fetch data from database
   const { data: truckTypes = [], isLoading: truckLoading, error: truckError } = useTruckData();
   const { categories, equipment, isLoading: equipmentLoading, error: equipmentError } = useEquipmentData();
+  const { getContent } = useSiteContent();
 
   // Convert stored equipment object to Map for component use (normalize quantities to numbers)
   const selectedEquipmentMap = useMemo(
@@ -312,9 +314,11 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 1: פרטים אישיים</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  {getContent('contact_title', 'שלב 1: פרטים אישיים')}
+                </h2>
                 <p className="text-muted-foreground">
-                  ספרו לנו קצת על עצמכם כדי שנוכל ליצור איתכם קשר
+                  {getContent('contact_subtitle', 'ספרו לנו קצת על עצמכם כדי שנוכל ליצור איתכם קשר')}
                 </p>
               </div>
               <ContactForm
@@ -336,11 +340,13 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 2: בחירת דגם</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  {getContent('type_title', 'שלב 2: בחירת דגם')}
+                </h2>
                 <p className="text-muted-foreground">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, בחר/י את סוג הפודטראק` 
-                    : 'בחרו את סוג הפודטראק המתאים לעסק שלכם'}
+                    ? `${state.contactDetails.firstName}, ${getContent('type_subtitle', 'בחר/י את סוג הפודטראק')}` 
+                    : getContent('type_subtitle', 'בחרו את סוג הפודטראק המתאים לעסק שלכם')}
                 </p>
               </div>
 
@@ -366,11 +372,13 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 3: בחירת גודל</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  {getContent('size_title', 'שלב 3: בחירת גודל')}
+                </h2>
                 <p className="text-muted-foreground">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, בחר/י את הגודל המתאים` 
-                    : 'בחרו את הגודל המתאים לעסק שלכם'}
+                    ? `${state.contactDetails.firstName}, ${getContent('size_subtitle', 'בחר/י את הגודל המתאים')}` 
+                    : getContent('size_subtitle', 'בחרו את הגודל המתאים לעסק שלכם')}
                 </p>
               </div>
 
@@ -397,11 +405,13 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-foreground mb-2">שלב 4: בחירת ציוד</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  {getContent('equipment_title', 'שלב 4: בחירת ציוד')}
+                </h2>
                 <p className="text-muted-foreground">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName} - בחר/י את הציוד הנוסף שתרצו להוסיף להצעה` 
-                    : 'בחרו את הציוד הנוסף שתרצו להוסיף'}
+                    ? `${state.contactDetails.firstName} - ${getContent('equipment_subtitle', 'בחר/י את הציוד הנוסף שתרצו להוסיף להצעה')}` 
+                    : getContent('equipment_subtitle', 'בחרו את הציוד הנוסף שתרצו להוסיף')}
                 </p>
               </div>
 

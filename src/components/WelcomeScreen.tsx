@@ -3,12 +3,15 @@ import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import welcomeBg from "@/assets/welcome-foodtruck-bg.jpg";
 import logo from "@/assets/eluya_nigrarim.svg";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 interface WelcomeScreenProps {
   onStart: () => void;
 }
 
 export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
+  const { getContent } = useSiteContent();
+
   return (
     <div className="min-h-svh relative overflow-hidden bg-slate-900">
       {/* Background Image */}
@@ -48,7 +51,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
               שלום וברוכים הבאים
             </h1>
             <h2 className="text-lg sm:text-xl text-primary font-medium">
-              בואו נבנה את הפודטראק המושלם עבורכם
+              {getContent('welcome_title', 'בואו נבנה את הפודטראק המושלם עבורכם')}
             </h2>
           </motion.div>
 
@@ -60,7 +63,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             <p className="text-base sm:text-lg text-slate-300">
-              אנחנו <span className="font-semibold text-white">באליה קרוואנים</span> מומחים לייצור פודטראקים בגימור גבוה ומחומרי גלם איכותיים.
+              {getContent('welcome_subtitle', 'אנחנו באליה קרוואנים מומחים לייצור פודטראקים בגימור גבוה ומחומרי גלם איכותיים.')}
             </p>
           </motion.div>
 
@@ -104,7 +107,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
                 "border border-primary/30",
               )}
             >
-              <span>בואו נתחיל</span>
+              <span>{getContent('welcome_button', 'בואו נתחיל')}</span>
               <ArrowLeft className="w-5 h-5" />
             </button>
           </motion.div>

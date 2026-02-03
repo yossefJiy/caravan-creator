@@ -2,6 +2,7 @@ import { Edit2, Check, Truck, Package, User, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TruckType } from '@/hooks/useTruckData';
 import type { ContactDetails } from '@/types/configurator';
+import { useSiteContent } from '@/hooks/useSiteContent';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export const SummaryStep = ({
   onSubmit,
   isSubmitting,
 }: SummaryStepProps) => {
+  const { getContent } = useSiteContent();
   const selectedSize = truckType.sizes.find((s) => s.id === selectedSizeId);
   const totalEquipmentUnits = selectedEquipment.reduce(
     (sum, item) => sum + (Number(item.quantity) || 0),
@@ -73,9 +75,11 @@ export const SummaryStep = ({
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">סיכום ההזמנה</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">
+          {getContent('summary_title', 'סיכום ההזמנה')}
+        </h2>
         <p className="text-muted-foreground">
-          בדקו את הפרטים לפני השליחה
+          {getContent('summary_subtitle', 'בדקו את הפרטים לפני השליחה')}
         </p>
       </div>
 
@@ -218,7 +222,7 @@ export const SummaryStep = ({
         ) : (
           <>
             <Check className="w-5 h-5" />
-            שלח בקשה להצעת מחיר
+            {getContent('summary_button', 'שלח בקשה להצעת מחיר')}
           </>
         )}
       </button>
