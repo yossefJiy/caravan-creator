@@ -186,34 +186,26 @@ export const FoodTruckConfigurator = () => {
   };
 
   const handleContactSubmit = async (details: ContactDetails) => {
-    // Save partial lead immediately after collecting contact details
+    // Save partial lead via Edge Function (bypasses RLS SELECT issue)
     console.log('[DEBUG] handleContactSubmit started', { details });
     try {
       const fullName = `${details.firstName} ${details.lastName}`;
-      console.log('[DEBUG] Inserting partial lead:', { fullName, email: details.email, phone: details.phone });
+      console.log('[DEBUG] Creating partial lead via edge function:', { fullName, email: details.email, phone: details.phone });
       
-      const insertData = {
-        full_name: fullName,
-        email: details.email || null,
-        phone: details.phone,
-        notes: details.notes || null,
-        status: 'new',
-        is_complete: false,
-        privacy_accepted: true,
-        privacy_accepted_at: new Date().toISOString(),
-      };
-      console.log('[DEBUG] Insert data:', insertData);
+      const { data, error } = await supabase.functions.invoke('create-lead', {
+        body: {
+          full_name: fullName,
+          email: details.email || null,
+          phone: details.phone,
+          notes: details.notes || null,
+          privacy_accepted: true,
+        }
+      });
       
-      const { data: partialLead, error } = await supabase.from('leads').insert(insertData).select('id').single();
-      
-      console.log('[DEBUG] Insert result:', { partialLead, error });
+      console.log('[DEBUG] Edge function result:', { data, error });
       
       if (error) {
-        console.error('[DEBUG] Error saving partial lead:', error);
-        console.error('[DEBUG] Error code:', error.code);
-        console.error('[DEBUG] Error message:', error.message);
-        console.error('[DEBUG] Error details:', error.details);
-        console.error('[DEBUG] Error hint:', error.hint);
+        console.error('[DEBUG] Edge function error:', error);
         toast({ 
           title: 'שגיאה', 
           description: `לא הצלחנו לשמור את הפרטים: ${error.message}`, 
@@ -222,12 +214,22 @@ export const FoodTruckConfigurator = () => {
         return; // Block progress if partial lead save fails
       }
       
-      console.log('[DEBUG] Partial lead saved successfully:', partialLead?.id);
+      if (data?.error) {
+        console.error('[DEBUG] Edge function data error:', data.error);
+        toast({ 
+          title: 'שגיאה', 
+          description: data.message || data.error, 
+          variant: 'destructive' 
+        });
+        return;
+      }
+      
+      console.log('[DEBUG] Partial lead saved successfully:', data?.id);
       setState((prev) => ({ 
         ...prev, 
         contactDetails: details,
         step: 2, // Move to truck type selection
-        partialLeadId: partialLead?.id || null,
+        partialLeadId: data?.id || null,
       }));
     } catch (error) {
       console.error('[DEBUG] Catch block - Error saving partial lead:', error);
@@ -297,32 +299,49 @@ export const FoodTruckConfigurator = () => {
         }
         console.log('[DEBUG] Lead updated successfully');
       } else {
-        console.log('[DEBUG] Creating new lead (no partial exists)');
-        // Create new lead if no partial exists
-        const insertData = {
-          full_name: fullName,
-          email: state.contactDetails.email || null,
-          phone: state.contactDetails.phone,
-          notes: state.contactDetails.notes || null,
-          selected_truck_type: truckTypeName,
-          selected_truck_size: truckSizeName,
-          selected_equipment: equipmentNames,
-          is_complete: true,
-          privacy_accepted: true,
-          privacy_accepted_at: new Date().toISOString(),
-        };
-        console.log('[DEBUG] Insert data:', insertData);
+        console.log('[DEBUG] Creating new lead via edge function (no partial exists)');
+        // Create new lead via Edge Function if no partial exists
+        const { data: createResult, error: createError } = await supabase.functions.invoke('create-lead', {
+          body: {
+            full_name: fullName,
+            email: state.contactDetails.email || null,
+            phone: state.contactDetails.phone,
+            notes: state.contactDetails.notes || null,
+            privacy_accepted: true,
+          }
+        });
         
-        const { data: insertedLead, error } = await supabase.from('leads').insert(insertData).select('id').single();
+        console.log('[DEBUG] Create lead result:', { createResult, createError });
         
-        console.log('[DEBUG] Insert result:', { insertedLead, error });
-        
-        if (error) {
-          console.error('[DEBUG] Insert error:', error);
-          throw error;
+        if (createError) {
+          console.error('[DEBUG] Create lead error:', createError);
+          throw createError;
         }
-        leadId = insertedLead?.id;
+        if (createResult?.error) {
+          console.error('[DEBUG] Create lead data error:', createResult.error);
+          throw new Error(createResult.error);
+        }
+        
+        leadId = createResult?.id;
         console.log('[DEBUG] New lead created:', leadId);
+        
+        // Now update with truck selection data
+        if (leadId) {
+          const { data: updateResult, error: updateError } = await supabase.functions.invoke('update-lead', {
+            body: {
+              leadId,
+              selected_truck_type: truckTypeName,
+              selected_truck_size: truckSizeName,
+              selected_equipment: equipmentNames,
+              is_complete: true,
+            }
+          });
+          
+          if (updateError || updateResult?.error) {
+            console.error('[DEBUG] Update after create error:', updateError || updateResult?.error);
+            throw new Error(updateError?.message || updateResult?.error || 'Failed to update lead');
+          }
+        }
       }
 
       // Send email notifications (fire and forget - don't block submission)
