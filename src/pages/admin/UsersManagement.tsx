@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UserPlus, Shield, User, Eye, EyeOff } from 'lucide-react';
@@ -23,6 +23,7 @@ const UsersManagement = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -39,6 +40,34 @@ const UsersManagement = () => {
       return data as UserRole[];
     },
   });
+
+  // Fetch user emails when we have user roles
+  useEffect(() => {
+    const fetchUserEmails = async () => {
+      if (!userRoles || userRoles.length === 0) return;
+      
+      const userIds = userRoles.map(ur => ur.user_id);
+      
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        const response = await supabase.functions.invoke('get-user-emails', {
+          body: { userIds },
+          headers: {
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+          },
+        });
+        
+        if (response.data?.userEmails) {
+          setUserEmails(response.data.userEmails);
+        }
+      } catch (error) {
+        console.error('Error fetching user emails:', error);
+      }
+    };
+
+    fetchUserEmails();
+  }, [userRoles]);
 
   // Create client user mutation
   const createClientMutation = useMutation({
@@ -196,6 +225,7 @@ const UsersManagement = () => {
         {userRoles?.map((userRole) => {
           const roleInfo = getRoleInfo(userRole.role);
           const RoleIcon = roleInfo.icon;
+          const userEmail = userEmails[userRole.user_id] || 'טוען...';
           
           return (
             <Card key={userRole.id}>
@@ -206,7 +236,7 @@ const UsersManagement = () => {
                       <RoleIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-base">{userRole.user_id}</CardTitle>
+                      <CardTitle className="text-base">{userEmail}</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         נוצר: {new Date(userRole.created_at).toLocaleDateString('he-IL')}
                       </p>

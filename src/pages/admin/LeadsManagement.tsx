@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,6 +26,11 @@ interface Lead {
   updated_at: string;
 }
 
+interface Equipment {
+  id: string;
+  name: string;
+}
+
 const statusOptions = [
   { value: 'new', label: 'חדש', color: 'bg-blue-500' },
   { value: 'contacted', label: 'נוצר קשר', color: 'bg-yellow-500' },
@@ -40,6 +45,24 @@ const LeadsManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch all equipment for name mapping
+  const { data: allEquipment } = useQuery({
+    queryKey: ['all-equipment'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('equipment')
+        .select('id, name');
+      if (error) throw error;
+      return data as Equipment[];
+    },
+  });
+
+  // Create equipment ID to name map
+  const equipmentMap = allEquipment?.reduce((acc, eq) => {
+    acc[eq.id] = eq.name;
+    return acc;
+  }, {} as Record<string, string>) || {};
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ['admin-leads', statusFilter],
@@ -101,6 +124,16 @@ const LeadsManagement = () => {
         {statusOption?.label || status}
       </Badge>
     );
+  };
+
+  // Helper function to get equipment name from ID
+  const getEquipmentName = (idOrName: string): string => {
+    // Check if it's a UUID (equipment ID)
+    if (idOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return equipmentMap[idOrName] || idOrName;
+    }
+    // If it's not a UUID, it might already be a name
+    return idOrName;
   };
 
   if (isLoading) {
@@ -278,7 +311,7 @@ const LeadsManagement = () => {
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedLead.selected_equipment.map((item, index) => (
                       <Badge key={index} variant="secondary" className="text-sm">
-                        {item}
+                        {getEquipmentName(item)}
                       </Badge>
                     ))}
                   </div>
