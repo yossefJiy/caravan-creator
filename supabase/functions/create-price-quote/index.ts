@@ -367,7 +367,7 @@ serve(async (req) => {
     const quoteId = docData.id;
     const quoteNumber = docData.number?.toString() || docData.id;
     const quoteUrl = docData.url?.origin || docData.url?.he || '';
-    const quoteTotal = totalBeforeVat;
+    const quoteTotal = Math.round(totalBeforeVat * 1.18); // Save INCLUDING VAT
 
     // Update the lead with quote details
     // Different update based on whether we're sending the email or just creating

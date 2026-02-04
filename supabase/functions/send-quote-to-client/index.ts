@@ -78,8 +78,8 @@ serve(async (req) => {
       }).format(price);
     };
 
-    const quoteTotal = lead.quote_total || 0;
-    const quoteTotalWithVat = quoteTotal * 1.18;
+    const quoteTotalWithVat = lead.quote_total || 0; // Already includes VAT
+    const quoteBeforeVat = Math.round(quoteTotalWithVat / 1.18);
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
@@ -151,8 +151,8 @@ serve(async (req) => {
             
             <div class="quote-details">
               <p><strong>מספר הצעה:</strong> ${lead.quote_number}</p>
-              <p><strong>סכום לפני מע"מ:</strong> ${formatPrice(quoteTotal)}</p>
-              <p><strong>סכום כולל מע"מ:</strong> ${formatPrice(quoteTotalWithVat)}</p>
+              <p><strong>סכום לפני מע"מ:</strong> ${formatPrice(quoteBeforeVat)}</p>
+              <p><strong>סה"כ לתשלום:</strong> ${formatPrice(quoteTotalWithVat)}</p>
             </div>
             
             <p style="text-align: center;">
