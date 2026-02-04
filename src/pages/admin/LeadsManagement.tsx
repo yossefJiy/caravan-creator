@@ -479,8 +479,16 @@ const LeadsManagement = () => {
       {selectedLead && (
         <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
+            <DialogHeader className="flex flex-row items-center justify-between">
               <DialogTitle>פרטי ליד</DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingLead(selectedLead)}
+              >
+                <FileText className="h-4 w-4 ml-2" />
+                עריכה
+              </Button>
             </DialogHeader>
             
             <div className="space-y-6">
