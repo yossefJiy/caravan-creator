@@ -473,6 +473,17 @@ const LeadsManagement = () => {
                   </p>
                 </div>
                 <div>
+                  <label className="text-sm font-medium text-muted-foreground">ח.פ. / ת.ז.</label>
+                  <p className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    {selectedLead.id_number ? (
+                      <span dir="ltr">{selectedLead.id_number}</span>
+                    ) : (
+                      <span className="text-muted-foreground">לא צוין</span>
+                    )}
+                  </p>
+                </div>
+                <div>
                   <label className="text-sm font-medium text-muted-foreground">תאריך יצירה</label>
                   <p className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
