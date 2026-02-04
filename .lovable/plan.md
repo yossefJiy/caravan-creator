@@ -1,100 +1,114 @@
 
-# תיקון חישוב מע"מ במורנינג
+# תוכנית: שיפור גלילה וקיפול במסך פרטי ליד
 
-## הבעיה שזוהתה
+## סקירת הבעיה
 
-מהמסמכים שצורפו:
-- **476.pdf**: מחיר ₪56,500, **מע"מ 0%**, סה"כ ₪56,500 - שגוי
-- **477.pdf**: מחיר ₪47,881, **מע"מ 18% = ₪8,618**, סה"כ ₪56,500 - שגוי (הוריד במקום הוסיף)
+דיאלוג פרטי הליד מכיל הרבה מידע - פרטי לקוח, טראק, ציוד, הערות, סיכום מחיר וסטטוס הצעה. במסכים קטנים ובמובייל, התוכן חורג מגובה המסך ואי אפשר לגלול לראות הכל.
 
-מהתמונה שצירפת רואים שבעמודת "מע"מ" צריך להופיע **"לפני"** (מחיר לפני מע"מ).
+## הפתרון המוצע
 
-## מה צריך לקרות
+שילוב של שני שיפורים:
 
-| נתון | ערך |
-|------|-----|
-| מחיר ששולח למורנינג | ₪56,500 (לפני מע"מ) |
-| vatType לשורה | 0 (DEFAULT - יוסיף 18%) |
-| תוצאה במורנינג | ₪56,500 + 18% = **₪66,670 לתשלום** |
-| נשמר בליד | quote_total = ₪66,670 (כולל מע"מ) |
+### 1. הוספת גלילה לדיאלוג
+- הגבלת גובה מקסימלי ל-85% מגובה המסך במובייל ו-90% בדסקטופ
+- הפעלת גלילה אוטומטית כשהתוכן חורג
 
-## סיבת הבעיה הטכנית
-
-בלוגים האחרונים (18:24) רואים:
-```
-income[0].vatType = 1  ← INCLUDED (מע"מ כלול)
-```
-
-המספר 1 בשורה פירושו **"מע"מ כבר כלול במחיר"**, ולכן מורנינג הוריד את המע"מ מהסכום במקום להוסיף.
-
-לפי התיעוד של GreenInvoice:
-
-| ערך | שם | משמעות |
-|-----|-----|---------|
-| 0 | DEFAULT | מע"מ יתווסף לפי סוג העסק |
-| 1 | INCLUDED | מע"מ כבר כלול במחיר (יחושב אחורה) |
-| 2 | EXEMPT | פטור ממע"מ |
-
-## הפתרון
-
-### 1. תיקון vatType בשורות ל-0 (DEFAULT)
-```javascript
-// במקום:
-vatType: 1  // INCLUDED - שגוי!
-
-// צריך:
-vatType: 0  // DEFAULT - יוסיף מע"מ על המחיר
+### 2. הפיכת QuoteSummary לקיפול חכם
+**לפני:**
+```text
+┌─────────────────────────────┐
+│ סיכום הצעת מחיר             │
+├─────────────────────────────┤
+│ גודל טראק:        ₪50,000   │
+│ ציוד (5 פריטים):  ₪12,000   │
+│─────────────────────────────│
+│ סה"כ לפני מע"מ:   ₪62,000   │
+│ מע"מ (18%):       ₪11,160   │
+│─────────────────────────────│
+│ סה"כ כולל מע"מ:   ₪73,160   │
+└─────────────────────────────┘
 ```
 
-### 2. עדכון quote_total לשמור כולל מע"מ
-```javascript
-// במקום:
-quote_total: totalBeforeVat  // 56,500
-
-// צריך:
-quote_total: totalBeforeVat * 1.18  // 66,670
+**אחרי (מקופל כברירת מחדל):**
+```text
+┌─────────────────────────────────────┐
+│ ▸ סיכום הצעת מחיר    סה"כ: ₪73,160 │
+└─────────────────────────────────────┘
 ```
 
-### 3. עדכון ה-UI להציג "סה"כ לתשלום"
-במקום "סכום (לפני מע"מ)" יוצג "סה"כ לתשלום"
+לחיצה פותחת את הפירוט המלא.
 
 ---
 
-## קבצים לעדכון
+## פרטים טכניים
+
+### שינוי 1: DialogContent בקובץ LeadsManagement.tsx
+
+```tsx
+<DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+```
+
+### שינוי 2: רכיב QuoteSummary עם קיפול
+
+שימוש ב-Collapsible מ-Radix (כבר מותקן):
+
+```tsx
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
+
+export const QuoteSummary = ({ ... }: QuoteSummaryProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // ... חישובים קיימים ...
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="bg-muted/50">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-2 cursor-pointer hover:bg-muted/70 transition-colors">
+            <CardTitle className="text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                סיכום הצעת מחיר
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-primary">
+                  {formatPrice(calculations.total)}
+                </span>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  isOpen && "rotate-180"
+                )} />
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent>
+          <CardContent className="space-y-2 text-sm pt-0">
+            {/* הפירוט המלא - נשאר כמו שהוא */}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+};
+```
+
+---
+
+## קבצים שיעודכנו
 
 | קובץ | שינוי |
 |------|-------|
-| `supabase/functions/create-price-quote/index.ts` | vatType=0 + שמירת סכום כולל מע"מ |
-| `supabase/functions/send-quote-to-client/index.ts` | הסרת החישוב הכפול של מע"מ |
-| `src/components/admin/QuoteStatus.tsx` | שינוי label ל"סה"כ לתשלום" |
-| `src/components/admin/QuoteSummary.tsx` | כבר נכון (18%) |
+| `src/pages/admin/LeadsManagement.tsx` | הוספת max-height ו-overflow לדיאלוג |
+| `src/components/admin/QuoteSummary.tsx` | הפיכה לרכיב Collapsible עם סה"כ בכותרת |
 
 ---
 
-## דוגמת חישוב אחרי התיקון
+## תוצאה צפויה
 
-**נתוני ליד:**
-- גודל טראק M (קפה): ₪50,000
-- ציוד: ₪6,500
-- **סה"כ לפני מע"מ: ₪56,500**
-
-**מה נשלח למורנינג:**
-```javascript
-income: [
-  { description: "קפה טראק", price: 56500, vatType: 0 },  // DEFAULT
-  { description: "פירוט החבילה:", price: 0, vatType: 0 },
-  // ... שאר הפריטים עם price: 0
-]
-```
-
-**מה יוצג במסמך המורנינג:**
-| פירוט | מחיר | מע"מ |
-|-------|------|------|
-| קפה טראק | ₪56,500 | לפני |
-| ... | | |
-| **סה"כ** | ₪56,500 | |
-| **מע"מ 18%** | ₪10,170 | |
-| **לתשלום** | **₪66,670** | |
-
-**מה נשמר בליד:**
-- quote_total = ₪66,670 (כולל מע"מ)
+- **גלילה חלקה** - גם אם יש הרבה תוכן, ניתן לגלול בדיאלוג
+- **ממשק נקי** - סיכום המחיר מקופל ומציג רק את הסה"כ
+- **גמישות** - לחיצה פותחת את הפירוט המלא
+- **תואם מובייל** - עובד טוב על כל גודל מסך
