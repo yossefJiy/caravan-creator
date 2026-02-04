@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, ExternalLink, Send, RefreshCw, Edit } from 'lucide-react';
+import { FileText, ExternalLink, Send, Edit, Download } from 'lucide-react';
 
 interface QuoteStatusProps {
   quoteId: string | null;
@@ -13,7 +13,6 @@ interface QuoteStatusProps {
   quoteUrl: string | null;
   onCreateQuote?: () => void;
   onSendToClient?: () => void;
-  onRecreate?: () => void;
   onEdit?: () => void;
   isCreating?: boolean;
   isSending?: boolean;
@@ -30,13 +29,32 @@ export const QuoteStatus = ({
   quoteUrl,
   onCreateQuote,
   onSendToClient,
-  onRecreate,
   onEdit,
   isCreating = false,
   isSending = false,
   hasProducts = false,
   hasEmail = false,
 }: QuoteStatusProps) => {
+  // Handle PDF download
+  const handleDownloadPdf = async () => {
+    if (!quoteUrl) return;
+    
+    try {
+      const response = await fetch(quoteUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `quote-${quoteNumber || 'document'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      // Fallback: open in new tab
+      window.open(quoteUrl, '_blank');
+    }
+  };
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('he-IL', {
       style: 'currency',
@@ -108,14 +126,24 @@ export const QuoteStatus = ({
 
         <div className="flex flex-wrap gap-2">
           {quoteUrl && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(quoteUrl, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 ml-2" />
-              צפה ב-PDF
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(quoteUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 ml-2" />
+                צפה ב-PDF
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPdf}
+              >
+                <Download className="h-4 w-4 ml-2" />
+                הורד
+              </Button>
+            </>
           )}
           {onEdit && (
             <Button
@@ -125,17 +153,6 @@ export const QuoteStatus = ({
             >
               <Edit className="h-4 w-4 ml-2" />
               ערוך
-            </Button>
-          )}
-          {onRecreate && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRecreate}
-              disabled={isCreating}
-            >
-              <RefreshCw className="h-4 w-4 ml-2" />
-              {isCreating ? 'יוצר...' : 'צור מחדש'}
             </Button>
           )}
           {onSendToClient && hasEmail && (
@@ -184,16 +201,26 @@ export const QuoteStatus = ({
         )}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {quoteUrl && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(quoteUrl, '_blank')}
-          >
-            <ExternalLink className="h-4 w-4 ml-2" />
-            צפה ב-PDF
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(quoteUrl, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 ml-2" />
+              צפה ב-PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadPdf}
+            >
+              <Download className="h-4 w-4 ml-2" />
+              הורד
+            </Button>
+          </>
         )}
         {onEdit && (
           <Button
@@ -203,17 +230,6 @@ export const QuoteStatus = ({
           >
             <Edit className="h-4 w-4 ml-2" />
             ערוך
-          </Button>
-        )}
-        {onRecreate && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRecreate}
-            disabled={isCreating}
-          >
-            <RefreshCw className="h-4 w-4 ml-2" />
-            {isCreating ? 'יוצר...' : 'צור מחדש'}
           </Button>
         )}
         {onSendToClient && hasEmail && (
