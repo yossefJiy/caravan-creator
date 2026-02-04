@@ -330,7 +330,7 @@ serve(async (req) => {
       type: 10, // Price Quote
       lang: 'he',
       currency: 'ILS',
-      vatType: 0, // Prices are BEFORE VAT, Morning will add 17% VAT
+      vatType: 1, // Prices are BEFORE VAT (לפני מע"מ), Morning will ADD 18% VAT
       client,
       income: incomeItems,
     };
