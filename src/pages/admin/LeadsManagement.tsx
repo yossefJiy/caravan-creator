@@ -195,19 +195,17 @@ const LeadsManagement = () => {
         title: 'הצעת המחיר נוצרה בהצלחה', 
         description: `מספר הצעה: ${data.quote_number}` 
       });
-      // Refresh the selected lead data
-      if (selectedLead) {
-        setSelectedLead({
-          ...selectedLead,
-          quote_id: data.quote_id,
-          quote_number: data.quote_number,
-          quote_url: data.quote_url,
-          quote_total: data.quote_total,
-          quote_created_at: new Date().toISOString(),
-          is_complete: true, // Mark as complete after quote creation
-          id_validation_error: null, // Clear validation error on success
-        });
-      }
+      // Refresh the selected lead data using functional update
+      setSelectedLead(prev => prev ? {
+        ...prev,
+        quote_id: data.quote_id,
+        quote_number: data.quote_number,
+        quote_url: data.quote_url,
+        quote_total: data.quote_total,
+        quote_created_at: new Date().toISOString(),
+        is_complete: true,
+        id_validation_error: null,
+      } : null);
     },
     onError: (error) => {
       toast({ 
@@ -242,14 +240,12 @@ const LeadsManagement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
       toast({ title: 'הצעת המחיר נשלחה ללקוח בהצלחה' });
-      // Refresh the selected lead data
-      if (selectedLead) {
-        setSelectedLead({
-          ...selectedLead,
-          quote_sent_at: new Date().toISOString(),
-          status: 'quoted',
-        });
-      }
+      // Refresh the selected lead data using functional update
+      setSelectedLead(prev => prev ? {
+        ...prev,
+        quote_sent_at: new Date().toISOString(),
+        status: 'quoted',
+      } : null);
     },
     onError: (error) => {
       toast({ 
@@ -404,6 +400,9 @@ const LeadsManagement = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                        {lead.id.slice(0, 8)}
+                      </span>
                       <h3 className="font-semibold text-lg">{lead.full_name}</h3>
                       {getStatusBadge(lead.status)}
                       {!lead.is_complete && (
@@ -495,7 +494,12 @@ const LeadsManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">שם מלא</label>
-                  <p className="text-lg font-semibold">{selectedLead.full_name}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                      {selectedLead.id.slice(0, 8)}
+                    </span>
+                    <p className="text-lg font-semibold">{selectedLead.full_name}</p>
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">סטטוס</label>
