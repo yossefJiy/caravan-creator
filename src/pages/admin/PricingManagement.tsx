@@ -34,6 +34,7 @@ interface TruckSize {
 interface Equipment {
   id: string;
   name: string;
+  description: string | null;
   category_id: string;
   is_active: boolean;
   image_url: string | null;
@@ -164,14 +165,6 @@ const PricingManagement = () => {
     });
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('he-IL', {
-      style: 'currency',
-      currency: 'ILS',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
   const hasChanges = (itemType: string, itemId: string) => {
     const key = `${itemType}:${itemId}`;
     return editingPrices[key] !== undefined;
@@ -249,27 +242,28 @@ const PricingManagement = () => {
                         <thead>
                           <tr className="border-b text-muted-foreground">
                             <th className="text-right py-2 px-2 font-medium">גודל</th>
-                            <th className="text-center py-2 px-2 font-medium w-28">מחיר עלות</th>
-                            <th className="text-center py-2 px-2 font-medium w-28">מחיר מכירה</th>
-                            <th className="text-center py-2 px-2 font-medium w-12">שמירה</th>
-                            <th className="text-left py-2 px-2 font-medium w-24">מחיר נוכחי</th>
+                            <th className="text-right py-2 px-2 font-medium">מידות</th>
+                            <th className="text-center py-2 px-2 font-medium w-24">עלות</th>
+                            <th className="text-center py-2 px-2 font-medium w-24">מכירה</th>
+                            <th className="text-left py-2 px-2 font-medium w-12"></th>
                           </tr>
                         </thead>
                         <tbody>
                           {sizes.length > 0 ? (
                             sizes.map((size) => {
-                              const sizePricing = getPricing('truck_size', size.id);
                               const prices = getPrices('truck_size', size.id);
                               return (
                                 <tr key={size.id} className="border-b last:border-b-0">
                                   <td className="py-3 px-2">
                                     <p className="font-medium">{size.name}</p>
-                                    <p className="text-xs text-muted-foreground">{size.dimensions}</p>
+                                  </td>
+                                  <td className="py-3 px-2">
+                                    <p className="text-muted-foreground">{size.dimensions}</p>
                                   </td>
                                   <td className="py-3 px-2">
                                     <Input
                                       type="number"
-                                      placeholder="עלות"
+                                      placeholder="₪"
                                       value={prices.cost}
                                       onChange={(e) => handlePriceChange('truck_size', size.id, 'cost', e.target.value)}
                                       className="text-center h-9"
@@ -279,14 +273,14 @@ const PricingManagement = () => {
                                   <td className="py-3 px-2">
                                     <Input
                                       type="number"
-                                      placeholder="מכירה"
+                                      placeholder="₪"
                                       value={prices.sale}
                                       onChange={(e) => handlePriceChange('truck_size', size.id, 'sale', e.target.value)}
                                       className="text-center h-9"
                                       dir="ltr"
                                     />
                                   </td>
-                                  <td className="py-3 px-2 text-center">
+                                  <td className="py-3 px-2 text-left">
                                     <Button
                                       size="icon"
                                       variant="outline"
@@ -300,15 +294,6 @@ const PricingManagement = () => {
                                         <Save className="h-4 w-4" />
                                       )}
                                     </Button>
-                                  </td>
-                                  <td className="py-3 px-2 text-left">
-                                    {sizePricing ? (
-                                      <Badge variant="outline" className="text-xs">
-                                        {formatPrice(sizePricing.sale_price)}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-muted-foreground text-xs">—</span>
-                                    )}
                                   </td>
                                 </tr>
                               );
@@ -360,15 +345,14 @@ const PricingManagement = () => {
                           <tr className="border-b text-muted-foreground">
                             <th className="text-right py-2 px-2 font-medium w-14">תמונה</th>
                             <th className="text-right py-2 px-2 font-medium">מוצר</th>
-                            <th className="text-center py-2 px-2 font-medium w-28">מחיר עלות</th>
-                            <th className="text-center py-2 px-2 font-medium w-28">מחיר מכירה</th>
-                            <th className="text-center py-2 px-2 font-medium w-12">שמירה</th>
-                            <th className="text-left py-2 px-2 font-medium w-24">מחיר נוכחי</th>
+                            <th className="text-right py-2 px-2 font-medium">תיאור</th>
+                            <th className="text-center py-2 px-2 font-medium w-24">עלות</th>
+                            <th className="text-center py-2 px-2 font-medium w-24">מכירה</th>
+                            <th className="text-left py-2 px-2 font-medium w-12"></th>
                           </tr>
                         </thead>
                         <tbody>
                           {categoryEquipment.map((item) => {
-                            const itemPricing = getPricing('equipment', item.id);
                             const prices = getPrices('equipment', item.id);
                             return (
                               <tr key={item.id} className="border-b last:border-b-0">
@@ -394,9 +378,14 @@ const PricingManagement = () => {
                                   )}
                                 </td>
                                 <td className="py-3 px-2">
+                                  <p className="text-muted-foreground text-sm">
+                                    {item.description || '—'}
+                                  </p>
+                                </td>
+                                <td className="py-3 px-2">
                                   <Input
                                     type="number"
-                                    placeholder="עלות"
+                                    placeholder="₪"
                                     value={prices.cost}
                                     onChange={(e) => handlePriceChange('equipment', item.id, 'cost', e.target.value)}
                                     className="text-center h-9"
@@ -406,14 +395,14 @@ const PricingManagement = () => {
                                 <td className="py-3 px-2">
                                   <Input
                                     type="number"
-                                    placeholder="מכירה"
+                                    placeholder="₪"
                                     value={prices.sale}
                                     onChange={(e) => handlePriceChange('equipment', item.id, 'sale', e.target.value)}
                                     className="text-center h-9"
                                     dir="ltr"
                                   />
                                 </td>
-                                <td className="py-3 px-2 text-center">
+                                <td className="py-3 px-2 text-left">
                                   <Button
                                     size="icon"
                                     variant="outline"
@@ -427,15 +416,6 @@ const PricingManagement = () => {
                                       <Save className="h-4 w-4" />
                                     )}
                                   </Button>
-                                </td>
-                                <td className="py-3 px-2 text-left">
-                                  {itemPricing ? (
-                                    <Badge variant="outline" className="text-xs">
-                                      {formatPrice(itemPricing.sale_price)}
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-muted-foreground text-xs">—</span>
-                                  )}
                                 </td>
                               </tr>
                             );
