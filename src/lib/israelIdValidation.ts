@@ -1,9 +1,8 @@
 /**
  * Israeli ID/Business Number Validation
  * 
- * - ת.ז. (ID): 9 digits with Luhn-variant checksum
- * - ח.פ. (Company): 9 digits starting with 51-59
- * - עוסק מורשה (Licensed Dealer): Uses owner's ID number
+ * Validates Israeli ID numbers (ת.ז.) and Business Numbers (ח.פ.)
+ * using the Luhn-based algorithm used by the Israeli government.
  */
 
 /**
@@ -43,25 +42,37 @@ export function validateIsraeliId(id: string): boolean {
 }
 
 /**
- * Checks if a number looks like a company number (ח.פ.)
- * Company numbers start with 51-59
+ * Validates an Israeli Business Number (ח.פ.)
+ * Business numbers are typically 8-9 digits
+ * @param bn - The business number to validate
+ * @returns true if valid, false otherwise
  */
-function looksLikeCompanyNumber(value: string): boolean {
-  const cleanValue = value.replace(/\D/g, '');
-  if (cleanValue.length !== 9) return false;
+export function validateBusinessNumber(bn: string): boolean {
+  // Remove any non-digit characters
+  const cleanBn = bn.replace(/\D/g, '');
   
-  const prefix = parseInt(cleanValue.substring(0, 2), 10);
-  return prefix >= 51 && prefix <= 59;
+  // Business numbers are typically 8-9 digits
+  if (cleanBn.length < 8 || cleanBn.length > 9) {
+    return false;
+  }
+  
+  // For 9-digit business numbers, apply the same Luhn algorithm
+  if (cleanBn.length === 9) {
+    return validateIsraeliId(cleanBn);
+  }
+  
+  // For 8-digit business numbers, pad with leading zero and validate
+  return validateIsraeliId(cleanBn.padStart(9, '0'));
 }
 
 /**
  * Validates either an Israeli ID or Business Number
  * @param value - The ID or business number to validate
- * @returns object with isValid boolean, type, and message
+ * @returns object with isValid boolean and type of ID
  */
 export function validateIsraeliIdOrBn(value: string): {
   isValid: boolean;
-  type: 'id' | 'company' | 'unknown';
+  type: 'id' | 'business' | 'unknown';
   message: string;
 } {
   // Remove any non-digit characters
@@ -72,25 +83,15 @@ export function validateIsraeliIdOrBn(value: string): {
     return { isValid: true, type: 'unknown', message: '' };
   }
   
-  // Check for non-numeric characters in original
-  if (value.replace(/[-\s]/g, '') !== cleanValue && value.replace(/[-\s]/g, '').length !== cleanValue.length) {
-    return { 
-      isValid: false, 
-      type: 'unknown', 
-      message: 'יש להזין מספרים בלבד' 
-    };
-  }
-  
-  // Check length - too short
+  // Check length
   if (cleanValue.length < 5) {
     return { 
       isValid: false, 
       type: 'unknown', 
-      message: 'מספר קצר מדי' 
+      message: 'מספר קצר מדי (מינימום 5 ספרות)' 
     };
   }
   
-  // Check length - too long
   if (cleanValue.length > 9) {
     return { 
       isValid: false, 
@@ -99,47 +100,35 @@ export function validateIsraeliIdOrBn(value: string): {
     };
   }
   
-  // For 9-digit numbers, determine if it's a company or ID
+  // Try to validate as ID (9 digits)
   if (cleanValue.length === 9) {
-    // Check if it looks like a company number (starts with 51-59)
-    if (looksLikeCompanyNumber(cleanValue)) {
-      // Company numbers - accept without checksum validation
-      return { 
-        isValid: true, 
-        type: 'company', 
-        message: '' 
-      };
-    }
-    
-    // Otherwise, validate as ID number
     if (validateIsraeliId(cleanValue)) {
       return { isValid: true, type: 'id', message: '' };
     }
-    
     return { 
       isValid: false, 
       type: 'id', 
-      message: 'מספר ת.ז. לא תקין - ספרת הביקורת שגויה' 
+      message: 'מספר ת.ז. לא תקין - בדקו את הספרות' 
     };
   }
   
-  // For 8 digits, could be an old format - pad and validate as ID
+  // Try to validate as business number (8 digits)
   if (cleanValue.length === 8) {
-    if (validateIsraeliId(cleanValue)) {
-      return { isValid: true, type: 'id', message: '' };
+    if (validateBusinessNumber(cleanValue)) {
+      return { isValid: true, type: 'business', message: '' };
     }
-    // If it doesn't pass ID validation, it might still be a valid business number
     return { 
-      isValid: true, 
-      type: 'unknown', 
-      message: '' 
+      isValid: false, 
+      type: 'business', 
+      message: 'מספר ח.פ. לא תקין - בדקו את הספרות' 
     };
   }
   
-  // For 5-7 digits, could be older formats - accept without validation
+  // For other lengths (5-7), just check basic format
+  // These could be older business numbers or special cases
   return { 
     isValid: true, 
-    type: 'unknown', 
+    type: 'business', 
     message: '' 
   };
 }
