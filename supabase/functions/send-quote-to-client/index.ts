@@ -64,8 +64,8 @@ serve(async (req) => {
       configMap.set(c.config_key, c.config_value);
     });
 
-    const fromEmail = configMap.get('from_email') || 'noreply@caravan-creator.com';
-    const fromName = configMap.get('from_name') || 'אלויה ניגרים';
+    const fromEmail = configMap.get('from_email') || 'foodtracks@converto.co.il';
+    const fromName = configMap.get('from_name') || 'אלויה ניגררים';
     const companyName = configMap.get('company_name') || 'אלויה ניגרים';
 
     // Format price for display
@@ -172,7 +172,13 @@ serve(async (req) => {
       `,
     });
 
-    console.log('Email sent successfully:', emailResponse);
+    // Check for Resend errors
+    if (emailResponse.error) {
+      console.error('Resend error:', emailResponse.error);
+      throw new Error(`Failed to send email: ${emailResponse.error.message}`);
+    }
+
+    console.log('Email sent successfully:', emailResponse.data);
 
     // Update lead with sent timestamp and status
     const { error: updateError } = await supabase

@@ -71,7 +71,7 @@ serve(async (req) => {
     });
 
     const companyName = configMap['company_name'] || 'אלויה ניגררים';
-    const fromEmail = configMap['from_email'] || 'noreply@caravan-creator.lovable.app';
+    const fromEmail = configMap['from_email'] || 'foodtracks@converto.co.il';
     const fromName = configMap['from_name'] || companyName;
 
     // Build email HTML

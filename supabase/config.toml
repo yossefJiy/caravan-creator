@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-quote-to-client]
 verify_jwt = false
+
+[functions.send-completion-link]
+verify_jwt = false
