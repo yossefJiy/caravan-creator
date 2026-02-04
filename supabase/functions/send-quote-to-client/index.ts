@@ -65,8 +65,8 @@ serve(async (req) => {
     });
 
     const fromEmail = configMap.get('from_email') || 'foodtracks@converto.co.il';
-    const fromName = configMap.get('from_name') || 'אלויה ניגררים';
-    const companyName = configMap.get('company_name') || 'אלויה ניגרים';
+    const fromName = configMap.get('from_name') || 'אליה פודטראקים ונגררים';
+    const companyName = configMap.get('company_name') || 'אליה פודטראקים ונגררים';
 
     // Format price for display
     const formatPrice = (price: number) => {

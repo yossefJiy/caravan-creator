@@ -70,9 +70,9 @@ serve(async (req) => {
       configMap[item.config_key] = item.config_value;
     });
 
-    const companyName = configMap['company_name'] || 'אלויה ניגררים';
+    const companyName = configMap['company_name'] || 'אליה פודטראקים ונגררים';
     const fromEmail = configMap['from_email'] || 'foodtracks@converto.co.il';
-    const fromName = configMap['from_name'] || companyName;
+    const fromName = configMap['from_name'] || 'אליה פודטראקים ונגררים';
 
     // Build email HTML
     const emailHtml = `
