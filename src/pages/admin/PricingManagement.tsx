@@ -21,6 +21,7 @@ interface TruckType {
   name: string;
   name_he: string;
   is_active: boolean;
+  image_url: string | null;
 }
 
 interface TruckSize {
@@ -36,6 +37,7 @@ interface Equipment {
   name: string;
   category_id: string;
   is_active: boolean;
+  image_url: string | null;
 }
 
 interface EquipmentCategory {
@@ -116,7 +118,7 @@ const PricingManagement = () => {
     setEditingPrices(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSavePrice = async (itemType: 'truck_type' | 'truck_size' | 'equipment', itemId: string) => {
+  const handleSavePrice = async (itemType: 'truck_size' | 'equipment', itemId: string) => {
     const key = `${itemType}:${itemId}`;
     const priceValue = editingPrices[key];
     
@@ -191,7 +193,7 @@ const PricingManagement = () => {
           <Accordion type="multiple" className="space-y-3">
             {truckTypes?.map((truckType) => {
               const sizes = truckSizes?.filter(s => s.truck_type_id === truckType.id) || [];
-              const typePricing = getPricing('truck_type', truckType.id);
+              const pricedSizesCount = sizes.filter(s => getPricing('truck_size', s.id)).length;
               
               return (
                 <AccordionItem
@@ -202,96 +204,73 @@ const PricingManagement = () => {
                   <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
                     <div className="flex items-center justify-between w-full pl-4">
                       <div className="flex items-center gap-3">
+                        {truckType.image_url && (
+                          <img 
+                            src={truckType.image_url} 
+                            alt={truckType.name_he}
+                            className="w-10 h-10 object-cover rounded-lg"
+                          />
+                        )}
                         <span className="font-semibold">{truckType.name_he}</span>
                         {!truckType.is_active && (
                           <Badge variant="outline" className="text-muted-foreground">לא פעיל</Badge>
                         )}
                       </div>
-                      {typePricing && (
+                      {pricedSizesCount > 0 && (
                         <Badge variant="secondary">
-                          {formatPrice(typePricing.price)}
+                          {pricedSizesCount}/{sizes.length} מתומחרים
                         </Badge>
                       )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-4">
-                      {/* Truck Type Price */}
-                      <div className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium">מחיר בסיס - {truckType.name_he}</p>
-                          <p className="text-sm text-muted-foreground">מחיר הטראק לפני תוספות</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            placeholder="מחיר ב-₪"
-                            value={getPrice('truck_type', truckType.id)}
-                            onChange={(e) => handlePriceChange('truck_type', truckType.id, e.target.value)}
-                            className="w-32 text-left"
-                            dir="ltr"
-                          />
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => handleSavePrice('truck_type', truckType.id)}
-                            disabled={savingItem === `truck_type:${truckType.id}` || editingPrices[`truck_type:${truckType.id}`] === undefined}
-                          >
-                            {savingItem === `truck_type:${truckType.id}` ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Save className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Truck Sizes */}
-                      {sizes.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium text-muted-foreground">גדלים:</p>
-                          {sizes.map((size) => {
-                            const sizePricing = getPricing('truck_size', size.id);
-                            return (
-                              <div 
-                                key={size.id} 
-                                className="flex items-center justify-between gap-3 p-3 border border-border rounded-lg"
-                              >
-                                <div className="flex-1">
-                                  <p className="font-medium">{size.name}</p>
-                                  <p className="text-sm text-muted-foreground">{size.dimensions}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    type="number"
-                                    placeholder="מחיר ב-₪"
-                                    value={getPrice('truck_size', size.id)}
-                                    onChange={(e) => handlePriceChange('truck_size', size.id, e.target.value)}
-                                    className="w-32 text-left"
-                                    dir="ltr"
-                                  />
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={() => handleSavePrice('truck_size', size.id)}
-                                    disabled={savingItem === `truck_size:${size.id}` || editingPrices[`truck_size:${size.id}`] === undefined}
-                                  >
-                                    {savingItem === `truck_size:${size.id}` ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Save className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </div>
-                                {sizePricing && (
-                                  <Badge variant="outline" className="min-w-fit">
-                                    {formatPrice(sizePricing.price)}
-                                  </Badge>
-                                )}
+                    <div className="space-y-2">
+                      {sizes.length > 0 ? (
+                        sizes.map((size) => {
+                          const sizePricing = getPricing('truck_size', size.id);
+                          return (
+                            <div 
+                              key={size.id} 
+                              className="flex items-center justify-between gap-3 p-3 border border-border rounded-lg"
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium">{size.name}</p>
+                                <p className="text-sm text-muted-foreground">{size.dimensions}</p>
                               </div>
-                            );
-                          })}
-                        </div>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  placeholder="מחיר ב-₪"
+                                  value={getPrice('truck_size', size.id)}
+                                  onChange={(e) => handlePriceChange('truck_size', size.id, e.target.value)}
+                                  className="w-32 text-left"
+                                  dir="ltr"
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => handleSavePrice('truck_size', size.id)}
+                                  disabled={savingItem === `truck_size:${size.id}` || editingPrices[`truck_size:${size.id}`] === undefined}
+                                >
+                                  {savingItem === `truck_size:${size.id}` ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Save className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                              {sizePricing && (
+                                <Badge variant="outline" className="min-w-fit">
+                                  {formatPrice(sizePricing.price)}
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-center text-muted-foreground py-4">
+                          אין גדלים לסוג טראק זה
+                        </p>
                       )}
                     </div>
                   </AccordionContent>
@@ -333,13 +312,26 @@ const PricingManagement = () => {
                             key={item.id} 
                             className="flex items-center justify-between gap-3 p-3 border border-border rounded-lg"
                           >
-                            <div className="flex-1">
-                              <p className="font-medium">{item.name}</p>
-                              {!item.is_active && (
-                                <Badge variant="outline" className="text-muted-foreground text-xs">
-                                  לא פעיל
-                                </Badge>
+                            <div className="flex items-center gap-3 flex-1">
+                              {item.image_url ? (
+                                <img 
+                                  src={item.image_url} 
+                                  alt={item.name}
+                                  className="w-12 h-12 object-cover rounded-lg"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                                  <Package className="h-5 w-5 text-muted-foreground" />
+                                </div>
                               )}
+                              <div>
+                                <p className="font-medium">{item.name}</p>
+                                {!item.is_active && (
+                                  <Badge variant="outline" className="text-muted-foreground text-xs">
+                                    לא פעיל
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <Input
