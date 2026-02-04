@@ -422,6 +422,7 @@ serve(async (req) => {
       quote_url: quoteUrl,
       quote_created_at: new Date().toISOString(),
       id_validation_error: null, // Clear any previous validation error on success
+      is_complete: true, // Mark lead as complete after successful quote creation
     };
 
     // Only update status and quote_sent_at if we're sending the email

@@ -204,6 +204,8 @@ const LeadsManagement = () => {
           quote_url: data.quote_url,
           quote_total: data.quote_total,
           quote_created_at: new Date().toISOString(),
+          is_complete: true, // Mark as complete after quote creation
+          id_validation_error: null, // Clear validation error on success
         });
       }
     },
