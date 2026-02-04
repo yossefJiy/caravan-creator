@@ -249,11 +249,12 @@ serve(async (req) => {
     const incomeItems: IncomeItem[] = [];
 
     // Line 1: Truck type with the TOTAL price
+    // IncomeVatType: 0=DEFAULT (VAT will be added), 1=INCLUDED, 2=EXEMPT
     incomeItems.push({
       description: truckTypeName || 'פוד טראק',
       quantity: 1,
       price: totalBeforeVat,
-      vatType: 1,
+      vatType: 0, // DEFAULT - VAT will be added to this price
     });
 
     // Line 2: Package details header
@@ -261,7 +262,7 @@ serve(async (req) => {
       description: 'פירוט החבילה:',
       quantity: 1,
       price: 0,
-      vatType: 1,
+      vatType: 0,
     });
 
     // Line 3: Truck size (with price 0)
@@ -270,7 +271,7 @@ serve(async (req) => {
         description: sizeName,
         quantity: 1,
         price: 0,
-        vatType: 1,
+        vatType: 0,
       });
     }
 
@@ -280,7 +281,7 @@ serve(async (req) => {
         description: detail.name,
         quantity: 1,
         price: 0,
-        vatType: 1,
+        vatType: 0,
       });
     }
 
@@ -326,11 +327,13 @@ serve(async (req) => {
     }
 
     // Build document request
+    // DocumentVatType: 0=DEFAULT, 1=EXEMPT, 2=MIXED
+    // IncomeVatType: 0=DEFAULT (VAT added), 1=INCLUDED, 2=EXEMPT
     const documentRequest: MorningDocumentRequest = {
       type: 10, // Price Quote
       lang: 'he',
       currency: 'ILS',
-      vatType: 1, // Prices are BEFORE VAT (לפני מע"מ), Morning will ADD 18% VAT
+      vatType: 0, // DEFAULT - VAT will be calculated based on business type
       client,
       income: incomeItems,
     };
