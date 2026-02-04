@@ -574,18 +574,15 @@ const LeadsManagement = () => {
         lead={editingLead}
         open={!!editingLead}
         onOpenChange={(open) => !open && setEditingLead(null)}
-        onSave={(data) => {
+        onSaveAndRecreate={async (data) => {
           if (editingLead) {
-            updateLeadMutation.mutate({ id: editingLead.id, ...data });
-          }
-        }}
-        onRecreateQuote={() => {
-          if (editingLead) {
+            // First update the lead
+            await updateLeadMutation.mutateAsync({ id: editingLead.id, ...data });
+            // Then recreate the quote
             createQuoteMutation.mutate(editingLead.id);
           }
         }}
-        isRecreating={createQuoteMutation.isPending}
-        isSaving={updateLeadMutation.isPending}
+        isSaving={updateLeadMutation.isPending || createQuoteMutation.isPending}
       />
     </div>
   );
