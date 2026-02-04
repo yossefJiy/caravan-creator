@@ -100,27 +100,19 @@ export function validateIsraeliIdOrBn(value: string): {
     };
   }
   
-  // Try to validate as ID (9 digits)
-  if (cleanValue.length === 9) {
-    if (validateIsraeliId(cleanValue)) {
-      return { isValid: true, type: 'id', message: '' };
+  // Try to validate as ID or business number (8-9 digits)
+  if (cleanValue.length === 9 || cleanValue.length === 8) {
+    const isValid = cleanValue.length === 9 
+      ? validateIsraeliId(cleanValue) 
+      : validateBusinessNumber(cleanValue);
+    
+    if (isValid) {
+      return { isValid: true, type: cleanValue.length === 9 ? 'id' : 'business', message: '' };
     }
     return { 
       isValid: false, 
-      type: 'id', 
-      message: 'מספר ת.ז. לא תקין - בדקו את הספרות' 
-    };
-  }
-  
-  // Try to validate as business number (8 digits)
-  if (cleanValue.length === 8) {
-    if (validateBusinessNumber(cleanValue)) {
-      return { isValid: true, type: 'business', message: '' };
-    }
-    return { 
-      isValid: false, 
-      type: 'business', 
-      message: 'מספר ח.פ. לא תקין - בדקו את הספרות' 
+      type: 'unknown', 
+      message: 'ח.פ. / ת.ז. לא תקין - בדקו את הספרות' 
     };
   }
   
