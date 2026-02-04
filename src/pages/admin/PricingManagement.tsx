@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePricing } from '@/hooks/usePricing';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,9 +46,14 @@ interface EquipmentCategory {
   is_active: boolean;
 }
 
+interface EditingPrices {
+  cost: string;
+  sale: string;
+}
+
 const PricingManagement = () => {
-  const { pricing, getPricing, upsertPricing, isUpdating } = usePricing();
-  const [editingPrices, setEditingPrices] = useState<Record<string, string>>({});
+  const { getPricing, upsertPricing } = usePricing();
+  const [editingPrices, setEditingPrices] = useState<Record<string, EditingPrices>>({});
   const [savingItem, setSavingItem] = useState<string | null>(null);
 
   // Fetch truck types
@@ -104,27 +108,37 @@ const PricingManagement = () => {
     },
   });
 
-  const getPrice = (itemType: string, itemId: string) => {
+  const getPrices = (itemType: string, itemId: string): EditingPrices => {
     const key = `${itemType}:${itemId}`;
-    if (editingPrices[key] !== undefined) {
+    if (editingPrices[key]) {
       return editingPrices[key];
     }
     const existingPricing = getPricing(itemType, itemId);
-    return existingPricing ? existingPricing.price.toString() : '';
+    return {
+      cost: existingPricing ? existingPricing.cost_price.toString() : '',
+      sale: existingPricing ? existingPricing.sale_price.toString() : '',
+    };
   };
 
-  const handlePriceChange = (itemType: string, itemId: string, value: string) => {
+  const handlePriceChange = (itemType: string, itemId: string, field: 'cost' | 'sale', value: string) => {
     const key = `${itemType}:${itemId}`;
-    setEditingPrices(prev => ({ ...prev, [key]: value }));
+    setEditingPrices(prev => ({
+      ...prev,
+      [key]: {
+        ...getPrices(itemType, itemId),
+        [field]: value,
+      },
+    }));
   };
 
   const handleSavePrice = async (itemType: 'truck_size' | 'equipment', itemId: string) => {
     const key = `${itemType}:${itemId}`;
-    const priceValue = editingPrices[key];
+    const prices = editingPrices[key];
     
-    if (priceValue === undefined) return;
+    if (!prices) return;
     
-    const price = parseFloat(priceValue) || 0;
+    const costPrice = parseFloat(prices.cost) || 0;
+    const salePrice = parseFloat(prices.sale) || 0;
     setSavingItem(key);
     
     const existingPricing = getPricing(itemType, itemId);
@@ -133,7 +147,8 @@ const PricingManagement = () => {
       id: existingPricing?.id,
       item_type: itemType,
       item_id: itemId,
-      price,
+      cost_price: costPrice,
+      sale_price: salePrice,
       currency: 'ILS',
       notes: null,
       is_active: true,
@@ -157,9 +172,14 @@ const PricingManagement = () => {
     }).format(price);
   };
 
+  const hasChanges = (itemType: string, itemId: string) => {
+    const key = `${itemType}:${itemId}`;
+    return editingPrices[key] !== undefined;
+  };
+
   if (loadingTrucks || loadingCategories) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4" dir="rtl">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-32 w-full" />
@@ -168,7 +188,7 @@ const PricingManagement = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6" dir="rtl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">ניהול מחירונים</h1>
         <p className="text-muted-foreground">
@@ -202,7 +222,7 @@ const PricingManagement = () => {
                   className="border border-border rounded-xl overflow-hidden bg-card"
                 >
                   <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
-                    <div className="flex items-center justify-between w-full pl-4">
+                    <div className="flex items-center justify-between w-full pr-4">
                       <div className="flex items-center gap-3">
                         {truckType.image_url && (
                           <img 
@@ -225,43 +245,59 @@ const PricingManagement = () => {
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-2">
+                      {/* Header row */}
+                      <div className="flex items-center gap-3 p-2 text-sm font-medium text-muted-foreground">
+                        <div className="flex-1">גודל</div>
+                        <div className="w-28 text-center">מחיר עלות</div>
+                        <div className="w-28 text-center">מחיר מכירה</div>
+                        <div className="w-10"></div>
+                        <div className="w-24"></div>
+                      </div>
+                      
                       {sizes.length > 0 ? (
                         sizes.map((size) => {
                           const sizePricing = getPricing('truck_size', size.id);
+                          const prices = getPrices('truck_size', size.id);
                           return (
                             <div 
                               key={size.id} 
-                              className="flex items-center justify-between gap-3 p-3 border border-border rounded-lg"
+                              className="flex items-center gap-3 p-3 border border-border rounded-lg"
                             >
                               <div className="flex-1">
                                 <p className="font-medium">{size.name}</p>
                                 <p className="text-sm text-muted-foreground">{size.dimensions}</p>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  type="number"
-                                  placeholder="מחיר ב-₪"
-                                  value={getPrice('truck_size', size.id)}
-                                  onChange={(e) => handlePriceChange('truck_size', size.id, e.target.value)}
-                                  className="w-32 text-left"
-                                  dir="ltr"
-                                />
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => handleSavePrice('truck_size', size.id)}
-                                  disabled={savingItem === `truck_size:${size.id}` || editingPrices[`truck_size:${size.id}`] === undefined}
-                                >
-                                  {savingItem === `truck_size:${size.id}` ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Save className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
+                              <Input
+                                type="number"
+                                placeholder="עלות"
+                                value={prices.cost}
+                                onChange={(e) => handlePriceChange('truck_size', size.id, 'cost', e.target.value)}
+                                className="w-28 text-center"
+                                dir="ltr"
+                              />
+                              <Input
+                                type="number"
+                                placeholder="מכירה"
+                                value={prices.sale}
+                                onChange={(e) => handlePriceChange('truck_size', size.id, 'sale', e.target.value)}
+                                className="w-28 text-center"
+                                dir="ltr"
+                              />
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => handleSavePrice('truck_size', size.id)}
+                                disabled={savingItem === `truck_size:${size.id}` || !hasChanges('truck_size', size.id)}
+                              >
+                                {savingItem === `truck_size:${size.id}` ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Save className="h-4 w-4" />
+                                )}
+                              </Button>
                               {sizePricing && (
-                                <Badge variant="outline" className="min-w-fit">
-                                  {formatPrice(sizePricing.price)}
+                                <Badge variant="outline" className="min-w-24 justify-center">
+                                  {formatPrice(sizePricing.sale_price)}
                                 </Badge>
                               )}
                             </div>
@@ -294,7 +330,7 @@ const PricingManagement = () => {
                   className="border border-border rounded-xl overflow-hidden bg-card"
                 >
                   <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 pr-4">
                       <span className="font-semibold">{category.name_he}</span>
                       {pricedCount > 0 && (
                         <Badge variant="secondary">
@@ -305,59 +341,74 @@ const PricingManagement = () => {
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-2">
+                      {/* Header row */}
+                      <div className="flex items-center gap-3 p-2 text-sm font-medium text-muted-foreground">
+                        <div className="w-12"></div>
+                        <div className="flex-1">מוצר</div>
+                        <div className="w-28 text-center">מחיר עלות</div>
+                        <div className="w-28 text-center">מחיר מכירה</div>
+                        <div className="w-10"></div>
+                        <div className="w-24"></div>
+                      </div>
+                      
                       {categoryEquipment.map((item) => {
                         const itemPricing = getPricing('equipment', item.id);
+                        const prices = getPrices('equipment', item.id);
                         return (
                           <div 
                             key={item.id} 
-                            className="flex items-center justify-between gap-3 p-3 border border-border rounded-lg"
+                            className="flex items-center gap-3 p-3 border border-border rounded-lg"
                           >
-                            <div className="flex items-center gap-3 flex-1">
-                              {item.image_url ? (
-                                <img 
-                                  src={item.image_url} 
-                                  alt={item.name}
-                                  className="w-12 h-12 object-cover rounded-lg"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                                  <Package className="h-5 w-5 text-muted-foreground" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium">{item.name}</p>
-                                {!item.is_active && (
-                                  <Badge variant="outline" className="text-muted-foreground text-xs">
-                                    לא פעיל
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                placeholder="מחיר ב-₪"
-                                value={getPrice('equipment', item.id)}
-                                onChange={(e) => handlePriceChange('equipment', item.id, e.target.value)}
-                                className="w-32 text-left"
-                                dir="ltr"
+                            {item.image_url ? (
+                              <img 
+                                src={item.image_url} 
+                                alt={item.name}
+                                className="w-12 h-12 object-cover rounded-lg"
                               />
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => handleSavePrice('equipment', item.id)}
-                                disabled={savingItem === `equipment:${item.id}` || editingPrices[`equipment:${item.id}`] === undefined}
-                              >
-                                {savingItem === `equipment:${item.id}` ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Save className="h-4 w-4" />
-                                )}
-                              </Button>
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                                <Package className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <p className="font-medium">{item.name}</p>
+                              {!item.is_active && (
+                                <Badge variant="outline" className="text-muted-foreground text-xs">
+                                  לא פעיל
+                                </Badge>
+                              )}
                             </div>
+                            <Input
+                              type="number"
+                              placeholder="עלות"
+                              value={prices.cost}
+                              onChange={(e) => handlePriceChange('equipment', item.id, 'cost', e.target.value)}
+                              className="w-28 text-center"
+                              dir="ltr"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="מכירה"
+                              value={prices.sale}
+                              onChange={(e) => handlePriceChange('equipment', item.id, 'sale', e.target.value)}
+                              className="w-28 text-center"
+                              dir="ltr"
+                            />
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleSavePrice('equipment', item.id)}
+                              disabled={savingItem === `equipment:${item.id}` || !hasChanges('equipment', item.id)}
+                            >
+                              {savingItem === `equipment:${item.id}` ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Save className="h-4 w-4" />
+                              )}
+                            </Button>
                             {itemPricing && (
-                              <Badge variant="outline" className="min-w-fit">
-                                {formatPrice(itemPricing.price)}
+                              <Badge variant="outline" className="min-w-24 justify-center">
+                                {formatPrice(itemPricing.sale_price)}
                               </Badge>
                             )}
                           </div>
