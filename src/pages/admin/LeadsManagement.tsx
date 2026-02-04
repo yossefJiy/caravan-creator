@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2 } from 'lucide-react';
+import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2, AlertTriangle, Send } from 'lucide-react';
 import { QuoteSummary } from '@/components/admin/QuoteSummary';
 import { QuoteStatus } from '@/components/admin/QuoteStatus';
 import { EditLeadDialog } from '@/components/admin/EditLeadDialog';
@@ -36,6 +36,7 @@ interface Lead {
   quote_sent_at: string | null;
   quote_total: number | null;
   quote_url: string | null;
+  id_validation_error: string | null;
 }
 
 interface TruckType {
@@ -251,6 +252,40 @@ const LeadsManagement = () => {
     onError: (error) => {
       toast({ 
         title: 'שגיאה בשליחת הצעת מחיר', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Send completion link to client mutation
+  const sendCompletionLinkMutation = useMutation({
+    mutationFn: async (leadId: string) => {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-completion-link`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ leadId }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send completion link');
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
+      toast({ title: 'הקישור נשלח ללקוח בהצלחה' });
+    },
+    onError: (error) => {
+      toast({ 
+        title: 'שגיאה בשליחת הקישור', 
         description: error.message, 
         variant: 'destructive' 
       });
@@ -477,7 +512,15 @@ const LeadsManagement = () => {
                   <p className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     {selectedLead.id_number ? (
-                      <span dir="ltr">{selectedLead.id_number}</span>
+                      <>
+                        <span dir="ltr">{selectedLead.id_number}</span>
+                        {selectedLead.id_validation_error && (
+                          <span className="flex items-center gap-1 text-destructive text-sm">
+                            <AlertTriangle className="h-4 w-4" />
+                            {selectedLead.id_validation_error}
+                          </span>
+                        )}
+                      </>
                     ) : (
                       <span className="text-muted-foreground">לא צוין</span>
                     )}
@@ -533,6 +576,38 @@ const LeadsManagement = () => {
                 </div>
               )}
 
+              {/* For incomplete leads - show edit and send completion link buttons */}
+              {!selectedLead.is_complete && (
+                <div className="space-y-4 p-4 border rounded-lg bg-orange-50 dark:bg-orange-950/20">
+                  <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span className="font-medium">ליד לא הושלם</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    הלקוח לא סיים את תהליך הבחירה. ניתן לערוך את הבחירות או לשלוח לו קישור להשלמה.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingLead(selectedLead)}
+                    >
+                      <FileText className="h-4 w-4 ml-2" />
+                      ערוך בחירות
+                    </Button>
+                    <Button
+                      onClick={() => sendCompletionLinkMutation.mutate(selectedLead.id)}
+                      disabled={!selectedLead.email || sendCompletionLinkMutation.isPending}
+                    >
+                      <Send className="h-4 w-4 ml-2" />
+                      {sendCompletionLinkMutation.isPending ? 'שולח...' : 'שלח ללקוח להשלמה'}
+                    </Button>
+                  </div>
+                  {!selectedLead.email && (
+                    <p className="text-xs text-destructive">* נדרש אימייל לשליחת קישור</p>
+                  )}
+                </div>
+              )}
+
               {/* Quote Summary - show price calculation */}
               {hasProducts(selectedLead) && (
                 <QuoteSummary
@@ -545,22 +620,24 @@ const LeadsManagement = () => {
                 />
               )}
 
-              {/* Quote Status - 3-step workflow */}
-              <QuoteStatus
-                quoteId={selectedLead.quote_id}
-                quoteNumber={selectedLead.quote_number}
-                quoteCreatedAt={selectedLead.quote_created_at}
-                quoteSentAt={selectedLead.quote_sent_at}
-                quoteTotal={selectedLead.quote_total}
-                quoteUrl={selectedLead.quote_url}
-                onCreateQuote={() => createQuoteMutation.mutate(selectedLead.id)}
-                onSendToClient={() => sendQuoteMutation.mutate(selectedLead.id)}
-                onEdit={() => setEditingLead(selectedLead)}
-                isCreating={createQuoteMutation.isPending}
-                isSending={sendQuoteMutation.isPending}
-                hasProducts={hasProducts(selectedLead)}
-                hasEmail={!!selectedLead.email}
-              />
+              {/* Quote Status - 3-step workflow (only for complete leads) */}
+              {selectedLead.is_complete && (
+                <QuoteStatus
+                  quoteId={selectedLead.quote_id}
+                  quoteNumber={selectedLead.quote_number}
+                  quoteCreatedAt={selectedLead.quote_created_at}
+                  quoteSentAt={selectedLead.quote_sent_at}
+                  quoteTotal={selectedLead.quote_total}
+                  quoteUrl={selectedLead.quote_url}
+                  onCreateQuote={() => createQuoteMutation.mutate(selectedLead.id)}
+                  onSendToClient={() => sendQuoteMutation.mutate(selectedLead.id)}
+                  onEdit={() => setEditingLead(selectedLead)}
+                  isCreating={createQuoteMutation.isPending}
+                  isSending={sendQuoteMutation.isPending}
+                  hasProducts={hasProducts(selectedLead)}
+                  hasEmail={!!selectedLead.email}
+                />
+              )}
 
               <div className="flex justify-end pt-4 border-t">
                 <Button
@@ -593,7 +670,14 @@ const LeadsManagement = () => {
             createQuoteMutation.mutate(editingLead.id);
           }
         }}
+        onSaveOnly={async (data) => {
+          if (editingLead) {
+            await updateLeadMutation.mutateAsync({ id: editingLead.id, ...data });
+            setEditingLead(null);
+          }
+        }}
         isSaving={updateLeadMutation.isPending || createQuoteMutation.isPending}
+        showSaveOnly={editingLead ? !editingLead.is_complete : false}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Save } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -27,7 +27,9 @@ interface EditLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaveAndRecreate: (data: Partial<Lead>) => void;
+  onSaveOnly?: (data: Partial<Lead>) => void;
   isSaving?: boolean;
+  showSaveOnly?: boolean;
 }
 
 export const EditLeadDialog = ({
@@ -35,7 +37,9 @@ export const EditLeadDialog = ({
   open,
   onOpenChange,
   onSaveAndRecreate,
+  onSaveOnly,
   isSaving = false,
+  showSaveOnly = false,
 }: EditLeadDialogProps) => {
   const [formData, setFormData] = useState({
     full_name: '',
@@ -115,9 +119,9 @@ export const EditLeadDialog = ({
     }
   }, [lead, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent, saveOnly = false) => {
     e.preventDefault();
-    onSaveAndRecreate({
+    const data = {
       full_name: formData.full_name,
       email: formData.email || null,
       phone: formData.phone,
@@ -126,7 +130,13 @@ export const EditLeadDialog = ({
       selected_truck_type: formData.selected_truck_type || null,
       selected_truck_size: formData.selected_truck_size || null,
       selected_equipment: formData.selected_equipment,
-    });
+    };
+    
+    if (saveOnly && onSaveOnly) {
+      onSaveOnly(data);
+    } else {
+      onSaveAndRecreate(data);
+    }
   };
 
   const toggleEquipment = (equipmentName: string) => {
@@ -158,7 +168,7 @@ export const EditLeadDialog = ({
           <DialogTitle>עריכת ליד</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="full_name">שם מלא</Label>
@@ -278,10 +288,21 @@ export const EditLeadDialog = ({
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               ביטול
             </Button>
+            {showSaveOnly && onSaveOnly && (
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={(e) => handleSubmit(e, true)} 
+                disabled={isSaving}
+              >
+                <Save className="h-4 w-4 ml-2" />
+                שמור בלבד
+              </Button>
+            )}
             <Button type="submit" disabled={isSaving}>
               <RefreshCw className="h-4 w-4 ml-2" />
               {isSaving ? 'שומר ויוצר הצעה...' : 'שמור וצור הצעה מחדש'}
