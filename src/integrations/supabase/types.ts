@@ -155,6 +155,7 @@ export type Database = {
           full_name: string
           id: string
           id_number: string | null
+          id_validation_error: string | null
           is_complete: boolean
           notes: string | null
           phone: string
@@ -178,6 +179,7 @@ export type Database = {
           full_name: string
           id?: string
           id_number?: string | null
+          id_validation_error?: string | null
           is_complete?: boolean
           notes?: string | null
           phone: string
@@ -201,6 +203,7 @@ export type Database = {
           full_name?: string
           id?: string
           id_number?: string | null
+          id_validation_error?: string | null
           is_complete?: boolean
           notes?: string | null
           phone?: string

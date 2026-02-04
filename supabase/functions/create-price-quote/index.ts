@@ -384,9 +384,24 @@ serve(async (req) => {
     });
 
     if (!docResponse.ok) {
-      const docError = await docResponse.text();
-      console.error('Morning document creation error:', docError);
-      throw new Error(`Failed to create price quote: ${docError}`);
+      const docErrorText = await docResponse.text();
+      console.error('Morning document creation error:', docErrorText);
+      
+      // Check if this is an ID validation error (errorCode 1111)
+      try {
+        const docErrorJson = JSON.parse(docErrorText);
+        if (docErrorJson.errorCode === 1111) {
+          // Save the ID validation error to the lead
+          await supabase
+            .from('leads')
+            .update({ id_validation_error: 'ח.פ. / ת.ז. לא תקין במורנינג' })
+            .eq('id', leadId);
+        }
+      } catch {
+        // Not JSON, continue with original error
+      }
+      
+      throw new Error(`Failed to create price quote: ${docErrorText}`);
     }
 
     const docData = await docResponse.json();
@@ -406,6 +421,7 @@ serve(async (req) => {
       quote_total: quoteTotal,
       quote_url: quoteUrl,
       quote_created_at: new Date().toISOString(),
+      id_validation_error: null, // Clear any previous validation error on success
     };
 
     // Only update status and quote_sent_at if we're sending the email
