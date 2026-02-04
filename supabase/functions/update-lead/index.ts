@@ -41,10 +41,10 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // First verify the lead exists
+    // First verify the lead exists and check if it was already complete
     const { data: existingLead, error: fetchError } = await supabaseAdmin
       .from('leads')
-      .select('id')
+      .select('id, is_complete')
       .eq('id', leadId)
       .maybeSingle()
 
@@ -63,6 +63,10 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Check if this is a new completion (was not complete, now becoming complete)
+    const wasComplete = existingLead.is_complete
+    const isBecomingComplete = updateData.is_complete === true && !wasComplete
+
     // Update the lead
     const { data, error: updateError } = await supabaseAdmin
       .from('leads')
@@ -77,6 +81,62 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Failed to update lead' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    // If lead is becoming complete, automatically create price quote and notify business
+    if (isBecomingComplete) {
+      console.log('Lead completed, creating automatic price quote...')
+      
+      // Create price quote automatically (without sending to client)
+      try {
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        
+        const quoteResponse = await fetch(`${SUPABASE_URL}/functions/v1/create-price-quote`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({ leadId, sendEmail: false }),
+        })
+        
+        if (quoteResponse.ok) {
+          const quoteResult = await quoteResponse.json()
+          console.log('Price quote created automatically:', quoteResult)
+        } else {
+          const quoteError = await quoteResponse.text()
+          console.error('Error creating automatic price quote:', quoteError)
+        }
+      } catch (quoteError) {
+        console.error('Error calling create-price-quote:', quoteError)
+        // Don't fail the whole request, quote creation is a bonus
+      }
+
+      // Send notification to business owners
+      try {
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        
+        const notifyResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-lead-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({ leadId }),
+        })
+        
+        if (notifyResponse.ok) {
+          console.log('Business notification sent successfully')
+        } else {
+          const notifyError = await notifyResponse.text()
+          console.error('Error sending business notification:', notifyError)
+        }
+      } catch (notifyError) {
+        console.error('Error calling send-lead-notification:', notifyError)
+        // Don't fail the whole request
+      }
     }
 
     return new Response(
