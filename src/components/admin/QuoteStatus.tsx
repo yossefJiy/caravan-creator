@@ -126,24 +126,14 @@ export const QuoteStatus = ({
 
         <div className="flex flex-wrap gap-2">
           {quoteUrl && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(quoteUrl, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 ml-2" />
-                צפה ב-PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadPdf}
-              >
-                <Download className="h-4 w-4 ml-2" />
-                הורד
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(quoteUrl, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 ml-2" />
+              צפה ב-PDF
+            </Button>
           )}
           {onEdit && (
             <Button
@@ -201,9 +191,8 @@ export const QuoteStatus = ({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {quoteUrl && (
-          <>
+        <div className="flex flex-wrap gap-2">
+          {quoteUrl && (
             <Button
               variant="outline"
               size="sm"
@@ -212,16 +201,7 @@ export const QuoteStatus = ({
               <ExternalLink className="h-4 w-4 ml-2" />
               צפה ב-PDF
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadPdf}
-            >
-              <Download className="h-4 w-4 ml-2" />
-              הורד
-            </Button>
-          </>
-        )}
+          )}
         {onEdit && (
           <Button
             variant="outline"
