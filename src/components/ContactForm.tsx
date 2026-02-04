@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Phone, Mail, MessageSquare, Loader2, ArrowLeft } from 'lucide-react';
+import { User, Phone, Mail, MessageSquare, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ContactDetails } from '@/types/configurator';
 import { cn } from '@/lib/utils';
+import { validateIsraeliIdOrBn } from '@/lib/israelIdValidation';
 
 interface ContactFormProps {
   onSubmit: (details: ContactDetails) => void;
@@ -40,7 +41,21 @@ export const ContactForm = ({
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ContactDetails | 'privacy', string>>>({});
+  const [idWarning, setIdWarning] = useState<string>('');
   const { toast } = useToast();
+
+  // Validate ID number on change
+  const handleIdNumberChange = (value: string) => {
+    setFormData({ ...formData, idNumber: value });
+    
+    // Only validate if there's a value
+    if (value.trim()) {
+      const validation = validateIsraeliIdOrBn(value);
+      setIdWarning(validation.message);
+    } else {
+      setIdWarning('');
+    }
+  };
 
   const validate = () => {
     const newErrors: Partial<Record<keyof ContactDetails | 'privacy', string>> = {};
@@ -168,10 +183,17 @@ export const ContactForm = ({
         <Input 
           id="idNumber" 
           value={formData.idNumber} 
-          onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })} 
+          onChange={(e) => handleIdNumberChange(e.target.value)} 
           placeholder="מספר ח.פ. או ת.ז." 
-          dir="ltr" 
+          dir="ltr"
+          className={idWarning ? 'border-yellow-500' : ''}
         />
+        {idWarning && (
+          <p className="text-xs text-yellow-600 flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            {idWarning}
+          </p>
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="notes" className="flex items-center gap-2">
