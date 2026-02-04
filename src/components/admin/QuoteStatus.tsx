@@ -100,7 +100,7 @@ export const QuoteStatus = ({
           )}
           {quoteTotal !== null && (
             <div>
-              <span className="text-muted-foreground">סכום (לפני מע"מ): </span>
+              <span className="text-muted-foreground">סה"כ לתשלום: </span>
               <span className="font-medium">{formatPrice(quoteTotal)}</span>
             </div>
           )}
@@ -178,7 +178,7 @@ export const QuoteStatus = ({
         )}
         {quoteTotal !== null && (
           <div>
-            <span className="text-muted-foreground">סכום (לפני מע"מ): </span>
+            <span className="text-muted-foreground">סה"כ לתשלום: </span>
             <span className="font-medium">{formatPrice(quoteTotal)}</span>
           </div>
         )}
