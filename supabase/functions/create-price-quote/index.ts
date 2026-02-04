@@ -19,6 +19,7 @@ interface MorningClient {
   name: string;
   phone?: string;
   emails?: string[];
+  taxId?: string; // ח.פ. or ת.ז.
   add: boolean;
 }
 
@@ -311,6 +312,29 @@ serve(async (req) => {
       throw new Error('No token received from Morning API');
     }
 
+    // Close previous quote if exists
+    const previousQuoteId = lead.quote_id;
+    if (previousQuoteId) {
+      console.log('Closing previous quote:', previousQuoteId);
+      try {
+        const closeResponse = await fetch(`${MORNING_API_URL}/documents/${previousQuoteId}/close`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (closeResponse.ok) {
+          console.log('Previous quote closed successfully');
+        } else {
+          console.warn('Failed to close previous quote:', await closeResponse.text());
+        }
+      } catch (closeError) {
+        console.warn('Error closing previous quote:', closeError);
+        // Continue - don't fail the new quote creation
+      }
+    }
+
     // Build client object
     const client: MorningClient = {
       name: lead.full_name,
@@ -319,6 +343,11 @@ serve(async (req) => {
 
     if (lead.phone) {
       client.phone = lead.phone;
+    }
+
+    // Add tax ID (ח.פ. / ת.ז.) if available
+    if (lead.id_number) {
+      client.taxId = lead.id_number;
     }
 
     // Only add email if sendEmail is true

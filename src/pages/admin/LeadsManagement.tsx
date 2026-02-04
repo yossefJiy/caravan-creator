@@ -20,6 +20,7 @@ interface Lead {
   full_name: string;
   email: string | null;
   phone: string;
+  id_number: string | null;
   notes: string | null;
   selected_truck_type: string | null;
   selected_truck_size: string | null;
@@ -543,7 +544,6 @@ const LeadsManagement = () => {
                 quoteUrl={selectedLead.quote_url}
                 onCreateQuote={() => createQuoteMutation.mutate(selectedLead.id)}
                 onSendToClient={() => sendQuoteMutation.mutate(selectedLead.id)}
-                onRecreate={() => createQuoteMutation.mutate(selectedLead.id)}
                 onEdit={() => setEditingLead(selectedLead)}
                 isCreating={createQuoteMutation.isPending}
                 isSending={sendQuoteMutation.isPending}
@@ -579,6 +579,12 @@ const LeadsManagement = () => {
             updateLeadMutation.mutate({ id: editingLead.id, ...data });
           }
         }}
+        onRecreateQuote={() => {
+          if (editingLead) {
+            createQuoteMutation.mutate(editingLead.id);
+          }
+        }}
+        isRecreating={createQuoteMutation.isPending}
         isSaving={updateLeadMutation.isPending}
       />
     </div>

@@ -10,6 +10,7 @@ interface UpdateLeadRequest {
   full_name?: string
   email?: string | null
   phone?: string
+  id_number?: string | null
   notes?: string | null
   selected_truck_type?: string | null
   selected_truck_size?: string | null

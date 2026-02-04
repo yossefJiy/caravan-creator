@@ -34,6 +34,7 @@ export const ContactForm = ({
     lastName: initialData?.lastName || '',
     phone: initialData?.phone || '',
     email: initialData?.email || '',
+    idNumber: initialData?.idNumber || '',
     notes: initialData?.notes || '',
   });
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -50,7 +51,9 @@ export const ContactForm = ({
     } else if (!/^0\d{8,9}$/.test(formData.phone.replace(/[-\s]/g, ''))) {
       newErrors.phone = 'מספר טלפון לא תקין';
     }
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!formData.email.trim()) {
+      newErrors.email = 'אימייל הוא שדה חובה';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'כתובת אימייל לא תקינה';
     }
     if (!privacyAccepted) {
@@ -144,7 +147,7 @@ export const ContactForm = ({
       </div>
       <div className="space-y-2">
         <Label htmlFor="email" className="flex items-center gap-2">
-          <Mail className="w-4 h-4" />אימייל
+          <Mail className="w-4 h-4" />אימייל *
         </Label>
         <Input 
           id="email" 
@@ -154,8 +157,21 @@ export const ContactForm = ({
           placeholder="email@example.com" 
           className={errors.email ? 'border-destructive' : ''} 
           dir="ltr" 
+          required
         />
         {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="idNumber" className="flex items-center gap-2">
+          <User className="w-4 h-4" />ח.פ. / ת.ז.
+        </Label>
+        <Input 
+          id="idNumber" 
+          value={formData.idNumber} 
+          onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })} 
+          placeholder="מספר ח.פ. או ת.ז." 
+          dir="ltr" 
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="notes" className="flex items-center gap-2">

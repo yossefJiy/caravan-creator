@@ -7,8 +7,9 @@ const corsHeaders = {
 
 interface CreateLeadRequest {
   full_name: string
-  email?: string | null
+  email: string // Required
   phone: string
+  id_number?: string | null
   notes?: string | null
   privacy_accepted: boolean
 }
@@ -21,10 +22,10 @@ Deno.serve(async (req) => {
 
   try {
     const body: CreateLeadRequest = await req.json()
-    const { full_name, email, phone, notes, privacy_accepted } = body
+    const { full_name, email, phone, id_number, notes, privacy_accepted } = body
 
-    // Validate required fields
-    if (!full_name?.trim() || !phone?.trim() || privacy_accepted !== true) {
+    // Validate required fields (email is now required)
+    if (!full_name?.trim() || !phone?.trim() || !email?.trim() || privacy_accepted !== true) {
       return new Response(
         JSON.stringify({ error: 'missing_fields', message: 'חסרים שדות חובה' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -43,7 +44,8 @@ Deno.serve(async (req) => {
       .insert({
         full_name: full_name.trim(),
         phone: phone.trim(),
-        email: email || null,
+        email: email.trim(),
+        id_number: id_number || null,
         notes: notes || null,
         status: 'new',
         is_complete: false,

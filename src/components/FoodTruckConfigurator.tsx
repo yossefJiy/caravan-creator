@@ -195,8 +195,9 @@ export const FoodTruckConfigurator = () => {
       const { data, error } = await supabase.functions.invoke('create-lead', {
         body: {
           full_name: fullName,
-          email: details.email || null,
+          email: details.email,
           phone: details.phone,
+          id_number: details.idNumber || null,
           notes: details.notes || null,
           privacy_accepted: true,
         }
@@ -277,8 +278,9 @@ export const FoodTruckConfigurator = () => {
           body: {
             leadId,
             full_name: fullName,
-            email: state.contactDetails.email || null,
+            email: state.contactDetails.email,
             phone: state.contactDetails.phone,
+            id_number: state.contactDetails.idNumber || null,
             notes: state.contactDetails.notes || null,
             selected_truck_type: truckTypeName,
             selected_truck_size: truckSizeName,
@@ -304,8 +306,9 @@ export const FoodTruckConfigurator = () => {
         const { data: createResult, error: createError } = await supabase.functions.invoke('create-lead', {
           body: {
             full_name: fullName,
-            email: state.contactDetails.email || null,
+            email: state.contactDetails.email,
             phone: state.contactDetails.phone,
+            id_number: state.contactDetails.idNumber || null,
             notes: state.contactDetails.notes || null,
             privacy_accepted: true,
           }

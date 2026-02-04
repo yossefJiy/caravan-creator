@@ -41,6 +41,7 @@ export interface ContactDetails {
   lastName: string;
   phone: string;
   email: string;
+  idNumber: string; // ח.פ. or ת.ז.
   notes: string;
 }
 

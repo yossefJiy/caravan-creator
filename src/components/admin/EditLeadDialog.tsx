@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { RefreshCw } from 'lucide-react';
 
 interface Lead {
   id: string;
   full_name: string;
   email: string | null;
   phone: string;
+  id_number: string | null;
   notes: string | null;
   selected_truck_type: string | null;
   selected_truck_size: string | null;
@@ -25,6 +27,8 @@ interface EditLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: Partial<Lead>) => void;
+  onRecreateQuote?: () => void;
+  isRecreating?: boolean;
   isSaving?: boolean;
 }
 
@@ -33,12 +37,15 @@ export const EditLeadDialog = ({
   open,
   onOpenChange,
   onSave,
+  onRecreateQuote,
+  isRecreating = false,
   isSaving = false,
 }: EditLeadDialogProps) => {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone: '',
+    id_number: '',
     notes: '',
     selected_truck_type: '',
     selected_truck_size: '',
@@ -103,6 +110,7 @@ export const EditLeadDialog = ({
         full_name: lead.full_name || '',
         email: lead.email || '',
         phone: lead.phone || '',
+        id_number: lead.id_number || '',
         notes: lead.notes || '',
         selected_truck_type: lead.selected_truck_type || '',
         selected_truck_size: lead.selected_truck_size || '',
@@ -117,6 +125,7 @@ export const EditLeadDialog = ({
       full_name: formData.full_name,
       email: formData.email || null,
       phone: formData.phone,
+      id_number: formData.id_number || null,
       notes: formData.notes || null,
       selected_truck_type: formData.selected_truck_type || null,
       selected_truck_size: formData.selected_truck_size || null,
@@ -175,13 +184,24 @@ export const EditLeadDialog = ({
               />
             </div>
 
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="email">אימייל</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">אימייל *</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="id_number">ח.פ. / ת.ז.</Label>
+              <Input
+                id="id_number"
+                value={formData.id_number}
+                onChange={(e) => setFormData(prev => ({ ...prev, id_number: e.target.value }))}
+                dir="ltr"
               />
             </div>
           </div>
@@ -262,13 +282,27 @@ export const EditLeadDialog = ({
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              ביטול
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? 'שומר...' : 'שמור'}
-            </Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {onRecreateQuote && (
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={onRecreateQuote}
+                disabled={isRecreating || isSaving}
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className="h-4 w-4 ml-2" />
+                {isRecreating ? 'יוצר...' : 'צור הצעה מחדש'}
+              </Button>
+            )}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                ביטול
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? 'שומר...' : 'שמור'}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
