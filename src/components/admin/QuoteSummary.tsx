@@ -13,7 +13,7 @@ interface QuoteSummaryProps {
   equipment?: Array<{ id: string; name: string; description?: string | null }>;
 }
 
-const VAT_RATE = 0.17;
+const VAT_RATE = 0.18;
 
 export const QuoteSummary = ({ 
   selectedTruckType,
@@ -143,7 +143,7 @@ export const QuoteSummary = ({
           <span>{formatPrice(calculations.subtotal)}</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
-          <span>מע"מ (17%):</span>
+          <span>מע"מ (18%):</span>
           <span>{formatPrice(calculations.vat)}</span>
         </div>
         <Separator />
