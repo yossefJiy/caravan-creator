@@ -2,11 +2,8 @@
  * Israeli ID/Business Number Validation
  * 
  * - ת.ז. (ID): 9 digits with Luhn-variant checksum
- * - ח.פ. (Company): 9 digits starting with 51-59, no public checksum algorithm
+ * - ח.פ. (Company): 9 digits starting with 51-59
  * - עוסק מורשה (Licensed Dealer): Uses owner's ID number
- * 
- * Note: Full ח.פ. validation requires checking against the Companies Registrar.
- * Morning API does this automatically when creating documents.
  */
 
 /**
@@ -106,7 +103,7 @@ export function validateIsraeliIdOrBn(value: string): {
   if (cleanValue.length === 9) {
     // Check if it looks like a company number (starts with 51-59)
     if (looksLikeCompanyNumber(cleanValue)) {
-      // Company numbers - we can't validate checksum, Morning will verify
+      // Company numbers - accept without checksum validation
       return { 
         isValid: true, 
         type: 'company', 
@@ -132,7 +129,6 @@ export function validateIsraeliIdOrBn(value: string): {
       return { isValid: true, type: 'id', message: '' };
     }
     // If it doesn't pass ID validation, it might still be a valid business number
-    // Morning will verify
     return { 
       isValid: true, 
       type: 'unknown', 
