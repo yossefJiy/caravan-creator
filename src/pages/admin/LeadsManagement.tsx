@@ -13,6 +13,7 @@ import { he } from 'date-fns/locale';
 import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2 } from 'lucide-react';
 import { QuoteSummary } from '@/components/admin/QuoteSummary';
 import { QuoteStatus } from '@/components/admin/QuoteStatus';
+import { EditLeadDialog } from '@/components/admin/EditLeadDialog';
 
 interface Lead {
   id: string;
@@ -65,6 +66,7 @@ const statusOptions = [
 
 const LeadsManagement = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -248,6 +250,42 @@ const LeadsManagement = () => {
     onError: (error) => {
       toast({ 
         title: 'שגיאה בשליחת הצעת מחיר', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Update lead mutation (for editing)
+  const updateLeadMutation = useMutation({
+    mutationFn: async (data: Partial<Lead> & { id: string }) => {
+      const { id, ...updateData } = data;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-lead`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ leadId: id, ...updateData }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Failed to update lead');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
+      setEditingLead(null);
+      toast({ title: 'הליד עודכן בהצלחה' });
+    },
+    onError: (error) => {
+      toast({ 
+        title: 'שגיאה בעדכון הליד', 
         description: error.message, 
         variant: 'destructive' 
       });
@@ -506,6 +544,7 @@ const LeadsManagement = () => {
                 onCreateQuote={() => createQuoteMutation.mutate(selectedLead.id)}
                 onSendToClient={() => sendQuoteMutation.mutate(selectedLead.id)}
                 onRecreate={() => createQuoteMutation.mutate(selectedLead.id)}
+                onEdit={() => setEditingLead(selectedLead)}
                 isCreating={createQuoteMutation.isPending}
                 isSending={sendQuoteMutation.isPending}
                 hasProducts={hasProducts(selectedLead)}
@@ -529,6 +568,19 @@ const LeadsManagement = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Edit Lead Dialog */}
+      <EditLeadDialog
+        lead={editingLead}
+        open={!!editingLead}
+        onOpenChange={(open) => !open && setEditingLead(null)}
+        onSave={(data) => {
+          if (editingLead) {
+            updateLeadMutation.mutate({ id: editingLead.id, ...data });
+          }
+        }}
+        isSaving={updateLeadMutation.isPending}
+      />
     </div>
   );
 };

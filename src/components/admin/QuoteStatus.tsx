@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, ExternalLink, Send, RefreshCw } from 'lucide-react';
+import { FileText, ExternalLink, Send, RefreshCw, Edit } from 'lucide-react';
 
 interface QuoteStatusProps {
   quoteId: string | null;
@@ -14,6 +14,7 @@ interface QuoteStatusProps {
   onCreateQuote?: () => void;
   onSendToClient?: () => void;
   onRecreate?: () => void;
+  onEdit?: () => void;
   isCreating?: boolean;
   isSending?: boolean;
   hasProducts?: boolean;
@@ -30,6 +31,7 @@ export const QuoteStatus = ({
   onCreateQuote,
   onSendToClient,
   onRecreate,
+  onEdit,
   isCreating = false,
   isSending = false,
   hasProducts = false,
@@ -44,7 +46,7 @@ export const QuoteStatus = ({
     }).format(price);
   };
 
-  // State 1: No quote exists yet
+  // State 1: No quote exists yet - quote is created automatically, so this is rare
   if (!quoteId) {
     if (!hasProducts) {
       return null;
@@ -55,13 +57,24 @@ export const QuoteStatus = ({
         <p className="text-sm text-muted-foreground mb-3">
           לא נוצרה הצעת מחיר עדיין
         </p>
-        <Button
-          onClick={onCreateQuote}
-          disabled={isCreating}
-        >
-          <FileText className="h-4 w-4 ml-2" />
-          {isCreating ? 'יוצר הצעה...' : 'צור הצעת מחיר'}
-        </Button>
+        <div className="flex gap-2">
+          {onEdit && (
+            <Button
+              variant="outline"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4 ml-2" />
+              ערוך פרטים
+            </Button>
+          )}
+          <Button
+            onClick={onCreateQuote}
+            disabled={isCreating}
+          >
+            <FileText className="h-4 w-4 ml-2" />
+            {isCreating ? 'יוצר הצעה...' : 'צור הצעת מחיר'}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -102,6 +115,16 @@ export const QuoteStatus = ({
             >
               <ExternalLink className="h-4 w-4 ml-2" />
               צפה ב-PDF
+            </Button>
+          )}
+          {onEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4 ml-2" />
+              ערוך
             </Button>
           )}
           {onRecreate && (
@@ -170,6 +193,27 @@ export const QuoteStatus = ({
           >
             <ExternalLink className="h-4 w-4 ml-2" />
             צפה ב-PDF
+          </Button>
+        )}
+        {onEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4 ml-2" />
+            ערוך
+          </Button>
+        )}
+        {onRecreate && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRecreate}
+            disabled={isCreating}
+          >
+            <RefreshCw className="h-4 w-4 ml-2" />
+            {isCreating ? 'יוצר...' : 'צור מחדש'}
           </Button>
         )}
         {onSendToClient && hasEmail && (
