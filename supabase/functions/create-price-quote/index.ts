@@ -399,7 +399,7 @@ serve(async (req) => {
         quote_number: quoteNumber,
         quote_url: quoteUrl,
         quote_total: quoteTotal,
-        total_with_vat: quoteTotal * 1.17,
+        total_with_vat: quoteTotal * 1.18,
         email_sent: sendEmail,
       }),
       {
