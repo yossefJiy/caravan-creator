@@ -222,7 +222,7 @@ const PricingManagement = () => {
                   className="border border-border rounded-xl overflow-hidden bg-card"
                 >
                   <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
-                    <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
                         {truckType.image_url && (
                           <img 
@@ -237,77 +237,91 @@ const PricingManagement = () => {
                         )}
                       </div>
                       {pricedSizesCount > 0 && (
-                        <Badge variant="secondary">
+                        <Badge variant="secondary" className="ml-4">
                           {pricedSizesCount}/{sizes.length} מתומחרים
                         </Badge>
                       )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-2">
-                      {/* Header row */}
-                      <div className="flex items-center gap-3 p-2 text-sm font-medium text-muted-foreground">
-                        <div className="flex-1">גודל</div>
-                        <div className="w-28 text-center">מחיר עלות</div>
-                        <div className="w-28 text-center">מחיר מכירה</div>
-                        <div className="w-10"></div>
-                        <div className="w-24"></div>
-                      </div>
-                      
-                      {sizes.length > 0 ? (
-                        sizes.map((size) => {
-                          const sizePricing = getPricing('truck_size', size.id);
-                          const prices = getPrices('truck_size', size.id);
-                          return (
-                            <div 
-                              key={size.id} 
-                              className="flex items-center gap-3 p-3 border border-border rounded-lg"
-                            >
-                              <div className="flex-1">
-                                <p className="font-medium">{size.name}</p>
-                                <p className="text-sm text-muted-foreground">{size.dimensions}</p>
-                              </div>
-                              <Input
-                                type="number"
-                                placeholder="עלות"
-                                value={prices.cost}
-                                onChange={(e) => handlePriceChange('truck_size', size.id, 'cost', e.target.value)}
-                                className="w-28 text-center"
-                                dir="ltr"
-                              />
-                              <Input
-                                type="number"
-                                placeholder="מכירה"
-                                value={prices.sale}
-                                onChange={(e) => handlePriceChange('truck_size', size.id, 'sale', e.target.value)}
-                                className="w-28 text-center"
-                                dir="ltr"
-                              />
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => handleSavePrice('truck_size', size.id)}
-                                disabled={savingItem === `truck_size:${size.id}` || !hasChanges('truck_size', size.id)}
-                              >
-                                {savingItem === `truck_size:${size.id}` ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Save className="h-4 w-4" />
-                                )}
-                              </Button>
-                              {sizePricing && (
-                                <Badge variant="outline" className="min-w-24 justify-center">
-                                  {formatPrice(sizePricing.sale_price)}
-                                </Badge>
-                              )}
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <p className="text-center text-muted-foreground py-4">
-                          אין גדלים לסוג טראק זה
-                        </p>
-                      )}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-muted-foreground">
+                            <th className="text-right py-2 px-2 font-medium">גודל</th>
+                            <th className="text-center py-2 px-2 font-medium w-28">מחיר עלות</th>
+                            <th className="text-center py-2 px-2 font-medium w-28">מחיר מכירה</th>
+                            <th className="text-center py-2 px-2 font-medium w-12">שמירה</th>
+                            <th className="text-left py-2 px-2 font-medium w-24">מחיר נוכחי</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sizes.length > 0 ? (
+                            sizes.map((size) => {
+                              const sizePricing = getPricing('truck_size', size.id);
+                              const prices = getPrices('truck_size', size.id);
+                              return (
+                                <tr key={size.id} className="border-b last:border-b-0">
+                                  <td className="py-3 px-2">
+                                    <p className="font-medium">{size.name}</p>
+                                    <p className="text-xs text-muted-foreground">{size.dimensions}</p>
+                                  </td>
+                                  <td className="py-3 px-2">
+                                    <Input
+                                      type="number"
+                                      placeholder="עלות"
+                                      value={prices.cost}
+                                      onChange={(e) => handlePriceChange('truck_size', size.id, 'cost', e.target.value)}
+                                      className="text-center h-9"
+                                      dir="ltr"
+                                    />
+                                  </td>
+                                  <td className="py-3 px-2">
+                                    <Input
+                                      type="number"
+                                      placeholder="מכירה"
+                                      value={prices.sale}
+                                      onChange={(e) => handlePriceChange('truck_size', size.id, 'sale', e.target.value)}
+                                      className="text-center h-9"
+                                      dir="ltr"
+                                    />
+                                  </td>
+                                  <td className="py-3 px-2 text-center">
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      className="h-9 w-9"
+                                      onClick={() => handleSavePrice('truck_size', size.id)}
+                                      disabled={savingItem === `truck_size:${size.id}` || !hasChanges('truck_size', size.id)}
+                                    >
+                                      {savingItem === `truck_size:${size.id}` ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Save className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </td>
+                                  <td className="py-3 px-2 text-left">
+                                    {sizePricing ? (
+                                      <Badge variant="outline" className="text-xs">
+                                        {formatPrice(sizePricing.sale_price)}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-muted-foreground text-xs">—</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="text-center text-muted-foreground py-4">
+                                אין גדלים לסוג טראק זה
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -330,7 +344,7 @@ const PricingManagement = () => {
                   className="border border-border rounded-xl overflow-hidden bg-card"
                 >
                   <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
-                    <div className="flex items-center gap-3 pr-4">
+                    <div className="flex items-center gap-3">
                       <span className="font-semibold">{category.name_he}</span>
                       {pricedCount > 0 && (
                         <Badge variant="secondary">
@@ -340,85 +354,101 @@ const PricingManagement = () => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-2">
-                      {/* Header row */}
-                      <div className="flex items-center gap-3 p-2 text-sm font-medium text-muted-foreground">
-                        <div className="w-12"></div>
-                        <div className="flex-1">מוצר</div>
-                        <div className="w-28 text-center">מחיר עלות</div>
-                        <div className="w-28 text-center">מחיר מכירה</div>
-                        <div className="w-10"></div>
-                        <div className="w-24"></div>
-                      </div>
-                      
-                      {categoryEquipment.map((item) => {
-                        const itemPricing = getPricing('equipment', item.id);
-                        const prices = getPrices('equipment', item.id);
-                        return (
-                          <div 
-                            key={item.id} 
-                            className="flex items-center gap-3 p-3 border border-border rounded-lg"
-                          >
-                            {item.image_url ? (
-                              <img 
-                                src={item.image_url} 
-                                alt={item.name}
-                                className="w-12 h-12 object-cover rounded-lg"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                                <Package className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium">{item.name}</p>
-                              {!item.is_active && (
-                                <Badge variant="outline" className="text-muted-foreground text-xs">
-                                  לא פעיל
-                                </Badge>
-                              )}
-                            </div>
-                            <Input
-                              type="number"
-                              placeholder="עלות"
-                              value={prices.cost}
-                              onChange={(e) => handlePriceChange('equipment', item.id, 'cost', e.target.value)}
-                              className="w-28 text-center"
-                              dir="ltr"
-                            />
-                            <Input
-                              type="number"
-                              placeholder="מכירה"
-                              value={prices.sale}
-                              onChange={(e) => handlePriceChange('equipment', item.id, 'sale', e.target.value)}
-                              className="w-28 text-center"
-                              dir="ltr"
-                            />
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => handleSavePrice('equipment', item.id)}
-                              disabled={savingItem === `equipment:${item.id}` || !hasChanges('equipment', item.id)}
-                            >
-                              {savingItem === `equipment:${item.id}` ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Save className="h-4 w-4" />
-                              )}
-                            </Button>
-                            {itemPricing && (
-                              <Badge variant="outline" className="min-w-24 justify-center">
-                                {formatPrice(itemPricing.sale_price)}
-                              </Badge>
-                            )}
-                          </div>
-                        );
-                      })}
-                      {categoryEquipment.length === 0 && (
-                        <p className="text-center text-muted-foreground py-4">
-                          אין ציוד בקטגוריה זו
-                        </p>
-                      )}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-muted-foreground">
+                            <th className="text-right py-2 px-2 font-medium w-14">תמונה</th>
+                            <th className="text-right py-2 px-2 font-medium">מוצר</th>
+                            <th className="text-center py-2 px-2 font-medium w-28">מחיר עלות</th>
+                            <th className="text-center py-2 px-2 font-medium w-28">מחיר מכירה</th>
+                            <th className="text-center py-2 px-2 font-medium w-12">שמירה</th>
+                            <th className="text-left py-2 px-2 font-medium w-24">מחיר נוכחי</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {categoryEquipment.map((item) => {
+                            const itemPricing = getPricing('equipment', item.id);
+                            const prices = getPrices('equipment', item.id);
+                            return (
+                              <tr key={item.id} className="border-b last:border-b-0">
+                                <td className="py-3 px-2">
+                                  {item.image_url ? (
+                                    <img 
+                                      src={item.image_url} 
+                                      alt={item.name}
+                                      className="w-12 h-12 object-cover rounded-lg"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                                      <Package className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="py-3 px-2">
+                                  <p className="font-medium">{item.name}</p>
+                                  {!item.is_active && (
+                                    <Badge variant="outline" className="text-muted-foreground text-xs">
+                                      לא פעיל
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="py-3 px-2">
+                                  <Input
+                                    type="number"
+                                    placeholder="עלות"
+                                    value={prices.cost}
+                                    onChange={(e) => handlePriceChange('equipment', item.id, 'cost', e.target.value)}
+                                    className="text-center h-9"
+                                    dir="ltr"
+                                  />
+                                </td>
+                                <td className="py-3 px-2">
+                                  <Input
+                                    type="number"
+                                    placeholder="מכירה"
+                                    value={prices.sale}
+                                    onChange={(e) => handlePriceChange('equipment', item.id, 'sale', e.target.value)}
+                                    className="text-center h-9"
+                                    dir="ltr"
+                                  />
+                                </td>
+                                <td className="py-3 px-2 text-center">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-9 w-9"
+                                    onClick={() => handleSavePrice('equipment', item.id)}
+                                    disabled={savingItem === `equipment:${item.id}` || !hasChanges('equipment', item.id)}
+                                  >
+                                    {savingItem === `equipment:${item.id}` ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Save className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </td>
+                                <td className="py-3 px-2 text-left">
+                                  {itemPricing ? (
+                                    <Badge variant="outline" className="text-xs">
+                                      {formatPrice(itemPricing.sale_price)}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground text-xs">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {categoryEquipment.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="text-center text-muted-foreground py-4">
+                                אין ציוד בקטגוריה זו
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
