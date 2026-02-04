@@ -26,9 +26,7 @@ interface EditLeadDialogProps {
   lead: Lead | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: Partial<Lead>) => void;
-  onRecreateQuote?: () => void;
-  isRecreating?: boolean;
+  onSaveAndRecreate: (data: Partial<Lead>) => void;
   isSaving?: boolean;
 }
 
@@ -36,9 +34,7 @@ export const EditLeadDialog = ({
   lead,
   open,
   onOpenChange,
-  onSave,
-  onRecreateQuote,
-  isRecreating = false,
+  onSaveAndRecreate,
   isSaving = false,
 }: EditLeadDialogProps) => {
   const [formData, setFormData] = useState({
@@ -121,7 +117,7 @@ export const EditLeadDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
+    onSaveAndRecreate({
       full_name: formData.full_name,
       email: formData.email || null,
       phone: formData.phone,
@@ -282,27 +278,14 @@ export const EditLeadDialog = ({
             />
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            {onRecreateQuote && (
-              <Button 
-                type="button" 
-                variant="secondary" 
-                onClick={onRecreateQuote}
-                disabled={isRecreating || isSaving}
-                className="w-full sm:w-auto"
-              >
-                <RefreshCw className="h-4 w-4 ml-2" />
-                {isRecreating ? 'יוצר...' : 'צור הצעה מחדש'}
-              </Button>
-            )}
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                ביטול
-              </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'שומר...' : 'שמור'}
-              </Button>
-            </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              ביטול
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              <RefreshCw className="h-4 w-4 ml-2" />
+              {isSaving ? 'שומר ויוצר הצעה...' : 'שמור וצור הצעה מחדש'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
