@@ -15,15 +15,27 @@ import {
   Users,
   Menu,
   Mail,
+  DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+  roles: string[];
+  permission?: string;
+}
 
 // Nav items with role requirements
-const allNavItems = [
+const allNavItems: NavItem[] = [
   { path: '/admin', label: 'דאשבורד', icon: LayoutDashboard, exact: true, roles: ['admin', 'client'] },
   { path: '/admin/leads', label: 'לידים', icon: Users, roles: ['admin', 'client'] },
   { path: '/admin/trucks', label: 'סוגי טראקים', icon: Truck, roles: ['admin', 'client'] },
   { path: '/admin/equipment', label: 'ציוד', icon: Package, roles: ['admin', 'client'] },
+  { path: '/admin/pricing', label: 'מחירונים', icon: DollarSign, roles: ['admin', 'client'], permission: 'can_manage_pricing' },
   { path: '/admin/content', label: 'תוכן האתר', icon: FileText, roles: ['admin'] },
   { path: '/admin/email-preview', label: 'תצוגת מיילים', icon: Mail, roles: ['admin'] },
   { path: '/admin/users', label: 'ניהול משתמשים', icon: Users, roles: ['admin'] },
@@ -35,11 +47,22 @@ const AdminLayout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { userPermissions } = useUserPermissions(user?.id);
 
-  // Filter nav items based on user role
-  const navItems = allNavItems.filter(item => 
-    item.roles.includes(userRole || '')
-  );
+  // Filter nav items based on user role and permissions
+  const navItems = allNavItems.filter(item => {
+    // Check role first
+    if (!item.roles.includes(userRole || '')) return false;
+    
+    // For items with permission requirements, check if client has that permission
+    if (item.permission && userRole === 'client') {
+      if (item.permission === 'can_manage_pricing' && !userPermissions?.can_manage_pricing) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
 
   useEffect(() => {
     if (!loading && !user) {

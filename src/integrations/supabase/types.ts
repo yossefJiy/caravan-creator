@@ -199,6 +199,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          item_id: string
+          item_type: string
+          notes: string | null
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          item_id: string
+          item_type: string
+          notes?: string | null
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          item_id?: string
+          item_type?: string
+          notes?: string | null
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           category: string | null
@@ -338,6 +374,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          can_delete_leads: boolean
+          can_manage_pricing: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_delete_leads?: boolean
+          can_manage_pricing?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_delete_leads?: boolean
+          can_manage_pricing?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -364,6 +427,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
