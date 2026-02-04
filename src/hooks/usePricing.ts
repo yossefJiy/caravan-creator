@@ -6,7 +6,8 @@ export interface Pricing {
   id: string;
   item_type: 'truck_type' | 'truck_size' | 'equipment';
   item_id: string;
-  price: number;
+  cost_price: number;
+  sale_price: number;
   currency: string;
   notes: string | null;
   is_active: boolean;

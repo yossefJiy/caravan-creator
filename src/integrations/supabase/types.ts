@@ -201,6 +201,7 @@ export type Database = {
       }
       pricing: {
         Row: {
+          cost_price: number
           created_at: string
           currency: string
           id: string
@@ -208,10 +209,11 @@ export type Database = {
           item_id: string
           item_type: string
           notes: string | null
-          price: number
+          sale_price: number
           updated_at: string
         }
         Insert: {
+          cost_price?: number
           created_at?: string
           currency?: string
           id?: string
@@ -219,10 +221,11 @@ export type Database = {
           item_id: string
           item_type: string
           notes?: string | null
-          price?: number
+          sale_price?: number
           updated_at?: string
         }
         Update: {
+          cost_price?: number
           created_at?: string
           currency?: string
           id?: string
@@ -230,7 +233,7 @@ export type Database = {
           item_id?: string
           item_type?: string
           notes?: string | null
-          price?: number
+          sale_price?: number
           updated_at?: string
         }
         Relationships: []
