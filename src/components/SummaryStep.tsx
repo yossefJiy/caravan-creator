@@ -95,9 +95,15 @@ export const SummaryStep = ({
             <span className="font-medium" dir="ltr">{contactDetails.phone}</span>
           </div>
           {contactDetails.email && (
-            <div className="col-span-2">
+            <div>
               <span className="text-muted-foreground">אימייל: </span>
               <span className="font-medium" dir="ltr">{contactDetails.email}</span>
+            </div>
+          )}
+          {contactDetails.idNumber && (
+            <div>
+              <span className="text-muted-foreground">ח.פ. / ת.ז.: </span>
+              <span className="font-medium" dir="ltr">{contactDetails.idNumber}</span>
             </div>
           )}
         </div>
