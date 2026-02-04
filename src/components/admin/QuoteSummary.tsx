@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { usePricing } from '@/hooks/usePricing';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calculator } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Calculator, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface QuoteSummaryProps {
   selectedTruckType: string | null;
@@ -23,6 +25,7 @@ export const QuoteSummary = ({
   truckSizes = [], 
   equipment = [] 
 }: QuoteSummaryProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const { getPricing } = usePricing();
 
   const calculations = useMemo(() => {
@@ -117,41 +120,59 @@ export const QuoteSummary = ({
   }
 
   return (
-    <Card className="bg-muted/50">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Calculator className="h-4 w-4" />
-          סיכום הצעת מחיר
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 text-sm">
-        {calculations.sizePrice > 0 && (
-          <div className="flex justify-between">
-            <span>גודל טראק:</span>
-            <span>{formatPrice(calculations.sizePrice)}</span>
-          </div>
-        )}
-        {calculations.equipmentTotal > 0 && (
-          <div className="flex justify-between">
-            <span>ציוד ({calculations.equipmentCount} פריטים):</span>
-            <span>{formatPrice(calculations.equipmentTotal)}</span>
-          </div>
-        )}
-        <Separator />
-        <div className="flex justify-between text-muted-foreground">
-          <span>סה"כ לפני מע"מ:</span>
-          <span>{formatPrice(calculations.subtotal)}</span>
-        </div>
-        <div className="flex justify-between text-muted-foreground">
-          <span>מע"מ (18%):</span>
-          <span>{formatPrice(calculations.vat)}</span>
-        </div>
-        <Separator />
-        <div className="flex justify-between font-bold text-base">
-          <span>סה"כ כולל מע"מ:</span>
-          <span>{formatPrice(calculations.total)}</span>
-        </div>
-      </CardContent>
-    </Card>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="bg-muted/50">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-2 cursor-pointer hover:bg-muted/70 transition-colors rounded-t-lg">
+            <CardTitle className="text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                סיכום הצעת מחיר
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-primary">
+                  {formatPrice(calculations.total)}
+                </span>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isOpen && "rotate-180"
+                )} />
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent>
+          <CardContent className="space-y-2 text-sm pt-0">
+            {calculations.sizePrice > 0 && (
+              <div className="flex justify-between">
+                <span>גודל טראק:</span>
+                <span>{formatPrice(calculations.sizePrice)}</span>
+              </div>
+            )}
+            {calculations.equipmentTotal > 0 && (
+              <div className="flex justify-between">
+                <span>ציוד ({calculations.equipmentCount} פריטים):</span>
+                <span>{formatPrice(calculations.equipmentTotal)}</span>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between text-muted-foreground">
+              <span>סה"כ לפני מע"מ:</span>
+              <span>{formatPrice(calculations.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>מע"מ (18%):</span>
+              <span>{formatPrice(calculations.vat)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between font-bold text-base">
+              <span>סה"כ כולל מע"מ:</span>
+              <span>{formatPrice(calculations.total)}</span>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
