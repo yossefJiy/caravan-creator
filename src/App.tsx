@@ -15,6 +15,7 @@ import ContentManagement from "./pages/admin/ContentManagement";
 import LeadsManagement from "./pages/admin/LeadsManagement";
 import UsersManagement from "./pages/admin/UsersManagement";
 import EmailPreview from "./pages/admin/EmailPreview";
+import PricingManagement from "./pages/admin/PricingManagement";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="leads" element={<LeadsManagement />} />
             <Route path="trucks" element={<TrucksManagement />} />
             <Route path="equipment" element={<EquipmentManagement />} />
+            <Route path="pricing" element={<PricingManagement />} />
             <Route path="content" element={<ContentManagement />} />
             <Route path="users" element={<UsersManagement />} />
             <Route path="email-preview" element={<EmailPreview />} />

@@ -4,12 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserPlus, Shield, User, Eye, EyeOff } from 'lucide-react';
+import { Loader2, UserPlus, Shield, User, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 
 interface UserRole {
   id: string;
@@ -24,9 +26,11 @@ const UsersManagement = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [userEmails, setUserEmails] = useState<Record<string, string>>({});
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { permissionsMap, updatePermissions, isUpdating } = useUserPermissions();
 
   // Fetch user roles
   const { data: userRoles, isLoading } = useQuery({
@@ -116,6 +120,13 @@ const UsersManagement = () => {
     createClientMutation.mutate({ email, password });
   };
 
+  const handlePermissionChange = (userId: string, permission: 'can_delete_leads' | 'can_manage_pricing', value: boolean) => {
+    updatePermissions({
+      userId,
+      permissions: { [permission]: value },
+    });
+  };
+
   const getRoleInfo = (role: string) => {
     switch (role) {
       case 'admin':
@@ -125,6 +136,13 @@ const UsersManagement = () => {
       default:
         return { label: role, icon: User, variant: 'outline' as const };
     }
+  };
+
+  const getUserPermissions = (userId: string) => {
+    return permissionsMap[userId] || {
+      can_delete_leads: false,
+      can_manage_pricing: false,
+    };
   };
 
   if (isLoading) {
@@ -196,13 +214,14 @@ const UsersManagement = () => {
                 </div>
               </div>
               <div className="bg-muted p-3 rounded-md text-sm">
-                <p className="font-medium mb-1">הרשאות משתמש לקוח:</p>
+                <p className="font-medium mb-1">הרשאות ברירת מחדל:</p>
                 <ul className="text-muted-foreground space-y-1">
                   <li>✓ צפייה ועדכון לידים</li>
                   <li>✓ ניהול סוגי טראקים וגדלים</li>
                   <li>✓ ניהול ציוד</li>
+                  <li>✗ מחיקת לידים (ניתן להפעיל בנפרד)</li>
+                  <li>✗ ניהול מחירונים (ניתן להפעיל בנפרד)</li>
                   <li>✗ ניהול תוכן האתר</li>
-                  <li>✗ יצירת תוכן AI</li>
                   <li>✗ ניהול משתמשים</li>
                 </ul>
               </div>
@@ -226,6 +245,9 @@ const UsersManagement = () => {
           const roleInfo = getRoleInfo(userRole.role);
           const RoleIcon = roleInfo.icon;
           const userEmail = userEmails[userRole.user_id] || 'טוען...';
+          const isExpanded = expandedUser === userRole.user_id;
+          const permissions = getUserPermissions(userRole.user_id);
+          const isClientRole = userRole.role === 'client';
           
           return (
             <Card key={userRole.id}>
@@ -242,11 +264,68 @@ const UsersManagement = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge variant={roleInfo.variant}>
-                    {roleInfo.label}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={roleInfo.variant}>
+                      {roleInfo.label}
+                    </Badge>
+                    {isClientRole && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setExpandedUser(isExpanded ? null : userRole.user_id)}
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
+              
+              {isClientRole && isExpanded && (
+                <CardContent className="pt-0 pb-4">
+                  <div className="border-t pt-4 space-y-4">
+                    <p className="text-sm font-medium">הרשאות נוספות:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="font-medium">מחיקת לידים</p>
+                          <p className="text-sm text-muted-foreground">
+                            אפשרות למחוק לידים מהמערכת
+                          </p>
+                        </div>
+                        <Switch
+                          checked={permissions.can_delete_leads}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(userRole.user_id, 'can_delete_leads', checked)
+                          }
+                          disabled={isUpdating}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="font-medium">ניהול מחירונים</p>
+                          <p className="text-sm text-muted-foreground">
+                            צפייה ועריכת מחירי טראקים וציוד
+                          </p>
+                        </div>
+                        <Switch
+                          checked={permissions.can_manage_pricing}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(userRole.user_id, 'can_manage_pricing', checked)
+                          }
+                          disabled={isUpdating}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
             </Card>
           );
         })}
