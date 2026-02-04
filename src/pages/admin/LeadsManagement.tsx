@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2, Send } from 'lucide-react';
+import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2 } from 'lucide-react';
 import { QuoteSummary } from '@/components/admin/QuoteSummary';
 import { QuoteStatus } from '@/components/admin/QuoteStatus';
 
@@ -30,19 +30,28 @@ interface Lead {
   updated_at: string;
   quote_id: string | null;
   quote_number: string | null;
+  quote_created_at: string | null;
   quote_sent_at: string | null;
   quote_total: number | null;
   quote_url: string | null;
 }
 
+interface TruckType {
+  id: string;
+  name: string;
+  name_he: string;
+}
+
 interface TruckSize {
   id: string;
   name: string;
+  truck_type_id: string;
 }
 
 interface Equipment {
   id: string;
   name: string;
+  description: string | null;
 }
 
 const statusOptions = [
@@ -66,9 +75,21 @@ const LeadsManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('equipment')
-        .select('id, name');
+        .select('id, name, description');
       if (error) throw error;
       return data as Equipment[];
+    },
+  });
+
+  // Fetch truck types for quote calculation
+  const { data: truckTypes } = useQuery({
+    queryKey: ['truck-types-for-quotes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('truck_types')
+        .select('id, name, name_he');
+      if (error) throw error;
+      return data as TruckType[];
     },
   });
 
@@ -78,7 +99,7 @@ const LeadsManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('truck_sizes')
-        .select('id, name');
+        .select('id, name, truck_type_id');
       if (error) throw error;
       return data as TruckSize[];
     },
@@ -143,7 +164,7 @@ const LeadsManagement = () => {
     },
   });
 
-  // Create price quote mutation
+  // Create price quote mutation (creates quote in Morning without sending email)
   const createQuoteMutation = useMutation({
     mutationFn: async (leadId: string) => {
       const response = await fetch(
@@ -154,7 +175,7 @@ const LeadsManagement = () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ leadId, sendEmail: true }),
+          body: JSON.stringify({ leadId, sendEmail: false }),
         }
       );
 
@@ -167,7 +188,7 @@ const LeadsManagement = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
       toast({ 
-        title: 'הצעת המחיר נשלחה בהצלחה', 
+        title: 'הצעת המחיר נוצרה בהצלחה', 
         description: `מספר הצעה: ${data.quote_number}` 
       });
       // Refresh the selected lead data
@@ -178,6 +199,47 @@ const LeadsManagement = () => {
           quote_number: data.quote_number,
           quote_url: data.quote_url,
           quote_total: data.quote_total,
+          quote_created_at: new Date().toISOString(),
+        });
+      }
+    },
+    onError: (error) => {
+      toast({ 
+        title: 'שגיאה ביצירת הצעת מחיר', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Send quote to client mutation
+  const sendQuoteMutation = useMutation({
+    mutationFn: async (leadId: string) => {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-quote-to-client`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ leadId }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send quote');
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
+      toast({ title: 'הצעת המחיר נשלחה ללקוח בהצלחה' });
+      // Refresh the selected lead data
+      if (selectedLead) {
+        setSelectedLead({
+          ...selectedLead,
           quote_sent_at: new Date().toISOString(),
           status: 'quoted',
         });
@@ -209,6 +271,11 @@ const LeadsManagement = () => {
     }
     // If it's not a UUID, it might already be a name
     return idOrName;
+  };
+
+  // Check if lead has products for quoting
+  const hasProducts = (lead: Lead) => {
+    return !!(lead.selected_truck_size || (lead.selected_equipment && lead.selected_equipment.length > 0));
   };
 
   if (isLoading) {
@@ -357,9 +424,13 @@ const LeadsManagement = () => {
                   <label className="text-sm font-medium text-muted-foreground">אימייל</label>
                   <p className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    <a href={`mailto:${selectedLead.email}`} className="text-primary hover:underline">
-                      {selectedLead.email}
-                    </a>
+                    {selectedLead.email ? (
+                      <a href={`mailto:${selectedLead.email}`} className="text-primary hover:underline">
+                        {selectedLead.email}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">לא צוין</span>
+                    )}
                   </p>
                 </div>
                 <div>
@@ -412,43 +483,36 @@ const LeadsManagement = () => {
                 </div>
               )}
 
-              {/* Quote Status - show if quote already sent */}
-              {selectedLead.quote_id && (
-                <QuoteStatus
-                  quoteId={selectedLead.quote_id}
-                  quoteNumber={selectedLead.quote_number}
-                  quoteSentAt={selectedLead.quote_sent_at}
-                  quoteTotal={selectedLead.quote_total}
-                  quoteUrl={selectedLead.quote_url}
-                  onResend={() => createQuoteMutation.mutate(selectedLead.id)}
-                  isResending={createQuoteMutation.isPending}
-                />
-              )}
-
               {/* Quote Summary - show price calculation */}
-              {(selectedLead.selected_truck_size || (selectedLead.selected_equipment && selectedLead.selected_equipment.length > 0)) && (
+              {hasProducts(selectedLead) && (
                 <QuoteSummary
+                  selectedTruckType={selectedLead.selected_truck_type}
                   selectedTruckSize={selectedLead.selected_truck_size}
                   selectedEquipment={selectedLead.selected_equipment}
+                  truckTypes={truckTypes}
                   truckSizes={truckSizes}
                   equipment={allEquipment}
                 />
               )}
 
-              <div className="flex justify-between pt-4 border-t">
-                {/* Send Quote Button - show only if has products and no quote sent yet */}
-                {(selectedLead.selected_truck_size || (selectedLead.selected_equipment && selectedLead.selected_equipment.length > 0)) && !selectedLead.quote_id && (
-                  <Button
-                    onClick={() => createQuoteMutation.mutate(selectedLead.id)}
-                    disabled={createQuoteMutation.isPending}
-                  >
-                    <Send className="h-4 w-4 ml-2" />
-                    {createQuoteMutation.isPending ? 'שולח...' : 'שלח הצעת מחיר'}
-                  </Button>
-                )}
-                {!selectedLead.selected_truck_size && (!selectedLead.selected_equipment || selectedLead.selected_equipment.length === 0) && (
-                  <div />
-                )}
+              {/* Quote Status - 3-step workflow */}
+              <QuoteStatus
+                quoteId={selectedLead.quote_id}
+                quoteNumber={selectedLead.quote_number}
+                quoteCreatedAt={selectedLead.quote_created_at}
+                quoteSentAt={selectedLead.quote_sent_at}
+                quoteTotal={selectedLead.quote_total}
+                quoteUrl={selectedLead.quote_url}
+                onCreateQuote={() => createQuoteMutation.mutate(selectedLead.id)}
+                onSendToClient={() => sendQuoteMutation.mutate(selectedLead.id)}
+                onRecreate={() => createQuoteMutation.mutate(selectedLead.id)}
+                isCreating={createQuoteMutation.isPending}
+                isSending={sendQuoteMutation.isPending}
+                hasProducts={hasProducts(selectedLead)}
+                hasEmail={!!selectedLead.email}
+              />
+
+              <div className="flex justify-end pt-4 border-t">
                 <Button
                   variant="destructive"
                   onClick={() => {

@@ -159,6 +159,7 @@ export type Database = {
           phone: string
           privacy_accepted: boolean
           privacy_accepted_at: string | null
+          quote_created_at: string | null
           quote_id: string | null
           quote_number: string | null
           quote_sent_at: string | null
@@ -180,6 +181,7 @@ export type Database = {
           phone: string
           privacy_accepted?: boolean
           privacy_accepted_at?: string | null
+          quote_created_at?: string | null
           quote_id?: string | null
           quote_number?: string | null
           quote_sent_at?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           phone?: string
           privacy_accepted?: boolean
           privacy_accepted_at?: string | null
+          quote_created_at?: string | null
           quote_id?: string | null
           quote_number?: string | null
           quote_sent_at?: string | null

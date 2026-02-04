@@ -5,17 +5,21 @@ import { Separator } from '@/components/ui/separator';
 import { Calculator } from 'lucide-react';
 
 interface QuoteSummaryProps {
+  selectedTruckType: string | null;
   selectedTruckSize: string | null;
   selectedEquipment: string[] | null;
-  truckSizes?: Array<{ id: string; name: string }>;
-  equipment?: Array<{ id: string; name: string }>;
+  truckTypes?: Array<{ id: string; name: string; name_he: string; truck_type_id?: string }>;
+  truckSizes?: Array<{ id: string; name: string; truck_type_id: string }>;
+  equipment?: Array<{ id: string; name: string; description?: string | null }>;
 }
 
 const VAT_RATE = 0.17;
 
 export const QuoteSummary = ({ 
+  selectedTruckType,
   selectedTruckSize, 
   selectedEquipment, 
+  truckTypes = [],
   truckSizes = [], 
   equipment = [] 
 }: QuoteSummaryProps) => {
@@ -25,9 +29,33 @@ export const QuoteSummary = ({
     let sizePrice = 0;
     let equipmentTotal = 0;
 
-    // Find truck size ID and get price
+    // Find truck type ID first
+    let truckTypeId: string | null = null;
+    if (selectedTruckType) {
+      const truckType = truckTypes.find(t => 
+        t.name_he === selectedTruckType || t.name === selectedTruckType
+      );
+      if (truckType) {
+        truckTypeId = truckType.id;
+      }
+    }
+
+    // Find truck size ID and get price - match by truck_type_id if available
     if (selectedTruckSize) {
-      const sizeData = truckSizes.find(s => s.name === selectedTruckSize);
+      let sizeData;
+      
+      if (truckTypeId) {
+        // Try to find size that matches both name and truck type
+        sizeData = truckSizes.find(s => 
+          s.name === selectedTruckSize && s.truck_type_id === truckTypeId
+        );
+      }
+      
+      // Fallback to just matching by name
+      if (!sizeData) {
+        sizeData = truckSizes.find(s => s.name === selectedTruckSize);
+      }
+      
       if (sizeData) {
         const pricing = getPricing('truck_size', sizeData.id);
         sizePrice = pricing?.sale_price || 0;
@@ -44,11 +72,18 @@ export const QuoteSummary = ({
           const pricing = getPricing('equipment', equipId);
           equipmentTotal += pricing?.sale_price || 0;
         } else {
-          // Find equipment by name
-          const equipData = equipment.find(e => e.name === equipId);
+          // Find equipment by name using startsWith to handle descriptions
+          const equipData = equipment.find(e => equipId.startsWith(e.name));
           if (equipData) {
             const pricing = getPricing('equipment', equipData.id);
             equipmentTotal += pricing?.sale_price || 0;
+          } else {
+            // Exact match fallback
+            const exactMatch = equipment.find(e => e.name === equipId);
+            if (exactMatch) {
+              const pricing = getPricing('equipment', exactMatch.id);
+              equipmentTotal += pricing?.sale_price || 0;
+            }
           }
         }
       });
@@ -66,7 +101,7 @@ export const QuoteSummary = ({
       total,
       equipmentCount: selectedEquipment?.length || 0,
     };
-  }, [selectedTruckSize, selectedEquipment, truckSizes, equipment, getPricing]);
+  }, [selectedTruckType, selectedTruckSize, selectedEquipment, truckTypes, truckSizes, equipment, getPricing]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('he-IL', {
