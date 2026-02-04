@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.create-price-quote]
 verify_jwt = false
+
+[functions.send-quote-to-client]
+verify_jwt = false

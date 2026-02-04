@@ -32,6 +32,31 @@ interface MorningDocumentRequest {
   remarks?: string;
 }
 
+interface TruckType {
+  id: string;
+  name: string;
+  name_he: string;
+}
+
+interface TruckSize {
+  id: string;
+  name: string;
+  dimensions: string;
+  truck_type_id: string;
+}
+
+interface Equipment {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+interface Pricing {
+  item_type: string;
+  item_id: string;
+  sale_price: number;
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -54,7 +79,7 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { leadId, sendEmail = true } = await req.json();
+    const { leadId, sendEmail = false } = await req.json();
 
     if (!leadId) {
       throw new Error('leadId is required');
@@ -93,103 +118,170 @@ serve(async (req) => {
       .eq('is_active', true);
 
     // Create pricing maps
-    const pricingMap = new Map();
-    pricing?.forEach((p: { item_type: string; item_id: string; sale_price: number }) => {
+    const pricingMap = new Map<string, number>();
+    (pricing as Pricing[] || []).forEach((p) => {
       pricingMap.set(`${p.item_type}:${p.item_id}`, p.sale_price);
     });
 
-    const truckTypesMap = new Map();
-    truckTypes?.forEach((t: { id: string; name_he: string }) => {
-      truckTypesMap.set(t.id, t.name_he);
+    // Create truck types map
+    const truckTypesMap = new Map<string, TruckType>();
+    (truckTypes as TruckType[] || []).forEach((t) => {
+      truckTypesMap.set(t.id, t);
+      // Also map by name_he for reverse lookup
+      truckTypesMap.set(t.name_he, t);
     });
 
-    const truckSizesMap = new Map();
-    truckSizes?.forEach((s: { id: string; name: string; dimensions: string; truck_type_id: string }) => {
-      truckSizesMap.set(s.id, { name: s.name, dimensions: s.dimensions, truck_type_id: s.truck_type_id });
+    // Create equipment map
+    const equipmentList = (equipment as Equipment[] || []);
+    const equipmentMap = new Map<string, Equipment>();
+    equipmentList.forEach((e) => {
+      equipmentMap.set(e.id, e);
     });
 
-    const equipmentMap = new Map();
-    equipment?.forEach((e: { id: string; name: string }) => {
-      equipmentMap.set(e.id, e.name);
-    });
-
-    // Build income items
-    const incomeItems: IncomeItem[] = [];
-    let totalBeforeVat = 0;
-
-    // Add truck type as description line (price 0)
+    // Find the truck type for this lead
+    let truckTypeName = lead.selected_truck_type || '';
+    let truckTypeId: string | null = null;
+    
     if (lead.selected_truck_type) {
-      // Try to find the Hebrew name for the truck type
-      let truckTypeName = lead.selected_truck_type;
-      truckTypes?.forEach((t: { id: string; name: string; name_he: string }) => {
-        if (t.name === lead.selected_truck_type || t.name_he === lead.selected_truck_type) {
-          truckTypeName = t.name_he;
-        }
+      // Find by Hebrew name
+      const truckType = truckTypesMap.get(lead.selected_truck_type);
+      if (truckType) {
+        truckTypeName = truckType.name_he;
+        truckTypeId = truckType.id;
+      } else {
+        // Search in all truck types
+        (truckTypes as TruckType[] || []).forEach((t) => {
+          if (t.name === lead.selected_truck_type || t.name_he === lead.selected_truck_type) {
+            truckTypeName = t.name_he;
+            truckTypeId = t.id;
+          }
+        });
+      }
+    }
+
+    // Calculate prices FIRST before building income items
+    let sizePrice = 0;
+    let sizeName = '';
+    let sizeId: string | null = null;
+
+    if (lead.selected_truck_size) {
+      // Find the truck size that matches both the name AND the truck type
+      const matchedSize = (truckSizes as TruckSize[] || []).find((s) => {
+        const nameMatches = s.name === lead.selected_truck_size;
+        const typeMatches = truckTypeId ? s.truck_type_id === truckTypeId : true;
+        return nameMatches && typeMatches;
       });
-      
+
+      if (matchedSize) {
+        sizeId = matchedSize.id;
+        sizeName = `${matchedSize.name} - ${matchedSize.dimensions}`;
+        sizePrice = pricingMap.get(`truck_size:${matchedSize.id}`) || 0;
+      } else {
+        // Fallback: just match by name
+        (truckSizes as TruckSize[] || []).forEach((s) => {
+          if (s.name === lead.selected_truck_size) {
+            sizeId = s.id;
+            sizeName = `${s.name} - ${s.dimensions}`;
+            sizePrice = pricingMap.get(`truck_size:${s.id}`) || 0;
+          }
+        });
+      }
+    }
+
+    // Calculate equipment total and build equipment details
+    let equipmentTotal = 0;
+    const equipmentDetails: { name: string; price: number }[] = [];
+
+    if (lead.selected_equipment && Array.isArray(lead.selected_equipment)) {
+      for (const equipId of lead.selected_equipment) {
+        // Check if it's a UUID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(equipId);
+        
+        let equipName = equipId;
+        let equipPrice = 0;
+        let foundEquipId: string | null = null;
+
+        if (isUUID) {
+          const eq = equipmentMap.get(equipId);
+          if (eq) {
+            // Build full name with description
+            equipName = eq.description ? `${eq.name} (${eq.description})` : eq.name;
+            foundEquipId = eq.id;
+          }
+          equipPrice = pricingMap.get(`equipment:${equipId}`) || 0;
+        } else {
+          // Try to find the equipment by matching name at the start
+          // This handles cases like "ציפסר גז (28 ליטר)" matching "ציפסר גז"
+          for (const eq of equipmentList) {
+            if (equipId.startsWith(eq.name)) {
+              foundEquipId = eq.id;
+              equipName = equipId; // Keep the original name with description
+              equipPrice = pricingMap.get(`equipment:${eq.id}`) || 0;
+              break;
+            }
+          }
+          
+          // Fallback: exact match
+          if (!foundEquipId) {
+            for (const eq of equipmentList) {
+              if (eq.name === equipId) {
+                foundEquipId = eq.id;
+                equipName = eq.description ? `${eq.name} (${eq.description})` : eq.name;
+                equipPrice = pricingMap.get(`equipment:${eq.id}`) || 0;
+                break;
+              }
+            }
+          }
+        }
+
+        equipmentTotal += equipPrice;
+        equipmentDetails.push({ name: equipName, price: equipPrice });
+      }
+    }
+
+    // Calculate total BEFORE VAT
+    const totalBeforeVat = sizePrice + equipmentTotal;
+
+    // Build income items with NEW structure:
+    // 1. Truck type with TOTAL price
+    // 2. "פירוט החבילה:" header with price 0
+    // 3. All details (size + equipment) with price 0
+    const incomeItems: IncomeItem[] = [];
+
+    // Line 1: Truck type with the TOTAL price
+    incomeItems.push({
+      description: truckTypeName || 'פוד טראק',
+      quantity: 1,
+      price: totalBeforeVat,
+      vatType: 1,
+    });
+
+    // Line 2: Package details header
+    incomeItems.push({
+      description: 'פירוט החבילה:',
+      quantity: 1,
+      price: 0,
+      vatType: 1,
+    });
+
+    // Line 3: Truck size (with price 0)
+    if (sizeName) {
       incomeItems.push({
-        description: truckTypeName,
+        description: sizeName,
         quantity: 1,
         price: 0,
         vatType: 1,
       });
     }
 
-    // Add truck size with price
-    if (lead.selected_truck_size) {
-      // Find the truck size ID from the name
-      let sizeId: string | null = null;
-      let sizeName = lead.selected_truck_size;
-      
-      truckSizes?.forEach((s: { id: string; name: string; dimensions: string }) => {
-        if (s.name === lead.selected_truck_size) {
-          sizeId = s.id;
-          sizeName = `${s.name} - ${s.dimensions}`;
-        }
-      });
-
-      const sizePrice = sizeId ? pricingMap.get(`truck_size:${sizeId}`) || 0 : 0;
-      totalBeforeVat += sizePrice;
-
+    // Lines 4+: Equipment items (with price 0)
+    for (const detail of equipmentDetails) {
       incomeItems.push({
-        description: sizeName,
+        description: detail.name,
         quantity: 1,
-        price: sizePrice,
+        price: 0,
         vatType: 1,
       });
-    }
-
-    // Add selected equipment with prices
-    if (lead.selected_equipment && Array.isArray(lead.selected_equipment)) {
-      for (const equipId of lead.selected_equipment) {
-        // Check if it's a UUID or a name
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(equipId);
-        
-        let equipName = equipId;
-        let equipPrice = 0;
-
-        if (isUUID) {
-          equipName = equipmentMap.get(equipId) || equipId;
-          equipPrice = pricingMap.get(`equipment:${equipId}`) || 0;
-        } else {
-          // Try to find the equipment by name
-          equipment?.forEach((e: { id: string; name: string }) => {
-            if (e.name === equipId) {
-              equipName = e.name;
-              equipPrice = pricingMap.get(`equipment:${e.id}`) || 0;
-            }
-          });
-        }
-
-        totalBeforeVat += equipPrice;
-
-        incomeItems.push({
-          description: equipName,
-          quantity: 1,
-          price: equipPrice,
-          vatType: 1,
-        });
-      }
     }
 
     // Authenticate with Morning API
@@ -228,6 +320,7 @@ serve(async (req) => {
       client.phone = lead.phone;
     }
 
+    // Only add email if sendEmail is true
     if (lead.email && sendEmail) {
       client.emails = [lead.email];
     }
@@ -274,16 +367,24 @@ serve(async (req) => {
     const quoteTotal = totalBeforeVat;
 
     // Update the lead with quote details
+    // Different update based on whether we're sending the email or just creating
+    const updateData: Record<string, unknown> = {
+      quote_id: quoteId,
+      quote_number: quoteNumber,
+      quote_total: quoteTotal,
+      quote_url: quoteUrl,
+      quote_created_at: new Date().toISOString(),
+    };
+
+    // Only update status and quote_sent_at if we're sending the email
+    if (sendEmail) {
+      updateData.quote_sent_at = new Date().toISOString();
+      updateData.status = 'quoted';
+    }
+
     const { error: updateError } = await supabase
       .from('leads')
-      .update({
-        quote_id: quoteId,
-        quote_number: quoteNumber,
-        quote_sent_at: new Date().toISOString(),
-        quote_total: quoteTotal,
-        quote_url: quoteUrl,
-        status: 'quoted',
-      })
+      .update(updateData)
       .eq('id', leadId);
 
     if (updateError) {
@@ -299,6 +400,7 @@ serve(async (req) => {
         quote_url: quoteUrl,
         quote_total: quoteTotal,
         total_with_vat: quoteTotal * 1.17,
+        email_sent: sendEmail,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
