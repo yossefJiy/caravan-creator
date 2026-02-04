@@ -409,6 +409,12 @@ const LeadsManagement = () => {
                           לא הושלם
                         </Badge>
                       )}
+                      {lead.id_validation_error && (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          ח.פ. לא תקין
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -512,15 +518,15 @@ const LeadsManagement = () => {
                   <p className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     {selectedLead.id_number ? (
-                      <>
+                      <div className="flex flex-col gap-1">
                         <span dir="ltr">{selectedLead.id_number}</span>
                         {selectedLead.id_validation_error && (
-                          <span className="flex items-center gap-1 text-destructive text-sm">
-                            <AlertTriangle className="h-4 w-4" />
-                            {selectedLead.id_validation_error}
-                          </span>
+                          <div className="flex items-center gap-1 text-destructive text-sm bg-destructive/10 px-2 py-1 rounded">
+                            <AlertTriangle className="h-4 w-4 shrink-0" />
+                            <span>לא תקין במורנינג - יש לתקן לפני יצירת הצעת מחיר</span>
+                          </div>
                         )}
-                      </>
+                      </div>
                     ) : (
                       <span className="text-muted-foreground">לא צוין</span>
                     )}
@@ -666,6 +672,21 @@ const LeadsManagement = () => {
           if (editingLead) {
             // First update the lead
             await updateLeadMutation.mutateAsync({ id: editingLead.id, ...data });
+            // Update selectedLead with new data
+            if (selectedLead && selectedLead.id === editingLead.id) {
+              setSelectedLead({
+                ...selectedLead,
+                ...data,
+                full_name: data.full_name || selectedLead.full_name,
+                email: data.email ?? selectedLead.email,
+                phone: data.phone || selectedLead.phone,
+                id_number: data.id_number ?? selectedLead.id_number,
+                notes: data.notes ?? selectedLead.notes,
+                selected_truck_type: data.selected_truck_type ?? selectedLead.selected_truck_type,
+                selected_truck_size: data.selected_truck_size ?? selectedLead.selected_truck_size,
+                selected_equipment: data.selected_equipment ?? selectedLead.selected_equipment,
+              });
+            }
             // Then recreate the quote
             createQuoteMutation.mutate(editingLead.id);
           }
@@ -673,6 +694,21 @@ const LeadsManagement = () => {
         onSaveOnly={async (data) => {
           if (editingLead) {
             await updateLeadMutation.mutateAsync({ id: editingLead.id, ...data });
+            // Update selectedLead with new data
+            if (selectedLead && selectedLead.id === editingLead.id) {
+              setSelectedLead({
+                ...selectedLead,
+                ...data,
+                full_name: data.full_name || selectedLead.full_name,
+                email: data.email ?? selectedLead.email,
+                phone: data.phone || selectedLead.phone,
+                id_number: data.id_number ?? selectedLead.id_number,
+                notes: data.notes ?? selectedLead.notes,
+                selected_truck_type: data.selected_truck_type ?? selectedLead.selected_truck_type,
+                selected_truck_size: data.selected_truck_size ?? selectedLead.selected_truck_size,
+                selected_equipment: data.selected_equipment ?? selectedLead.selected_equipment,
+              });
+            }
             setEditingLead(null);
           }
         }}
