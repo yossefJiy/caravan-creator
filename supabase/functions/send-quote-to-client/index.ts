@@ -79,7 +79,7 @@ serve(async (req) => {
     };
 
     const quoteTotal = lead.quote_total || 0;
-    const quoteTotalWithVat = quoteTotal * 1.17;
+    const quoteTotalWithVat = quoteTotal * 1.18;
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
