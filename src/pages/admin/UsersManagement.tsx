@@ -293,20 +293,20 @@ const UsersManagement = () => {
                     <div>
                       <p className="text-sm font-medium mb-3">הרשאות קבועות (לא ניתן לשינוי):</p>
                       <div className="grid gap-2 text-sm">
-                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
-                          <Check className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2 p-2 bg-success/10 rounded">
+                          <Check className="h-4 w-4 text-success" />
                           <span>צפייה ועדכון לידים</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
-                          <Check className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2 p-2 bg-success/10 rounded">
+                          <Check className="h-4 w-4 text-success" />
                           <span>ניהול סוגי טראקים וגדלים</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
-                          <Check className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2 p-2 bg-success/10 rounded">
+                          <Check className="h-4 w-4 text-success" />
                           <span>ניהול ציוד וקטגוריות</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
-                          <Check className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2 p-2 bg-success/10 rounded">
+                          <Check className="h-4 w-4 text-success" />
                           <span>העלאת תמונות לציוד</span>
                           <Image className="h-3 w-3 text-muted-foreground" />
                         </div>
