@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserPlus, Shield, User, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, UserPlus, Shield, User, Eye, EyeOff, ChevronDown, ChevronUp, Check, X, Image } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { Separator } from '@/components/ui/separator';
 
 interface UserRole {
   id: string;
@@ -288,8 +289,44 @@ const UsersManagement = () => {
               {isClientRole && isExpanded && (
                 <CardContent className="pt-0 pb-4">
                   <div className="border-t pt-4 space-y-4">
-                    <p className="text-sm font-medium">הרשאות נוספות:</p>
-                    
+                    {/* הרשאות קבועות */}
+                    <div>
+                      <p className="text-sm font-medium mb-3">הרשאות קבועות (לא ניתן לשינוי):</p>
+                      <div className="grid gap-2 text-sm">
+                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span>צפייה ועדכון לידים</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span>ניהול סוגי טראקים וגדלים</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span>ניהול ציוד וקטגוריות</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span>העלאת תמונות לציוד</span>
+                          <Image className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded">
+                          <X className="h-4 w-4 text-destructive" />
+                          <span>ניהול תוכן האתר</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded">
+                          <X className="h-4 w-4 text-destructive" />
+                          <span>תצוגת מיילים</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded">
+                          <X className="h-4 w-4 text-destructive" />
+                          <span>ניהול משתמשים</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Separator />
+                    {/* הרשאות ניתנות להפעלה */}
+                    <p className="text-sm font-medium">הרשאות ניתנות להפעלה:</p>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div>
