@@ -16,6 +16,123 @@ interface LeadNotificationRequest {
   selectedTruckType?: string;
   selectedTruckSize?: string;
   selectedEquipment?: string[];
+  overrideRetry?: boolean;
+}
+
+interface EmailLogEntry {
+  lead_id: string;
+  type: string;
+  to_email: string;
+  subject: string;
+  status: string;
+  idempotency_key: string;
+  provider: string;
+  attempt: number;
+  metadata?: Record<string, unknown>;
+  error_message?: string;
+  provider_message_id?: string;
+}
+
+// Helper: check if email was already sent (idempotency)
+async function checkIdempotency(
+  supabase: ReturnType<typeof createClient>,
+  key: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("email_logs")
+    .select("id, status")
+    .eq("idempotency_key", key)
+    .eq("status", "sent")
+    .maybeSingle();
+  return !!data;
+}
+
+// Helper: insert a queued log entry
+async function insertQueuedLog(
+  supabase: ReturnType<typeof createClient>,
+  entry: EmailLogEntry
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("email_logs")
+    .insert({
+      lead_id: entry.lead_id,
+      type: entry.type,
+      to_email: entry.to_email,
+      subject: entry.subject,
+      status: "queued",
+      idempotency_key: entry.idempotency_key,
+      provider: "resend",
+      attempt: entry.attempt,
+      metadata: entry.metadata || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Failed to insert email log:", error);
+    return null;
+  }
+  return data.id;
+}
+
+// Helper: update log status
+async function updateLogStatus(
+  supabase: ReturnType<typeof createClient>,
+  logId: string,
+  status: "sent" | "failed",
+  extra: { provider_message_id?: string; error_message?: string } = {}
+) {
+  await supabase
+    .from("email_logs")
+    .update({ status, ...extra })
+    .eq("id", logId);
+}
+
+// Helper: send email via Resend and log result
+async function sendAndLog(
+  supabase: ReturnType<typeof createClient>,
+  resendApiKey: string,
+  logId: string,
+  from: string,
+  to: string[],
+  subject: string,
+  html: string
+): Promise<boolean> {
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from, to, subject, html }),
+    });
+
+    const body = await response.text();
+
+    if (response.ok) {
+      let messageId: string | undefined;
+      try {
+        const parsed = JSON.parse(body);
+        messageId = parsed.id;
+      } catch { /* ignore */ }
+      await updateLogStatus(supabase, logId, "sent", {
+        provider_message_id: messageId,
+      });
+      return true;
+    } else {
+      console.error("Email send failed:", response.status, body);
+      await updateLogStatus(supabase, logId, "failed", {
+        error_message: `HTTP ${response.status}: ${body.substring(0, 500)}`,
+      });
+      return false;
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("Email send error:", msg);
+    await updateLogStatus(supabase, logId, "failed", { error_message: msg });
+    return false;
+  }
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -25,45 +142,29 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
+    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Supabase credentials not configured");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const leadData: LeadNotificationRequest = await req.json();
+    const overrideRetry = leadData.overrideRetry === true;
 
-    // Fetch sensitive email settings from protected email_config table
+    // Fetch email config settings
     const { data: emailSettings, error: emailError } = await supabase
       .from("email_config")
       .select("config_key, config_value");
+    if (emailError) throw new Error("Failed to fetch email settings");
 
-    if (emailError) {
-      console.error("Error fetching email config:", emailError);
-      throw new Error("Failed to fetch email settings");
-    }
-
-    // Fetch non-sensitive settings from site_content
-    const { data: siteSettings, error: siteError } = await supabase
+    const { data: siteSettings } = await supabase
       .from("site_content")
       .select("content_key, content_value")
-      .in("content_key", [
-        "sender_name",
-        "customer_sender_name",
-        "customer_notification_emails"
-      ]);
+      .in("content_key", ["sender_name", "customer_sender_name", "customer_notification_emails"]);
 
-    if (siteError) {
-      console.error("Error fetching site settings:", siteError);
-    }
-
-    // Merge settings from both tables
     const settingsMap: Record<string, string> = {};
     emailSettings?.forEach((s: { config_key: string; config_value: string }) => {
       settingsMap[s.config_key] = s.config_value;
@@ -72,24 +173,26 @@ const handler = async (req: Request): Promise<Response> => {
       settingsMap[s.content_key] = s.content_value;
     });
 
-    // Business notification settings
-    const notificationEmails = settingsMap.notification_emails
-      ?.split(",")
-      .map((e: string) => e.trim())
-      .filter((e: string) => e.length > 0) || [];
-    
+    // Email sender config
     const senderEmail = settingsMap.sender_email || "noreply@storytell.co.il";
     const senderName = settingsMap.sender_name || "אליה קרוואנים";
-
-    // Customer email settings (separate sender for end customers)
     const customerSenderEmail = settingsMap.customer_sender_email || senderEmail;
     const customerSenderName = settingsMap.customer_sender_name || senderName;
-    
-    // Additional notification emails (customer side)
+
+    // Recipient lists
+    const notificationEmails = settingsMap.notification_emails
+      ?.split(",").map((e: string) => e.trim()).filter((e: string) => e.length > 0) || [];
     const customerNotificationEmails = settingsMap.customer_notification_emails
-      ?.split(",")
-      .map((e: string) => e.trim())
-      .filter((e: string) => e.length > 0) || [];
+      ?.split(",").map((e: string) => e.trim()).filter((e: string) => e.length > 0) || [];
+
+    // Check if quote exists for this lead (regardless of is_complete)
+    const { data: leadRecord } = await supabase
+      .from("leads")
+      .select("quote_id, quote_url, quote_number, quote_total, quote_created_at")
+      .eq("id", leadData.leadId)
+      .single();
+
+    const hasQuote = !!(leadRecord?.quote_id || leadRecord?.quote_created_at);
 
     // Build equipment list HTML
     const equipmentHtml = leadData.selectedEquipment?.length
@@ -98,11 +201,29 @@ const handler = async (req: Request): Promise<Response> => {
         ).join("")}</ul>`
       : "<em>לא נבחר ציוד</em>";
 
-    // Email to business (Eliya)
+    // Quote section for business emails (only if quote exists)
+    const quoteHtml = hasQuote && leadRecord ? `
+      <h2 style="color: #D4AF37;">הצעת מחיר מצורפת</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        ${leadRecord.quote_number ? `<tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">מספר הצעה:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${leadRecord.quote_number}</td>
+        </tr>` : ""}
+        ${leadRecord.quote_total ? `<tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">סכום:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">₪${Number(leadRecord.quote_total).toLocaleString()}</td>
+        </tr>` : ""}
+        ${leadRecord.quote_url ? `<tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">קישור:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="${leadRecord.quote_url}">לצפייה בהצעת מחיר</a></td>
+        </tr>` : ""}
+      </table>
+    ` : "";
+
+    // Business email HTML (includes lead details + optional quote)
     const businessEmailHtml = `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #D4AF37; border-bottom: 2px solid #D4AF37; padding-bottom: 10px;">ליד חדש!</h1>
-        
         <h2>פרטי הלקוח:</h2>
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
@@ -111,18 +232,13 @@ const handler = async (req: Request): Promise<Response> => {
           </tr>
           <tr>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">טלפון:</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">
-              <a href="tel:${leadData.phone}">${leadData.phone}</a>
-            </td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="tel:${leadData.phone}">${leadData.phone}</a></td>
           </tr>
           <tr>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">אימייל:</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">
-              <a href="mailto:${leadData.email}">${leadData.email}</a>
-            </td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="mailto:${leadData.email}">${leadData.email}</a></td>
           </tr>
         </table>
-
         ${leadData.selectedTruckType ? `
         <h2>בחירות הקונפיגורטור:</h2>
         <table style="width: 100%; border-collapse: collapse;">
@@ -130,63 +246,39 @@ const handler = async (req: Request): Promise<Response> => {
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">סוג טראק:</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${leadData.selectedTruckType}</td>
           </tr>
-          ${leadData.selectedTruckSize ? `
-          <tr>
+          ${leadData.selectedTruckSize ? `<tr>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">גודל:</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${leadData.selectedTruckSize}</td>
-          </tr>
-          ` : ""}
-        </table>
-        ` : ""}
-
+          </tr>` : ""}
+        </table>` : ""}
         <h2>ציוד שנבחר:</h2>
         ${equipmentHtml}
-
-        ${leadData.notes ? `
-        <h2>הערות:</h2>
-        <p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${leadData.notes}</p>
-        ` : ""}
-
-        <p style="margin-top: 30px; color: #666; font-size: 12px;">
-          ניתן לצפות בכל הלידים בממשק הניהול
-        </p>
+        ${leadData.notes ? `<h2>הערות:</h2><p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${leadData.notes}</p>` : ""}
+        ${quoteHtml}
+        <p style="margin-top: 30px; color: #666; font-size: 12px;">ניתן לצפות בכל הלידים בממשק הניהול</p>
       </div>
     `;
 
-    // Email to end customer (the person who filled the form)
+    // Client confirmation email (ONLY lead details, NO quote/pricing)
     const customerEmailHtml = `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #D4AF37;">שלום ${leadData.fullName.split(" ")[0]}!</h1>
-        
-        <p style="font-size: 16px; line-height: 1.6;">
-          תודה שפנית אלינו! קיבלנו את הבקשה שלך ונחזור אליך בהקדם.
-        </p>
-
+        <p style="font-size: 16px; line-height: 1.6;">תודה שפנית אלינו! קיבלנו את הבקשה שלך ונחזור אליך בהקדם.</p>
         <h2 style="color: #333; margin-top: 30px;">סיכום הבקשה שלך:</h2>
-        
         ${leadData.selectedTruckType ? `
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">סוג טראק:</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${leadData.selectedTruckType}</td>
           </tr>
-          ${leadData.selectedTruckSize ? `
-          <tr>
+          ${leadData.selectedTruckSize ? `<tr>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">גודל:</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${leadData.selectedTruckSize}</td>
-          </tr>
-          ` : ""}
-        </table>
-        ` : ""}
-
+          </tr>` : ""}
+        </table>` : ""}
         <h3>ציוד שנבחר:</h3>
         ${equipmentHtml}
-
-        ${leadData.notes ? `
-        <h3>הערות:</h3>
-        <p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${leadData.notes}</p>
-        ` : ""}
-
+        ${leadData.notes ? `<h3>הערות:</h3><p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${leadData.notes}</p>` : ""}
         <div style="margin-top: 40px; padding: 20px; background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 10px; text-align: center;">
           <p style="color: white; font-size: 18px; margin: 0;">צוות אליה קרוואנים</p>
           <p style="color: white; margin: 5px 0 0 0; font-size: 14px;">נבנה לך את הפודטראק המושלם</p>
@@ -194,100 +286,171 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const emailPromises: Promise<Response>[] = [];
+    const businessSubject = hasQuote
+      ? `ליד חדש: ${leadData.fullName} — הצעת מחיר מצורפת`
+      : `ליד חדש: ${leadData.fullName}`;
 
-    // Send to business emails (Eliya's addresses)
+    const results: { type: string; success: boolean }[] = [];
+
+    // --- Email 1: Business email #1 (owner/internal) ---
     if (notificationEmails.length > 0) {
-      emailPromises.push(
-        fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: `${senderName} <${senderEmail}>`,
-            to: notificationEmails,
-            subject: `ליד חדש: ${leadData.fullName}`,
-            html: businessEmailHtml,
-          }),
-        })
-      );
-    }
+      const type = "lead_notification_business_1";
+      const idempKey = `${type}:${leadData.leadId}`;
+      const alreadySent = !overrideRetry && await checkIdempotency(supabase, idempKey);
 
-    // Send to customer notification emails (e.g., new_lead@converto.co.il)
-    if (customerNotificationEmails.length > 0) {
-      emailPromises.push(
-        fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: `${customerSenderName} <${customerSenderEmail}>`,
-            to: customerNotificationEmails,
-            subject: `ליד חדש: ${leadData.fullName}`,
-            html: businessEmailHtml,
-          }),
-        })
-      );
-    }
-
-    // Send confirmation to end customer (the person who filled the form)
-    if (leadData.email && leadData.email.includes("@")) {
-      emailPromises.push(
-        fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: `${customerSenderName} <${customerSenderEmail}>`,
-            to: [leadData.email],
-            subject: "קיבלנו את הבקשה שלך - אליה קרוואנים",
-            html: customerEmailHtml,
-          }),
-        })
-      );
-    }
-
-    const results = await Promise.allSettled(emailPromises);
-    
-    let successCount = 0;
-    for (const result of results) {
-      if (result.status === "fulfilled") {
-        const response = result.value;
-        const body = await response.text();
-        if (response.ok) {
-          successCount++;
-        } else {
-          console.error("Email send failed:", response.status, body);
-        }
+      if (alreadySent) {
+        console.log(`Skipped ${type} (already sent)`);
+        results.push({ type, success: true });
       } else {
-        console.error("Email promise rejected:", result.reason);
+        // Get current attempt count
+        const { data: existing } = await supabase
+          .from("email_logs")
+          .select("attempt")
+          .eq("idempotency_key", idempKey)
+          .order("attempt", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const attempt = overrideRetry && existing ? existing.attempt + 1 : 1;
+        const finalKey = overrideRetry && existing ? `${idempKey}:retry_${attempt}` : idempKey;
+
+        const logId = await insertQueuedLog(supabase, {
+          lead_id: leadData.leadId,
+          type,
+          to_email: notificationEmails.join(", "),
+          subject: businessSubject,
+          status: "queued",
+          idempotency_key: finalKey,
+          provider: "resend",
+          attempt,
+          metadata: { included_quote: hasQuote },
+        });
+
+        if (logId) {
+          const ok = await sendAndLog(
+            supabase, RESEND_API_KEY, logId,
+            `${senderName} <${senderEmail}>`,
+            notificationEmails, businessSubject, businessEmailHtml
+          );
+          results.push({ type, success: ok });
+        } else {
+          results.push({ type, success: false });
+        }
       }
     }
 
-    console.log(`Sent ${successCount}/${emailPromises.length} emails for lead ${leadData.leadId}`);
+    // --- Email 2: Business email #2 (converto/customer notification) ---
+    if (customerNotificationEmails.length > 0) {
+      const type = "lead_notification_business_2";
+      const idempKey = `${type}:${leadData.leadId}`;
+      const alreadySent = !overrideRetry && await checkIdempotency(supabase, idempKey);
+
+      if (alreadySent) {
+        console.log(`Skipped ${type} (already sent)`);
+        results.push({ type, success: true });
+      } else {
+        const { data: existing } = await supabase
+          .from("email_logs")
+          .select("attempt")
+          .eq("idempotency_key", idempKey)
+          .order("attempt", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const attempt = overrideRetry && existing ? existing.attempt + 1 : 1;
+        const finalKey = overrideRetry && existing ? `${idempKey}:retry_${attempt}` : idempKey;
+
+        const logId = await insertQueuedLog(supabase, {
+          lead_id: leadData.leadId,
+          type,
+          to_email: customerNotificationEmails.join(", "),
+          subject: businessSubject,
+          status: "queued",
+          idempotency_key: finalKey,
+          provider: "resend",
+          attempt,
+          metadata: { included_quote: hasQuote },
+        });
+
+        if (logId) {
+          const ok = await sendAndLog(
+            supabase, RESEND_API_KEY, logId,
+            `${customerSenderName} <${customerSenderEmail}>`,
+            customerNotificationEmails, businessSubject, businessEmailHtml
+          );
+          results.push({ type, success: ok });
+        } else {
+          results.push({ type, success: false });
+        }
+      }
+    }
+
+    // --- Email 3: Client confirmation (NO quote info) ---
+    if (leadData.email && leadData.email.includes("@")) {
+      const type = "lead_confirmation_client";
+      const idempKey = `${type}:${leadData.leadId}`;
+      const alreadySent = !overrideRetry && await checkIdempotency(supabase, idempKey);
+
+      if (alreadySent) {
+        console.log(`Skipped ${type} (already sent)`);
+        results.push({ type, success: true });
+      } else {
+        const { data: existing } = await supabase
+          .from("email_logs")
+          .select("attempt")
+          .eq("idempotency_key", idempKey)
+          .order("attempt", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const attempt = overrideRetry && existing ? existing.attempt + 1 : 1;
+        const finalKey = overrideRetry && existing ? `${idempKey}:retry_${attempt}` : idempKey;
+
+        const clientSubject = "קיבלנו את הבקשה שלך - אליה קרוואנים";
+        const logId = await insertQueuedLog(supabase, {
+          lead_id: leadData.leadId,
+          type,
+          to_email: leadData.email,
+          subject: clientSubject,
+          status: "queued",
+          idempotency_key: finalKey,
+          provider: "resend",
+          attempt,
+          metadata: { included_quote: false },
+        });
+
+        if (logId) {
+          const ok = await sendAndLog(
+            supabase, RESEND_API_KEY, logId,
+            `${customerSenderName} <${customerSenderEmail}>`,
+            [leadData.email], clientSubject, customerEmailHtml
+          );
+          results.push({ type, success: ok });
+        } else {
+          results.push({ type, success: false });
+        }
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    console.log(`Lead ${leadData.leadId}: sent ${successCount}/${results.length} emails`, results);
+
+    // Update lead timestamp
+    await supabase
+      .from("leads")
+      .update({ lead_notification_sent_at: new Date().toISOString() })
+      .eq("id", leadData.leadId);
 
     return new Response(
-      JSON.stringify({ success: true, sentCount: successCount }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      JSON.stringify({ success: true, sentCount: successCount, results }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: unknown) {
     console.error("Error in send-lead-notification:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };
