@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { RefreshCw, Save } from 'lucide-react';
+import { RefreshCw, Save, Plus, Minus } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -139,21 +139,83 @@ export const EditLeadDialog = ({
     }
   };
 
+  // Parse quantity from equipment string like "שולחן דלפקי (1×0.6 מטר) (×2)"
+  const parseEquipmentQuantity = (item: string): { baseName: string; quantity: number } => {
+    const match = item.match(/^(.*?)\s*\(×(\d+)\)\s*$/);
+    if (match) {
+      return { baseName: match[1], quantity: parseInt(match[2], 10) };
+    }
+    return { baseName: item, quantity: 1 };
+  };
+
+  // Get the quantity of a specific equipment item from selected_equipment
+  const getEquipmentQuantity = (eq: { id: string; name: string; description: string | null }): number => {
+    const fullName = eq.description ? `${eq.name} (${eq.description})` : eq.name;
+    const found = formData.selected_equipment.find(
+      item => {
+        const { baseName } = parseEquipmentQuantity(item);
+        return baseName === eq.id || baseName === eq.name || baseName === fullName || baseName.startsWith(eq.name);
+      }
+    );
+    if (!found) return 0;
+    return parseEquipmentQuantity(found).quantity;
+  };
+
   const toggleEquipment = (equipmentName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selected_equipment: prev.selected_equipment.includes(equipmentName)
-        ? prev.selected_equipment.filter(e => e !== equipmentName)
-        : [...prev.selected_equipment, equipmentName],
-    }));
+    const qty = getEquipmentQuantityByName(equipmentName);
+    if (qty > 0) {
+      // Remove - filter out any entry matching this name
+      setFormData(prev => ({
+        ...prev,
+        selected_equipment: prev.selected_equipment.filter(item => {
+          const { baseName } = parseEquipmentQuantity(item);
+          return baseName !== equipmentName;
+        }),
+      }));
+    } else {
+      // Add with quantity 1
+      setFormData(prev => ({
+        ...prev,
+        selected_equipment: [...prev.selected_equipment, equipmentName],
+      }));
+    }
+  };
+
+  const getEquipmentQuantityByName = (equipmentName: string): number => {
+    const found = formData.selected_equipment.find(item => {
+      const { baseName } = parseEquipmentQuantity(item);
+      return baseName === equipmentName;
+    });
+    if (!found) return 0;
+    return parseEquipmentQuantity(found).quantity;
+  };
+
+  const setEquipmentQuantity = (equipmentName: string, newQty: number) => {
+    if (newQty < 1) {
+      // Remove
+      setFormData(prev => ({
+        ...prev,
+        selected_equipment: prev.selected_equipment.filter(item => {
+          const { baseName } = parseEquipmentQuantity(item);
+          return baseName !== equipmentName;
+        }),
+      }));
+      return;
+    }
+    
+    setFormData(prev => {
+      const filtered = prev.selected_equipment.filter(item => {
+        const { baseName } = parseEquipmentQuantity(item);
+        return baseName !== equipmentName;
+      });
+      const entry = newQty > 1 ? `${equipmentName} (×${newQty})` : equipmentName;
+      return { ...prev, selected_equipment: [...filtered, entry] };
+    });
   };
 
   // Check if equipment is selected (by name or ID)
   const isEquipmentSelected = (eq: { id: string; name: string; description: string | null }) => {
-    const fullName = eq.description ? `${eq.name} (${eq.description})` : eq.name;
-    return formData.selected_equipment.some(
-      item => item === eq.id || item === eq.name || item === fullName || item.startsWith(eq.name)
-    );
+    return getEquipmentQuantity(eq) > 0;
   };
 
   // Get equipment display name
@@ -259,22 +321,49 @@ export const EditLeadDialog = ({
 
           <div className="space-y-2">
             <Label>ציוד</Label>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
-              {equipment?.map((eq) => (
-                <div key={eq.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`eq-${eq.id}`}
-                    checked={isEquipmentSelected(eq)}
-                    onCheckedChange={() => {
-                      const displayName = getEquipmentDisplayName(eq);
-                      toggleEquipment(displayName);
-                    }}
-                  />
-                  <Label htmlFor={`eq-${eq.id}`} className="text-sm cursor-pointer">
-                    {getEquipmentDisplayName(eq)}
-                  </Label>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+              {equipment?.map((eq) => {
+                const displayName = getEquipmentDisplayName(eq);
+                const selected = isEquipmentSelected(eq);
+                const qty = getEquipmentQuantity(eq);
+                return (
+                  <div key={eq.id} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`eq-${eq.id}`}
+                        checked={selected}
+                        onCheckedChange={() => toggleEquipment(displayName)}
+                      />
+                      <Label htmlFor={`eq-${eq.id}`} className="text-sm cursor-pointer">
+                        {displayName}
+                      </Label>
+                    </div>
+                    {selected && (
+                      <div className="flex items-center gap-1 mr-6">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setEquipmentQuantity(displayName, qty - 1)}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="text-sm font-medium w-8 text-center">{qty}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setEquipmentQuantity(displayName, qty + 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
