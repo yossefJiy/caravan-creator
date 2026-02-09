@@ -18,6 +18,7 @@ interface LeadNotificationRequest {
   selectedEquipment?: string[];
   overrideRetry?: boolean;
   isPartial?: boolean;
+  isReminder?: boolean;
 }
 
 interface EmailLogEntry {
@@ -221,6 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
     const leadData: LeadNotificationRequest = await req.json();
     const overrideRetry = leadData.overrideRetry === true;
     const isPartial = leadData.isPartial === true;
+    const isReminder = leadData.isReminder === true;
 
     // Fetch email config settings
     const { data: emailSettings, error: emailError } = await supabase
@@ -255,12 +257,14 @@ const handler = async (req: Request): Promise<Response> => {
       ?.split(",").map((e: string) => e.trim()).filter((e: string) => e.length > 0) || [];
 
     const results: { type: string; success: boolean }[] = [];
-    const typeSuffix = isPartial ? "_partial" : "";
+    const typeSuffix = isPartial ? (isReminder ? "_partial_reminder" : "_partial") : "";
 
     if (isPartial) {
       // ========== PARTIAL LEAD EMAILS ==========
       const partialBusinessHtml = buildPartialBusinessHtml(leadData);
-      const partialBusinessSubject = `ליד חדש (חלקי): ${leadData.fullName}`;
+      const partialBusinessSubject = isReminder 
+        ? `תזכורת - ליד חלקי: ${leadData.fullName}` 
+        : `ליד חדש (חלקי): ${leadData.fullName}`;
 
       // --- Business email #1 (partial) ---
       if (notificationEmails.length > 0) {
@@ -329,7 +333,9 @@ const handler = async (req: Request): Promise<Response> => {
           results.push({ type, success: true });
         } else {
           const { attempt, finalKey } = await getAttemptInfo(supabase, idempKey, overrideRetry);
-          const clientSubject = "השלם את בחירת הפודטראק שלך - אליה פודטראקים ונגררים";
+          const clientSubject = isReminder 
+            ? "תזכורת: השלם את בחירת הפודטראק שלך - אליה פודטראקים ונגררים"
+            : "השלם את בחירת הפודטראק שלך - אליה פודטראקים ונגררים";
           const partialClientHtml = buildPartialClientHtml(leadData, siteUrl);
           const logId = await insertQueuedLog(supabase, {
             lead_id: leadData.leadId, type,

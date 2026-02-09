@@ -28,6 +28,9 @@ const typeLabels: Record<string, string> = {
   lead_notification_business_1_partial: 'התראה עסקית #1 (חלקי)',
   lead_notification_business_2_partial: 'התראה עסקית #2 (חלקי)',
   lead_confirmation_client_partial: 'השלמת בחירה ללקוח',
+  lead_notification_business_1_partial_reminder: 'תזכורת עסקית #1 (חלקי)',
+  lead_notification_business_2_partial_reminder: 'תזכורת עסקית #2 (חלקי)',
+  lead_confirmation_client_partial_reminder: 'תזכורת השלמה ללקוח',
   quote_to_client: 'הצעת מחיר ללקוח',
   completion_link: 'קישור להשלמה',
 };
