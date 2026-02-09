@@ -77,6 +77,68 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          attempt: number
+          cc_emails: Json | null
+          created_at: string
+          error_message: string | null
+          id: string
+          idempotency_key: string
+          lead_id: string | null
+          metadata: Json | null
+          payload_hash: string | null
+          provider: string
+          provider_message_id: string | null
+          status: string
+          subject: string
+          to_email: string
+          type: string
+        }
+        Insert: {
+          attempt?: number
+          cc_emails?: Json | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key: string
+          lead_id?: string | null
+          metadata?: Json | null
+          payload_hash?: string | null
+          provider?: string
+          provider_message_id?: string | null
+          status?: string
+          subject: string
+          to_email: string
+          type: string
+        }
+        Update: {
+          attempt?: number
+          cc_emails?: Json | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          payload_hash?: string | null
+          provider?: string
+          provider_message_id?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment: {
         Row: {
           category_id: string
@@ -150,6 +212,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          completion_link_sent_at: string | null
           created_at: string
           email: string | null
           full_name: string
@@ -157,6 +220,7 @@ export type Database = {
           id_number: string | null
           id_validation_error: string | null
           is_complete: boolean
+          lead_notification_sent_at: string | null
           notes: string | null
           phone: string
           privacy_accepted: boolean
@@ -174,6 +238,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          completion_link_sent_at?: string | null
           created_at?: string
           email?: string | null
           full_name: string
@@ -181,6 +246,7 @@ export type Database = {
           id_number?: string | null
           id_validation_error?: string | null
           is_complete?: boolean
+          lead_notification_sent_at?: string | null
           notes?: string | null
           phone: string
           privacy_accepted?: boolean
@@ -198,6 +264,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          completion_link_sent_at?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
@@ -205,6 +272,7 @@ export type Database = {
           id_number?: string | null
           id_validation_error?: string | null
           is_complete?: boolean
+          lead_notification_sent_at?: string | null
           notes?: string | null
           phone?: string
           privacy_accepted?: boolean

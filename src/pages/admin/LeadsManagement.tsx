@@ -14,6 +14,7 @@ import { Phone, Mail, Calendar, Truck, Package, FileText, Eye, Trash2, AlertTria
 import { QuoteSummary } from '@/components/admin/QuoteSummary';
 import { QuoteStatus } from '@/components/admin/QuoteStatus';
 import { EditLeadDialog } from '@/components/admin/EditLeadDialog';
+import { EmailLogsSection } from '@/components/admin/EmailLogsSection';
 
 interface Lead {
   id: string;
@@ -658,6 +659,9 @@ const LeadsManagement = () => {
                   hasEmail={!!selectedLead.email}
                 />
               )}
+
+              {/* Email Logs Section */}
+              <EmailLogsSection leadId={selectedLead.id} />
 
               <div className="flex justify-end pt-4 border-t">
                 <Button
