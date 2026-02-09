@@ -191,33 +191,37 @@ serve(async (req) => {
 
     // Calculate equipment total and build equipment details
     let equipmentTotal = 0;
-    const equipmentDetails: { name: string; price: number }[] = [];
+    const equipmentDetails: { name: string; price: number; quantity: number }[] = [];
 
     if (lead.selected_equipment && Array.isArray(lead.selected_equipment)) {
       for (const equipId of lead.selected_equipment) {
+        // Parse quantity from name pattern like "(×7)" or "(×10)"
+        const quantityMatch = equipId.match(/\(×(\d+)\)\s*$/);
+        const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 1;
+        // Remove quantity suffix for matching purposes
+        const cleanEquipId = quantityMatch ? equipId.replace(/\s*\(×\d+\)\s*$/, '') : equipId;
+
         // Check if it's a UUID
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(equipId);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanEquipId);
         
-        let equipName = equipId;
-        let equipPrice = 0;
+        let equipName = cleanEquipId;
+        let unitPrice = 0;
         let foundEquipId: string | null = null;
 
         if (isUUID) {
-          const eq = equipmentMap.get(equipId);
+          const eq = equipmentMap.get(cleanEquipId);
           if (eq) {
-            // Build full name with description
             equipName = eq.description ? `${eq.name} (${eq.description})` : eq.name;
             foundEquipId = eq.id;
           }
-          equipPrice = pricingMap.get(`equipment:${equipId}`) || 0;
+          unitPrice = pricingMap.get(`equipment:${cleanEquipId}`) || 0;
         } else {
           // Try to find the equipment by matching name at the start
-          // This handles cases like "ציפסר גז (28 ליטר)" matching "ציפסר גז"
           for (const eq of equipmentList) {
-            if (equipId.startsWith(eq.name)) {
+            if (cleanEquipId.startsWith(eq.name)) {
               foundEquipId = eq.id;
-              equipName = equipId; // Keep the original name with description
-              equipPrice = pricingMap.get(`equipment:${eq.id}`) || 0;
+              equipName = cleanEquipId; // Keep the original name with description
+              unitPrice = pricingMap.get(`equipment:${eq.id}`) || 0;
               break;
             }
           }
@@ -225,18 +229,19 @@ serve(async (req) => {
           // Fallback: exact match
           if (!foundEquipId) {
             for (const eq of equipmentList) {
-              if (eq.name === equipId) {
+              if (eq.name === cleanEquipId) {
                 foundEquipId = eq.id;
                 equipName = eq.description ? `${eq.name} (${eq.description})` : eq.name;
-                equipPrice = pricingMap.get(`equipment:${eq.id}`) || 0;
+                unitPrice = pricingMap.get(`equipment:${eq.id}`) || 0;
                 break;
               }
             }
           }
         }
 
-        equipmentTotal += equipPrice;
-        equipmentDetails.push({ name: equipName, price: equipPrice });
+        const totalItemPrice = unitPrice * quantity;
+        equipmentTotal += totalItemPrice;
+        equipmentDetails.push({ name: equipName, price: unitPrice, quantity });
       }
     }
 
@@ -276,10 +281,13 @@ serve(async (req) => {
       });
     }
 
-    // Lines 4+: Equipment items (with price 0)
+    // Lines 4+: Equipment items (with price 0, but show quantity)
     for (const detail of equipmentDetails) {
+      const displayName = detail.quantity > 1 
+        ? `${detail.name} (×${detail.quantity})`
+        : detail.name;
       incomeItems.push({
-        description: detail.name,
+        description: displayName,
         quantity: 1,
         price: 0,
         vatType: 0,
