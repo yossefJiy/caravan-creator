@@ -1,114 +1,60 @@
 
-# תוכנית: שיפור גלילה וקיפול במסך פרטי ליד
 
-## סקירת הבעיה
+# תוכנית: מיילים לפי שני תרחישים + דיליי 30 דקות לטופס חלקי
 
-דיאלוג פרטי הליד מכיל הרבה מידע - פרטי לקוח, טראק, ציוד, הערות, סיכום מחיר וסטטוס הצעה. במסכים קטנים ובמובייל, התוכן חורג מגובה המסך ואי אפשר לגלול לראות הכל.
+## סיכום
 
-## הפתרון המוצע
+המערכת תבחין בין טופס שהושלם לבין טופס חלקי, ותשלח מיילים מותאמים לכל תרחיש. טופס חלקי ישלח מיילים רק אחרי 30 דקות - אם הלקוח לא השלים בינתיים.
 
-שילוב של שני שיפורים:
+## תרחיש 1: טופס הושלם (קיים - ללא שינוי)
 
-### 1. הוספת גלילה לדיאלוג
-- הגבלת גובה מקסימלי ל-85% מגובה המסך במובייל ו-90% בדסקטופ
-- הפעלת גלילה אוטומטית כשהתוכן חורג
+- **לעסק**: פרטי ליד + הצעת מחיר (אם קיימת)
+- **ללקוח**: אישור קבלה עם פרטי הבחירה (בלי מחירים)
 
-### 2. הפיכת QuoteSummary לקיפול חכם
-**לפני:**
+## תרחיש 2: טופס חלקי (חדש)
+
+כשלקוח ממלא פרטי קשר (שלב 1) ולא משלים:
+- **דיליי 30 דקות**: מייל לא נשלח מיד. במקום זה, cron job רץ כל 5 דקות ובודק לידים חלקיים שנוצרו לפני 30+ דקות ועדיין לא הושלמו
+- **לעסק**: "ליד חדש (חלקי)" - פרטי קשר בלבד
+- **ללקוח**: "קיבלנו את הפרטים שלך, השלם את הבחירה" + כפתור CTA
+
+## שינויים
+
+### 1. Edge Function חדשה: `check-partial-leads`
+
+פונקציה שרצה מ-cron job כל 5 דקות:
+- שולפת לידים עם `is_complete = false` ו-`created_at < now() - 30 minutes`
+- מסננת לידים שכבר נשלח להם מייל חלקי (בודקת `email_logs` לסוג `lead_notification_business_1_partial`)
+- לכל ליד מתאים: שולחת 3 מיילים (2 לעסק + 1 ללקוח עם CTA להשלמה)
+- משתמשת באותם helpers של idempotency ולוגים
+
+### 2. הגדרת pg_cron job
+
+SQL שמריץ את הפונקציה כל 5 דקות:
+
 ```text
-┌─────────────────────────────┐
-│ סיכום הצעת מחיר             │
-├─────────────────────────────┤
-│ גודל טראק:        ₪50,000   │
-│ ציוד (5 פריטים):  ₪12,000   │
-│─────────────────────────────│
-│ סה"כ לפני מע"מ:   ₪62,000   │
-│ מע"מ (18%):       ₪11,160   │
-│─────────────────────────────│
-│ סה"כ כולל מע"מ:   ₪73,160   │
-└─────────────────────────────┘
+cron.schedule('check-partial-leads', '*/5 * * * *', ...)
 ```
 
-**אחרי (מקופל כברירת מחדל):**
-```text
-┌─────────────────────────────────────┐
-│ ▸ סיכום הצעת מחיר    סה"כ: ₪73,160 │
-└─────────────────────────────────────┘
-```
+קורא ל-`check-partial-leads` עם HTTP POST.
 
-לחיצה פותחת את הפירוט המלא.
+### 3. עדכון `send-lead-notification` 
 
----
+הוספת פרמטר `isPartial` (אופציונלי). כשמופעל עם `isPartial: true`:
+- מייל לעסק: כותרת "ליד חדש (חלקי)" + פרטי קשר בלבד (בלי בחירות טראק/ציוד)
+- מייל ללקוח: "עדיין לא בחרת את סוג הפודטראק" + כפתור "להשלמת הבחירה" עם קישור `?continue=LEAD_ID`
+- סוגי אימייל חדשים בלוגים: `lead_notification_business_1_partial`, `lead_notification_business_2_partial`, `lead_confirmation_client_partial`
 
-## פרטים טכניים
+### 4. ללא שינוי ב-`FoodTruckConfigurator.tsx`
 
-### שינוי 1: DialogContent בקובץ LeadsManagement.tsx
+לא שולחים מייל בשלב 1. ה-cron job מטפל בזה אחרי 30 דקות.
 
-```tsx
-<DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
-```
-
-### שינוי 2: רכיב QuoteSummary עם קיפול
-
-שימוש ב-Collapsible מ-Radix (כבר מותקן):
-
-```tsx
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
-
-export const QuoteSummary = ({ ... }: QuoteSummaryProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  // ... חישובים קיימים ...
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="bg-muted/50">
-        <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 cursor-pointer hover:bg-muted/70 transition-colors">
-            <CardTitle className="text-sm flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
-                סיכום הצעת מחיר
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-primary">
-                  {formatPrice(calculations.total)}
-                </span>
-                <ChevronDown className={cn(
-                  "h-4 w-4 transition-transform",
-                  isOpen && "rotate-180"
-                )} />
-              </div>
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
-        
-        <CollapsibleContent>
-          <CardContent className="space-y-2 text-sm pt-0">
-            {/* הפירוט המלא - נשאר כמו שהוא */}
-          </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
-  );
-};
-```
-
----
-
-## קבצים שיעודכנו
+### קבצים
 
 | קובץ | שינוי |
-|------|-------|
-| `src/pages/admin/LeadsManagement.tsx` | הוספת max-height ו-overflow לדיאלוג |
-| `src/components/admin/QuoteSummary.tsx` | הפיכה לרכיב Collapsible עם סה"כ בכותרת |
+|-------|--------|
+| `supabase/functions/check-partial-leads/index.ts` | חדש - cron job handler |
+| `supabase/functions/send-lead-notification/index.ts` | הוספת תמיכה ב-isPartial |
+| `supabase/config.toml` | הוספת הגדרה לפונקציה חדשה |
+| SQL (לא migration) | הגדרת pg_cron + pg_net |
 
----
-
-## תוצאה צפויה
-
-- **גלילה חלקה** - גם אם יש הרבה תוכן, ניתן לגלול בדיאלוג
-- **ממשק נקי** - סיכום המחיר מקופל ומציג רק את הסה"כ
-- **גמישות** - לחיצה פותחת את הפירוט המלא
-- **תואם מובייל** - עובד טוב על כל גודל מסך
