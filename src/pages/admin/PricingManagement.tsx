@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Truck, Package, Save, Loader2 } from 'lucide-react';
+import { Truck, Package, Save, Loader2, Download } from 'lucide-react';
 
 interface TruckType {
   id: string;
@@ -170,6 +170,52 @@ const PricingManagement = () => {
     return editingPrices[key] !== undefined;
   };
 
+  const handleExportCsv = () => {
+    const BOM = '\uFEFF';
+    const rows: string[][] = [['קטגוריה', 'פריט', 'תיאור', 'עלות', 'מכירה']];
+
+    // Truck sizes
+    truckTypes?.forEach((truckType) => {
+      const sizes = truckSizes?.filter(s => s.truck_type_id === truckType.id) || [];
+      sizes.forEach((size) => {
+        const pricing = getPricing('truck_size', size.id);
+        rows.push([
+          truckType.name_he,
+          size.name,
+          size.dimensions,
+          pricing ? pricing.cost_price.toString() : '',
+          pricing ? pricing.sale_price.toString() : '',
+        ]);
+      });
+    });
+
+    // Equipment
+    categories?.forEach((category) => {
+      const items = equipment?.filter(e => e.category_id === category.id) || [];
+      items.forEach((item) => {
+        const pricing = getPricing('equipment', item.id);
+        rows.push([
+          category.name_he,
+          item.name,
+          item.description || '',
+          pricing ? pricing.cost_price.toString() : '',
+          pricing ? pricing.sale_price.toString() : '',
+        ]);
+      });
+    });
+
+    const csvContent = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `מחירון-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
   if (loadingTrucks || loadingCategories) {
     return (
       <div className="p-6 space-y-4" dir="rtl">
@@ -182,11 +228,17 @@ const PricingManagement = () => {
 
   return (
     <div className="p-6" dir="rtl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">ניהול מחירונים</h1>
-        <p className="text-muted-foreground">
-          הגדרת מחירים לטראקים וציוד לצורך הפקת הצעות מחיר
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">ניהול מחירונים</h1>
+          <p className="text-muted-foreground">
+            הגדרת מחירים לטראקים וציוד לצורך הפקת הצעות מחיר
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleExportCsv}>
+          <Download className="h-4 w-4 ml-2" />
+          ייצוא CSV
+        </Button>
       </div>
 
       <Tabs defaultValue="trucks" className="space-y-6">
