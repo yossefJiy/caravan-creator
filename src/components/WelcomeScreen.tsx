@@ -123,6 +123,30 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
           </motion.p>
         </div>
       </div>
+
+      {/* Credits Strip */}
+      <div className="absolute bottom-0 left-0 right-0 py-3 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-8">
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
+              <span className="text-slate-500 text-[10px] md:text-xs">Marketing</span>
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-4 md:h-6 opacity-60 hover:opacity-90 transition-opacity" />
+            </a>
+            <div className="hidden md:block w-px h-5 bg-slate-700" />
+            <div className="w-12 h-px md:hidden bg-slate-700" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
+              <span className="text-slate-500 text-[10px] md:text-xs">UX/UI</span>
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-4 md:h-6 opacity-60 hover:opacity-90 transition-opacity" />
+            </a>
+            <div className="hidden md:block w-px h-5 bg-slate-700" />
+            <div className="w-12 h-px md:hidden bg-slate-700" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
+              <span className="text-slate-500 text-[10px] md:text-xs">Built by</span>
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-4 md:h-6 opacity-60 hover:opacity-90 transition-opacity" />
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
