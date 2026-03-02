@@ -1,0 +1,1 @@
+UPDATE site_content SET content_value = 'מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם' WHERE content_key = 'contact_heading';
