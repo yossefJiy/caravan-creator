@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { User, Phone, Mail, MessageSquare, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { User, Phone, Mail, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,11 +43,8 @@ export const ContactForm = ({
   const [idWarning, setIdWarning] = useState<string>('');
   const { toast } = useToast();
 
-  // Validate ID number on change
   const handleIdNumberChange = (value: string) => {
     setFormData({ ...formData, idNumber: value });
-    
-    // Only validate if there's a value
     if (value.trim()) {
       const validation = validateIsraeliIdOrBn(value);
       setIdWarning(validation.message);
@@ -81,13 +77,11 @@ export const ContactForm = ({
   const handleSubmit = async () => {
     if (!validate()) return;
     
-    // If we're just collecting details (step 1 flow), just call onSubmit
     if (!selectedTruckType) {
       onSubmit(formData);
       return;
     }
     
-    // Otherwise, save to database (legacy flow)
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('leads').insert({
@@ -113,10 +107,6 @@ export const ContactForm = ({
 
   return (
     <div className="max-w-xl mx-auto space-y-6 animate-fade-in">
-      <div className="text-center mb-8">
-        <h3 className="text-xl font-bold text-foreground mb-2">נעים להכיר!</h3>
-        <p className="text-muted-foreground">מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם</p>
-      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName" className="flex items-center gap-2">
@@ -127,7 +117,7 @@ export const ContactForm = ({
             value={formData.firstName} 
             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
             placeholder="הזינו שם פרטי" 
-            className={errors.firstName ? 'border-destructive' : ''} 
+            className={cn('text-right', errors.firstName ? 'border-destructive' : '')} 
           />
           {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
         </div>
@@ -140,7 +130,7 @@ export const ContactForm = ({
             value={formData.lastName} 
             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
             placeholder="הזינו שם משפחה" 
-            className={errors.lastName ? 'border-destructive' : ''} 
+            className={cn('text-right', errors.lastName ? 'border-destructive' : '')} 
           />
           {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
         </div>
@@ -155,7 +145,7 @@ export const ContactForm = ({
           value={formData.phone} 
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
           placeholder="050-000-0000" 
-          className={errors.phone ? 'border-destructive' : ''} 
+          className={cn('text-right', errors.phone ? 'border-destructive' : '')} 
           dir="ltr" 
         />
         {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
@@ -170,7 +160,7 @@ export const ContactForm = ({
           value={formData.email} 
           onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
           placeholder="email@example.com" 
-          className={errors.email ? 'border-destructive' : ''} 
+          className={cn('text-right', errors.email ? 'border-destructive' : '')} 
           dir="ltr" 
           required
         />
@@ -186,7 +176,7 @@ export const ContactForm = ({
           onChange={(e) => handleIdNumberChange(e.target.value)} 
           placeholder="מספר ח.פ. או ת.ז." 
           dir="ltr"
-          className={idWarning ? 'border-yellow-500' : ''}
+          className={cn('text-right', idWarning ? 'border-yellow-500' : '')}
         />
         {idWarning && (
           <p className="text-xs text-yellow-600 flex items-center gap-1">
@@ -194,18 +184,6 @@ export const ContactForm = ({
             {idWarning}
           </p>
         )}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="notes" className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4" />הערות נוספות
-        </Label>
-        <Textarea 
-          id="notes" 
-          value={formData.notes} 
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })} 
-          placeholder="יש לכם בקשות מיוחדות? ספרו לנו..." 
-          rows={4} 
-        />
       </div>
 
       {/* Privacy Policy Checkbox */}
@@ -253,6 +231,8 @@ export const ContactForm = ({
           </>
         )}
       </button>
+      {/* Bottom spacing so button doesn't get cut off by fixed nav */}
+      <div className="h-4" />
     </div>
   );
 };
