@@ -55,14 +55,17 @@ export const EquipmentSelector = ({
   const categoriesWithItems = categories.filter(c => getEquipmentByCategory(c.id).length > 0);
 
   const handleCategoryClick = (categoryId: string) => {
-    setOpenCategory(categoryId);
-    // Scroll the accordion item into view
+    // Close current category first so layout resets
+    setOpenCategory(undefined);
     setTimeout(() => {
-      const el = document.getElementById(`eq-cat-${categoryId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
+      setOpenCategory(categoryId);
+      setTimeout(() => {
+        const el = document.getElementById(`eq-cat-${categoryId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }, 50);
   };
 
   return (
