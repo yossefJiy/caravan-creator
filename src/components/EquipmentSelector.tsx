@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Plus, Minus, ZoomIn, Package, Flame, Snowflake, Armchair, Wrench, Sparkles } from 'lucide-react';
+import { Plus, Minus, ZoomIn, Package, CookingPot, Thermometer, Table2, AirVent, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Equipment, EquipmentCategory } from '@/hooks/useEquipmentData';
 import {
@@ -14,11 +14,11 @@ import {
 } from '@/components/ui/dialog';
 
 const categoryIcons: Record<string, React.ElementType> = {
-  cooking: Flame,
-  refrigeration: Snowflake,
-  furniture: Armchair,
-  utilities: Wrench,
-  extras: Sparkles,
+  cooking: CookingPot,
+  refrigeration: Thermometer,
+  furniture: Table2,
+  utilities: AirVent,
+  extras: Gift,
 };
 
 interface EquipmentSelectorProps {
@@ -66,10 +66,10 @@ export const EquipmentSelector = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Category quick-nav icons - sticky */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm py-2 -mx-1 px-1 -mt-2 pt-2">
-        <div className="flex items-center justify-center gap-3 flex-wrap">
+      <div className="sticky top-[56px] z-30 bg-background py-3 border-b border-border -mx-4 px-4">
+        <div className="flex items-center justify-between gap-2">
           {categoriesWithItems.map((category) => {
             const IconComp = categoryIcons[category.name] || Package;
             const isActive = openCategory === category.id;
@@ -79,16 +79,16 @@ export const EquipmentSelector = ({
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
                 className={cn(
-                  'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all text-xs font-medium',
+                  'flex flex-col items-center gap-1.5 flex-1 py-2 rounded-lg transition-all text-[11px] font-medium',
                   isActive
-                    ? 'bg-primary/10 text-primary border border-primary/30'
-                    : 'bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-secondary'
                 )}
               >
                 <div className="relative">
                   <IconComp className="w-5 h-5" />
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-2 w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-2.5 w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                       {count}
                     </span>
                   )}
