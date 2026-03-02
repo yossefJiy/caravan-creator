@@ -618,11 +618,11 @@ export const FoodTruckConfigurator = () => {
 
       {/* Fixed bottom navigation - show for steps 1-4 */}
       {state.step >= 1 && state.step <= 4 && !error && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-2 pb-[calc(0.25rem+env(safe-area-inset-bottom))] z-50">
           <div className="container flex items-center justify-between gap-4">
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
             >
               <ArrowRight className="w-5 h-5" />
               <span>חזרה</span>
@@ -633,7 +633,7 @@ export const FoodTruckConfigurator = () => {
                 onClick={handleNext}
                 disabled={!canProceed() || isLoading}
                 className={cn(
-                  'flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base whitespace-nowrap transition-all duration-200',
+                  'flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-base whitespace-nowrap transition-all duration-200',
                   canProceed() && !isLoading
                     ? 'bg-primary text-primary-foreground shadow-gold hover:opacity-90'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -651,25 +651,25 @@ export const FoodTruckConfigurator = () => {
             )}
           </div>
 
-          {/* Credits strip - inside bottom nav */}
-          <div className="container pt-2 mt-2 border-t border-slate-700/30">
-            <div className="block text-center mb-1">
-              <span className="text-navy font-normal text-[10px] md:text-xs whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
+          {/* Credits strip */}
+          <div className="container pt-1.5 mt-1.5 border-t border-border/30">
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-muted-foreground font-normal text-[9px] whitespace-nowrap">רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
             </div>
-            <div className="flex items-center justify-center gap-3 md:gap-6">
-              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-navy/60 text-[9px] md:text-xs">Marketing</span>
+            <div className="flex items-center justify-center gap-3 mt-0.5">
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                <img src="/images/credits/jiy.svg" alt="JIY" className="h-2.5 md:h-4 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[8px] md:text-[10px]">Marketing</span>
               </a>
-              <div className="w-px h-3 bg-navy/20" />
-              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-navy/60 text-[9px] md:text-xs">UX/UI</span>
+              <div className="w-px h-2.5 bg-border" />
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                <img src="/images/credits/storytell.svg" alt="Storytell" className="h-2.5 md:h-4 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[8px] md:text-[10px]">UX/UI</span>
               </a>
-              <div className="w-px h-3 bg-navy/20" />
-              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-navy/60 text-[9px] md:text-xs">Built by</span>
+              <div className="w-px h-2.5 bg-border" />
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                <img src="/images/credits/converto.svg" alt="Converto" className="h-2.5 md:h-4 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[8px] md:text-[10px]">Built by</span>
               </a>
             </div>
           </div>
