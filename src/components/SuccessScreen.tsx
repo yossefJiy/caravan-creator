@@ -1,4 +1,4 @@
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ExternalLink } from 'lucide-react';
 import { useSiteContent } from '@/hooks/useSiteContent';
 
 interface SuccessScreenProps {
@@ -28,20 +28,31 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
         </p>
       </div>
 
-      <button
-        onClick={onReset}
-        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
-      >
-        <ArrowRight className="w-5 h-5" />
-        <span>{getContent('success_button', 'התחל תהליך חדש')}</span>
-      </button>
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <a
+          href="https://eliya-caravans.co.il/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity"
+        >
+          <span>לאתר שלנו</span>
+          <ExternalLink className="w-4 h-4" />
+        </a>
+        <button
+          onClick={onReset}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
+        >
+          <ArrowRight className="w-5 h-5" />
+          <span>{getContent('success_button', 'התחל תהליך חדש')}</span>
+        </button>
+      </div>
 
       {/* Credits strip */}
       <div className="mt-12 pt-6 border-t border-border/50 w-full max-w-md">
         <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-3 group">
           <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
         </a>
-        <div className="flex items-center justify-center gap-3 md:gap-6">
+        <div className="flex flex-row items-center justify-center gap-4 md:gap-6">
           <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
             <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
             <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
