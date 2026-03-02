@@ -25,7 +25,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
 
       {/* Content */}
       <div className="relative min-h-svh flex items-center justify-center p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-2xl mx-auto text-center space-y-6">
+        <div className="max-w-2xl mx-auto text-center space-y-6 pb-32">
           {/* Logo */}
           <motion.div
             className="flex justify-center mb-2"
