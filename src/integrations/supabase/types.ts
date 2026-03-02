@@ -214,6 +214,7 @@ export type Database = {
         Row: {
           completion_link_sent_at: string | null
           created_at: string
+          duplicate_of: string | null
           email: string | null
           full_name: string
           id: string
@@ -240,6 +241,7 @@ export type Database = {
         Insert: {
           completion_link_sent_at?: string | null
           created_at?: string
+          duplicate_of?: string | null
           email?: string | null
           full_name: string
           id?: string
@@ -266,6 +268,7 @@ export type Database = {
         Update: {
           completion_link_sent_at?: string | null
           created_at?: string
+          duplicate_of?: string | null
           email?: string | null
           full_name?: string
           id?: string
@@ -289,7 +292,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pricing: {
         Row: {

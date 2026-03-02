@@ -39,6 +39,20 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
+    // Check for existing leads with the same phone number
+    let duplicate_of: string | null = null;
+    const { data: existingLeads } = await supabaseAdmin
+      .from('leads')
+      .select('id')
+      .eq('phone', phone.trim())
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (existingLeads && existingLeads.length > 0) {
+      duplicate_of = existingLeads[0].id;
+      console.log(`Duplicate detected: new lead has same phone as lead ${duplicate_of}`);
+    }
+
     const { data, error } = await supabaseAdmin
       .from('leads')
       .insert({
@@ -51,6 +65,7 @@ Deno.serve(async (req) => {
         is_complete: false,
         privacy_accepted: true,
         privacy_accepted_at: new Date().toISOString(),
+        duplicate_of,
       })
       .select('id')
       .single()
