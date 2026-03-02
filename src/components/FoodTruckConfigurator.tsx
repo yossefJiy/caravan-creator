@@ -468,7 +468,9 @@ export const FoodTruckConfigurator = () => {
                   {getContent('contact_heading', 'נשמח להכיר אתכם')}
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  {getContent('contact_subtitle', 'מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם')}
+                  {getContent('contact_subtitle', 'מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם').split('לכם').map((part, i, arr) => (
+                    <span key={i}>{i > 0 ? 'לכם' : ''}{part}{i < arr.length - 1 ? <br /> : ''}</span>
+                  ))}
                 </p>
               </div>
               <ContactForm
