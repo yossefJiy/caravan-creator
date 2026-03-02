@@ -13,8 +13,8 @@ export const ProgressIndicator = ({ currentStep }: ProgressIndicatorProps) => {
   
   return (
     <div className={cn(
-      'flex items-center justify-center gap-1 sm:gap-2 transition-all duration-300',
-      scrolled ? 'py-1' : 'py-4'
+      'flex items-center justify-center gap-1 sm:gap-2 transition-all duration-300 overflow-hidden',
+      scrolled ? 'py-0.5 max-h-6' : 'py-4 max-h-24'
     )}>
       {displaySteps.map((step, index) => {
         const isActive = currentStep === step.id;
@@ -23,26 +23,26 @@ export const ProgressIndicator = ({ currentStep }: ProgressIndicatorProps) => {
 
         return (
           <div key={step.id} className="flex items-center">
-            <div className="flex flex-col items-center gap-1">
+            <div className={cn('flex flex-col items-center transition-all duration-300', scrolled ? 'gap-0' : 'gap-1')}>
               <div
                 className={cn(
                   'progress-step rounded-full flex items-center justify-center transition-all duration-300',
-                  scrolled ? 'w-6 h-6' : 'w-8 h-8 sm:w-10 sm:h-10',
+                  scrolled ? 'w-4 h-4' : 'w-8 h-8 sm:w-10 sm:h-10',
                   isActive && 'bg-primary text-primary-foreground shadow-md',
                   isCompleted && 'bg-success text-white',
                   !isActive && !isCompleted && 'bg-muted text-muted-foreground'
                 )}
               >
                 {isCompleted ? (
-                  <Check className={cn('transition-all duration-300', scrolled ? 'w-3 h-3' : 'w-4 h-4 sm:w-5 sm:h-5')} />
+                  <Check className={cn('transition-all duration-300', scrolled ? 'w-2 h-2' : 'w-4 h-4 sm:w-5 sm:h-5')} />
                 ) : (
-                  <span className={cn('font-semibold transition-all duration-300', scrolled ? 'text-[9px]' : 'text-xs sm:text-sm')}>{step.id}</span>
+                  <span className={cn('font-semibold transition-all duration-300', scrolled ? 'text-[7px]' : 'text-xs sm:text-sm')}>{step.id}</span>
                 )}
               </div>
               <span
                 className={cn(
                   'font-medium transition-all duration-300 whitespace-nowrap',
-                  scrolled ? 'text-[8px] sm:text-[9px]' : 'text-[10px] sm:text-xs',
+                  scrolled ? 'text-[0px] opacity-0 h-0' : 'text-[10px] sm:text-xs opacity-100',
                   isActive ? 'text-foreground' : 'text-muted-foreground'
                 )}
               >
@@ -53,8 +53,8 @@ export const ProgressIndicator = ({ currentStep }: ProgressIndicatorProps) => {
             {!isLast && (
               <div
                 className={cn(
-                  'h-0.5 mx-1 sm:mx-2 transition-all duration-300',
-                  scrolled ? 'w-4 sm:w-8 mt-[-16px]' : 'w-6 sm:w-12 lg:w-16 mt-[-20px]',
+                  'h-0.5 transition-all duration-300',
+                  scrolled ? 'w-3 sm:w-6 mx-0.5' : 'w-6 sm:w-12 lg:w-16 mx-1 sm:mx-2 mt-[-20px]',
                   isCompleted ? 'bg-success' : 'bg-border'
                 )}
               />
