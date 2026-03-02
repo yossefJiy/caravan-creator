@@ -79,8 +79,8 @@ export const SummaryStep = ({
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div className="mb-6">
-        <p className="text-sm text-muted-foreground">{getContent('summary_title', 'סיכום')}</p>
-        <h2 className="text-xl font-bold text-foreground">
+        <p className="text-sm text-muted-foreground text-right">{getContent('summary_title', 'סיכום')}</p>
+        <h2 className="text-xl font-bold text-foreground text-center">
           {getContent('summary_subtitle', 'בדקו את הפרטים לפני השליחה')}
         </h2>
       </div>

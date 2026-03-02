@@ -463,8 +463,8 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="mb-6">
-                <p className="text-sm text-muted-foreground">{getContent('contact_title', 'פרטים אישיים')}</p>
-                <h2 className="text-xl font-bold text-foreground">
+                <p className="text-sm text-muted-foreground text-right">{getContent('contact_title', 'פרטים אישיים')}</p>
+                <h2 className="text-xl font-bold text-foreground text-center">
                   נשמח להכיר אתכם!
                 </h2>
               </div>
@@ -487,8 +487,8 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="mb-6">
-                <p className="text-sm text-muted-foreground">{getContent('type_title', 'בחירת דגם')}</p>
-                <h2 className="text-xl font-bold text-foreground">
+                <p className="text-sm text-muted-foreground text-right">{getContent('type_title', 'בחירת דגם')}</p>
+                <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
                     ? `${state.contactDetails.firstName}, ${getContent('type_subtitle', 'בחר/י את סוג הפודטראק')}` 
                     : getContent('type_subtitle', 'בחרו את סוג הפודטראק המתאים לעסק שלכם')}
@@ -517,8 +517,8 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="mb-6">
-                <p className="text-sm text-muted-foreground">{getContent('size_title', 'בחירת גודל')}</p>
-                <h2 className="text-xl font-bold text-foreground">
+                <p className="text-sm text-muted-foreground text-right">{getContent('size_title', 'בחירת גודל')}</p>
+                <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
                     ? `${state.contactDetails.firstName}, ${getContent('size_subtitle', 'בחר/י את הגודל המתאים')}` 
                     : getContent('size_subtitle', 'בחרו את הגודל המתאים לעסק שלכם')}
@@ -548,8 +548,8 @@ export const FoodTruckConfigurator = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="mb-6">
-                <p className="text-sm text-muted-foreground">{getContent('equipment_title', 'בחירת ציוד')}</p>
-                <h2 className="text-xl font-bold text-foreground">
+                <p className="text-sm text-muted-foreground text-right">{getContent('equipment_title', 'בחירת ציוד')}</p>
+                <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
                     ? `${state.contactDetails.firstName} - ${getContent('equipment_subtitle', 'בחר/י את הציוד הנוסף שתרצו להוסיף להצעה')}` 
                     : getContent('equipment_subtitle', 'בחרו את הציוד הנוסף שתרצו להוסיף')}
