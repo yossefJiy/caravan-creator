@@ -528,8 +528,8 @@ export const FoodTruckConfigurator = () => {
                 <p className="text-sm text-muted-foreground text-right">{getContent('size_title', 'בחירת גודל')}</p>
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, ${getContent('size_subtitle', 'בחר/י את הגודל המתאים')}` 
-                    : getContent('size_subtitle', 'בחר/י את הגודל המתאים לעסק שלך')}
+                    ? `${state.contactDetails.firstName}, מה הגודל המתאים לעסק שלך?` 
+                    : 'מה הגודל המתאים לעסק שלך?'}
                 </h2>
               </div>
 
@@ -559,8 +559,8 @@ export const FoodTruckConfigurator = () => {
                 <p className="text-sm text-muted-foreground text-right">{getContent('equipment_title', 'בחירת ציוד')}</p>
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName} - ${getContent('equipment_subtitle', 'בחר/י את הציוד הנוסף שתרצו להוסיף להצעה')}` 
-                    : getContent('equipment_subtitle', 'בחרו את הציוד הנוסף שתרצו להוסיף')}
+                    ? `${state.contactDetails.firstName}, נא להוסיף את הציוד הנדרש עבורך` 
+                    : 'נא להוסיף את הציוד הנדרש עבורך'}
                 </h2>
               </div>
 
@@ -620,6 +620,14 @@ export const FoodTruckConfigurator = () => {
       {state.step >= 1 && state.step <= 4 && !error && (
         <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-50">
           <div className="container flex items-center justify-between gap-4">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
+            >
+              <ArrowRight className="w-5 h-5" />
+              <span>חזרה</span>
+            </button>
+
             {state.step !== 1 && (
               <button
                 onClick={handleNext}
@@ -641,15 +649,6 @@ export const FoodTruckConfigurator = () => {
                 )}
               </button>
             )}
-
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
-            >
-              <ArrowRight className="w-5 h-5" />
-              <span>חזרה</span>
-            </button>
-
           </div>
 
           {/* Credits strip - inside bottom nav */}
