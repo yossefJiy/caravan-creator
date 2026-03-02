@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { CheckCircle2, ArrowRight, ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CheckCircle2, ArrowRight, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { useTruckData } from '@/hooks/useTruckData';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -13,18 +13,40 @@ import {
 
 interface SuccessScreenProps {
   onReset: () => void;
+  customerName?: string;
 }
 
-export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
+// Gallery images from the main website
+const websiteGalleryImages = [
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0010_IMG-20251118-WA0116.jpg', alt: 'פרויקט פודטראק 1' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0007_IMG-20251118-WA0121.jpg', alt: 'פרויקט פודטראק 2' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0006_IMG-20251118-WA0123.jpg', alt: 'פרויקט פודטראק 3' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0025_IMG-20251118-WA0039.jpg', alt: 'פרויקט פודטראק 4' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0016_IMG-20251118-WA0107.jpg', alt: 'פרויקט פודטראק 5' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/08/WhatsApp-Image-2025-07-24-at-11.19.27-2.jpeg', alt: 'פרויקט פודטראק 6' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/08/WhatsApp-Image-2025-07-24-at-11.19.22.jpeg', alt: 'פרויקט פודטראק 7' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0053_20240610_132346.jpg', alt: 'פרויקט פודטראק 8' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0058_20240409_094335.jpg', alt: 'פרויקט פודטראק 9' },
+  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0030_20250619_121825.jpg', alt: 'פרויקט פודטראק 10' },
+];
+
+export const SuccessScreen = ({ onReset, customerName }: SuccessScreenProps) => {
   const { getContent } = useSiteContent();
   const { data: truckTypes = [] } = useTruckData();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  // Collect all truck images for gallery
-  const galleryImages = truckTypes
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Combine truck type images + website gallery images
+  const truckImages = truckTypes
     .filter(t => t.image)
     .map(t => ({ src: t.image, alt: t.nameHe }));
+  
+  const galleryImages = [...truckImages, ...websiteGalleryImages];
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -32,13 +54,15 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-scale-in px-4">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-scale-in px-4 pt-8 pb-[calc(10rem+env(safe-area-inset-bottom))]">
       <div className="w-24 h-24 rounded-full bg-success/20 flex items-center justify-center mb-6">
         <CheckCircle2 className="w-12 h-12 text-success" />
       </div>
       
       <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-        {getContent('success_title', 'הבקשה נשלחה בהצלחה!')}
+        {customerName 
+          ? `${customerName}, ${getContent('success_title', 'הבקשה נשלחה בהצלחה!')}`
+          : getContent('success_title', 'הבקשה נשלחה בהצלחה!')}
       </h2>
       
       <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
@@ -48,7 +72,7 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
       {/* Gallery Carousel */}
       {galleryImages.length > 0 && (
         <div className="w-full max-w-md mb-8">
-          <p className="text-sm text-muted-foreground mb-3">🖼️ הצצה לפרויקטים שלנו</p>
+          <p className="text-sm text-muted-foreground mb-3">הצצה לפרויקטים שלנו</p>
           <Carousel opts={{ direction: 'rtl', loop: true }} className="w-full">
             <CarouselContent>
               {galleryImages.map((img, index) => (
@@ -109,19 +133,19 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
 
       <div className="p-6 rounded-2xl bg-accent border border-primary/20 max-w-md mb-8">
         <p className="text-sm text-accent-foreground">
-          💡 <strong>טיפ:</strong> בזמן ההמתנה, תוכלו לעיין בגלריית הפרויקטים שלנו באתר לקבלת השראה נוספת.
+          💡 <strong>טיפ:</strong> בזמן ההמתנה, תוכלו ללמוד עלינו ועל עבודתינו באתר שלנו
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
         <a
           href="https://eliya-caravans.co.il/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity shadow-lg"
         >
           <span>לאתר שלנו</span>
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="w-5 h-5" />
         </a>
         <button
           onClick={onReset}
@@ -132,26 +156,28 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
         </button>
       </div>
 
-      {/* Credits strip */}
-      <div className="mt-12 pt-6 border-t border-border/50 w-full max-w-md">
-        <div className="block text-center mb-3">
-          <span className="text-muted-foreground/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
-        </div>
-        <div className="flex flex-row items-center justify-center gap-4 md:gap-6">
-          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-            <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-            <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
-          </a>
-          <div className="w-px h-3 bg-border" />
-          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-            <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-            <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
-          </a>
-          <div className="w-px h-3 bg-border" />
-          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-            <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-            <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
-          </a>
+      {/* Fixed Credits footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="container py-3">
+          <div className="block text-center mb-2">
+            <span className="text-foreground/80 text-xs md:text-sm font-bold" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+          </div>
+          <div className="flex items-center justify-center gap-4 md:gap-8">
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-4 md:h-6 brightness-0 opacity-60 hover:opacity-90 transition-opacity" />
+              <span className="text-muted-foreground/70 text-[10px] md:text-sm font-medium">Marketing</span>
+            </a>
+            <div className="w-px h-4 bg-border" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-4 md:h-6 brightness-0 opacity-60 hover:opacity-90 transition-opacity" />
+              <span className="text-muted-foreground/70 text-[10px] md:text-sm font-medium">UX/UI</span>
+            </a>
+            <div className="w-px h-4 bg-border" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-4 md:h-6 brightness-0 opacity-60 hover:opacity-90 transition-opacity" />
+              <span className="text-muted-foreground/70 text-[10px] md:text-sm font-medium">Built by</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

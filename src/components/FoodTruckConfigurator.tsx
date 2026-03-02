@@ -389,6 +389,11 @@ export const FoodTruckConfigurator = () => {
     clearState();
   };
 
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [state.step, state.isSubmitted]);
+
   // Welcome screen (step 0)
   if (state.step === 0) {
     return <WelcomeScreen onStart={handleStart} />;
@@ -396,7 +401,7 @@ export const FoodTruckConfigurator = () => {
 
   // Success screen
   if (state.isSubmitted) {
-    return <SuccessScreen onReset={handleReset} />;
+    return <SuccessScreen onReset={handleReset} customerName={state.contactDetails?.firstName} />;
   }
 
   const hasSelection = state.selectedType && state.selectedSize;
