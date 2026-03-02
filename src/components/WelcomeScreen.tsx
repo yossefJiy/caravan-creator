@@ -51,7 +51,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
               שלום וברוכים הבאים
             </h1>
             <h2 className="text-lg sm:text-xl text-primary font-medium">
-              {getContent('welcome_title', 'בואו נבנה את הפודטראק המושלם עבורכם')}
+              {getContent('welcome_title', 'בוא/י נבנה את הפודטראק המושלם עבורך')}
             </h2>
           </motion.div>
 
@@ -119,7 +119,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            הפרטים שלכם מאובטחים ונשמרים בסודיות מלאה
+            הפרטים שלך מאובטחים ונשמרים בסודיות מלאה
           </motion.p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
       <div className="absolute bottom-0 left-0 right-0 py-2 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50">
         <div className="container mx-auto px-4">
           <div className="block text-center mb-1.5">
-            <span className="text-slate-400/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+            <span className="text-slate-400/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
           </div>
           <div className="flex items-center justify-center gap-3 md:gap-6">
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">

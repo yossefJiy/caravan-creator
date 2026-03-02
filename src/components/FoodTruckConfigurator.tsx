@@ -470,12 +470,10 @@ export const FoodTruckConfigurator = () => {
               <p className="text-xs text-muted-foreground/60 mb-4">{getContent('contact_title', 'פרטים אישיים')}</p>
               <div className="text-center mb-6">
                 <h2 className="text-xl font-bold text-foreground mb-1">
-                  {getContent('contact_heading', 'נשמח להכיר אתכם')}
+                  {getContent('contact_heading', 'נשמח להכיר אותך')}
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  {getContent('contact_subtitle', 'מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם').split('לכם').map((part, i, arr) => (
-                    <span key={i}>{i > 0 ? 'לכם' : ''}{part}{i < arr.length - 1 ? <br /> : ''}</span>
-                  ))}
+                  {getContent('contact_subtitle', 'מלא/י את הפרטים כדי שנוכל להתאים לך את הפודטראק המושלם')}
                 </p>
               </div>
               <ContactForm
@@ -501,7 +499,7 @@ export const FoodTruckConfigurator = () => {
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
                     ? `${state.contactDetails.firstName}, ${getContent('type_subtitle', 'בחר/י את סוג הפודטראק')}` 
-                    : getContent('type_subtitle', 'בחרו את סוג הפודטראק המתאים לעסק שלכם')}
+                    : getContent('type_subtitle', 'בחר/י את סוג הפודטראק המתאים לעסק שלך')}
                 </h2>
               </div>
 
@@ -531,7 +529,7 @@ export const FoodTruckConfigurator = () => {
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
                     ? `${state.contactDetails.firstName}, ${getContent('size_subtitle', 'בחר/י את הגודל המתאים')}` 
-                    : getContent('size_subtitle', 'בחרו את הגודל המתאים לעסק שלכם')}
+                    : getContent('size_subtitle', 'בחר/י את הגודל המתאים לעסק שלך')}
                 </h2>
               </div>
 
@@ -622,14 +620,6 @@ export const FoodTruckConfigurator = () => {
       {state.step >= 1 && state.step <= 4 && !error && (
         <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-50">
           <div className="container flex items-center justify-between gap-4">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
-            >
-              <ArrowRight className="w-5 h-5" />
-              <span>חזרה</span>
-            </button>
-
             {state.step !== 1 && (
               <button
                 onClick={handleNext}
@@ -651,54 +641,63 @@ export const FoodTruckConfigurator = () => {
                 )}
               </button>
             )}
+
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
+            >
+              <ArrowRight className="w-5 h-5" />
+              <span>חזרה</span>
+            </button>
+
           </div>
 
           {/* Credits strip - inside bottom nav */}
-          <div className="container pt-3 mt-3 border-t border-border/50">
+          <div className="container pt-3 mt-3 border-t border-slate-700/30">
             <div className="block text-center mb-2">
-              <span className="text-muted-foreground/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+              <span className="text-navy font-semibold text-[10px] md:text-xs whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
             </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
                 <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
+                <span className="text-navy/60 text-[9px] md:text-xs">Marketing</span>
               </a>
-              <div className="w-px h-3 bg-border" />
+              <div className="w-px h-3 bg-navy/20" />
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
                 <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
+                <span className="text-navy/60 text-[9px] md:text-xs">UX/UI</span>
               </a>
-              <div className="w-px h-3 bg-border" />
+              <div className="w-px h-3 bg-navy/20" />
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
                 <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
+                <span className="text-navy/60 text-[9px] md:text-xs">Built by</span>
               </a>
             </div>
           </div>
         </div>
       )}
 
-      {/* Credits strip - when no bottom nav (step 0, 5, success) */}
-      {(state.step < 1 || state.step > 4 || error) && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {/* Credits strip - when no bottom nav (step 5 with summary) */}
+      {(state.step === 5 || error) && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-700" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="container py-2">
             <div className="block text-center mb-1.5">
-              <span className="text-muted-foreground/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+              <span className="text-slate-300 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
             </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
+                <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-slate-500 text-[9px] md:text-xs">Marketing</span>
               </a>
-              <div className="w-px h-3 bg-border" />
+              <div className="w-px h-3 bg-slate-700" />
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
+                <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-slate-500 text-[9px] md:text-xs">UX/UI</span>
               </a>
-              <div className="w-px h-3 bg-border" />
+              <div className="w-px h-3 bg-slate-700" />
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
+                <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-slate-500 text-[9px] md:text-xs">Built by</span>
               </a>
             </div>
           </div>

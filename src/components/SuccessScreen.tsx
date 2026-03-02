@@ -54,128 +54,129 @@ export const SuccessScreen = ({ onReset, customerName }: SuccessScreenProps) => 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-scale-in px-4 pt-8 pb-[calc(10rem+env(safe-area-inset-bottom))]">
-      <div className="w-24 h-24 rounded-full bg-success/20 flex items-center justify-center mb-6">
-        <CheckCircle2 className="w-12 h-12 text-success" />
-      </div>
-      
-      <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-        {customerName 
-          ? `${customerName}, ${getContent('success_title', 'הבקשה נשלחה בהצלחה!')}`
-          : getContent('success_title', 'הבקשה נשלחה בהצלחה!')}
-      </h2>
-      
-      <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
-        {getContent('success_message', 'קיבלנו את הפרטים שלכם ונחזור אליכם בהקדם עם הצעת מחיר מותאמת אישית לפודטראק החלומות שלכם.')}
-      </p>
-
-      {/* Gallery Carousel */}
-      {galleryImages.length > 0 && (
-        <div className="w-full max-w-md mb-8">
-          <p className="text-sm text-muted-foreground mb-3">הצצה לפרויקטים שלנו</p>
-          <Carousel opts={{ direction: 'rtl', loop: true }} className="w-full">
-            <CarouselContent>
-              {galleryImages.map((img, index) => (
-                <CarouselItem key={index} className="basis-2/3 sm:basis-1/2">
-                  <button
-                    onClick={() => openLightbox(index)}
-                    className="w-full overflow-hidden rounded-xl border border-border hover:border-primary/50 transition-colors"
-                  >
-                    <img
-                      src={img.src}
-                      alt={img.alt}
-                      className="w-full aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </button>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-3 h-8 w-8" />
-            <CarouselNext className="-right-3 h-8 w-8" />
-          </Carousel>
+    <div className="min-h-svh bg-background">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-scale-in px-4 pt-8 pb-[calc(10rem+env(safe-area-inset-bottom))]">
+        <div className="w-24 h-24 rounded-full bg-success/20 flex items-center justify-center mb-6">
+          <CheckCircle2 className="w-12 h-12 text-success" />
         </div>
-      )}
-
-      {/* Lightbox Dialog */}
-      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-3xl p-2 bg-black/95 border-none">
-          {galleryImages[lightboxIndex] && (
-            <div className="relative">
-              <img
-                src={galleryImages[lightboxIndex].src}
-                alt={galleryImages[lightboxIndex].alt}
-                className="w-full max-h-[80vh] object-contain rounded-lg"
-              />
-              <p className="text-center text-white/70 text-sm mt-2">
-                {galleryImages[lightboxIndex].alt}
-              </p>
-              {/* Nav buttons */}
-              {galleryImages.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setLightboxIndex((lightboxIndex + 1) % galleryImages.length)}
-                    className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
-                  >
-                    <ChevronRight className="w-6 h-6 text-white" />
-                  </button>
-                  <button
-                    onClick={() => setLightboxIndex((lightboxIndex - 1 + galleryImages.length) % galleryImages.length)}
-                    className="absolute top-1/2 left-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
-                  >
-                    <ChevronLeft className="w-6 h-6 text-white" />
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <div className="p-6 rounded-2xl bg-accent border border-primary/20 max-w-md mb-8">
-        <p className="text-sm text-accent-foreground">
-          💡 <strong>טיפ:</strong> בזמן ההמתנה, תוכלו ללמוד עלינו ועל עבודתינו באתר שלנו
+        
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+          {customerName 
+            ? `${customerName}, ${getContent('success_title', 'הבקשה נשלחה בהצלחה!')}`
+            : getContent('success_title', 'הבקשה נשלחה בהצלחה!')}
+        </h2>
+        
+        <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
+          {getContent('success_message', 'קיבלנו את הפרטים שלך ונחזור אליך בהקדם עם הצעת מחיר מותאמת אישית לפודטראק החלומות שלך.')}
         </p>
-      </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
-        <a
-          href="https://eliya-caravans.co.il/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity shadow-lg"
-        >
-          <span>לאתר שלנו</span>
-          <ExternalLink className="w-5 h-5" />
-        </a>
-        <button
-          onClick={onReset}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
-        >
-          <ArrowRight className="w-5 h-5" />
-          <span>{getContent('success_button', 'התחל תהליך חדש')}</span>
-        </button>
+        {/* Gallery Carousel */}
+        {galleryImages.length > 0 && (
+          <div className="w-full max-w-md mb-8">
+            <p className="text-sm text-muted-foreground mb-3">הצצה לפרויקטים שלנו</p>
+            <Carousel opts={{ direction: 'rtl', loop: true }} className="w-full">
+              <CarouselContent>
+                {galleryImages.map((img, index) => (
+                  <CarouselItem key={index} className="basis-2/3 sm:basis-1/2">
+                    <button
+                      onClick={() => openLightbox(index)}
+                      className="w-full overflow-hidden rounded-xl border border-border hover:border-primary/50 transition-colors"
+                    >
+                      <img
+                        src={img.src}
+                        alt={img.alt}
+                        className="w-full aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </button>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="-left-3 h-8 w-8" />
+              <CarouselNext className="-right-3 h-8 w-8" />
+            </Carousel>
+          </div>
+        )}
+
+        {/* Lightbox Dialog */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-3xl p-2 bg-black/95 border-none">
+            {galleryImages[lightboxIndex] && (
+              <div className="relative">
+                <img
+                  src={galleryImages[lightboxIndex].src}
+                  alt={galleryImages[lightboxIndex].alt}
+                  className="w-full max-h-[80vh] object-contain rounded-lg"
+                />
+                <p className="text-center text-white/70 text-sm mt-2">
+                  {galleryImages[lightboxIndex].alt}
+                </p>
+                {galleryImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setLightboxIndex((lightboxIndex + 1) % galleryImages.length)}
+                      className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                    >
+                      <ChevronRight className="w-6 h-6 text-white" />
+                    </button>
+                    <button
+                      onClick={() => setLightboxIndex((lightboxIndex - 1 + galleryImages.length) % galleryImages.length)}
+                      className="absolute top-1/2 left-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <div className="p-6 rounded-2xl bg-accent border border-primary/20 max-w-md mb-8">
+          <p className="text-sm text-accent-foreground">
+            💡 <strong>טיפ:</strong> בזמן ההמתנה, תוכל/י ללמוד עלינו ועל עבודתינו באתר שלנו
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row-reverse items-center gap-3 mb-8">
+          <a
+            href="https://eliya-caravans.co.il/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity shadow-lg"
+          >
+            <span>לאתר שלנו</span>
+            <ExternalLink className="w-5 h-5" />
+          </a>
+          <button
+            onClick={onReset}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 transition-colors"
+          >
+            <ArrowRight className="w-5 h-5" />
+            <span>{getContent('success_button', 'התחל תהליך חדש')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Fixed Credits footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-700" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="container py-3">
           <div className="block text-center mb-2">
-            <span className="text-foreground/80 text-xs md:text-sm font-bold" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+            <span className="text-slate-300 text-xs md:text-sm font-bold" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
           </div>
           <div className="flex items-center justify-center gap-4 md:gap-8">
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-4 md:h-6 brightness-0 opacity-60 hover:opacity-90 transition-opacity" />
-              <span className="text-muted-foreground/70 text-[10px] md:text-sm font-medium">Marketing</span>
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
+              <span className="text-slate-400 text-[10px] md:text-sm font-medium">Marketing</span>
             </a>
-            <div className="w-px h-4 bg-border" />
+            <div className="w-px h-4 bg-slate-600" />
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-4 md:h-6 brightness-0 opacity-60 hover:opacity-90 transition-opacity" />
-              <span className="text-muted-foreground/70 text-[10px] md:text-sm font-medium">UX/UI</span>
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
+              <span className="text-slate-400 text-[10px] md:text-sm font-medium">UX/UI</span>
             </a>
-            <div className="w-px h-4 bg-border" />
+            <div className="w-px h-4 bg-slate-600" />
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-4 md:h-6 brightness-0 opacity-60 hover:opacity-90 transition-opacity" />
-              <span className="text-muted-foreground/70 text-[10px] md:text-sm font-medium">Built by</span>
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
+              <span className="text-slate-400 text-[10px] md:text-sm font-medium">Built by</span>
             </a>
           </div>
         </div>
