@@ -630,7 +630,7 @@ export const FoodTruckConfigurator = () => {
                 onClick={handleNext}
                 disabled={!canProceed() || isLoading}
                 className={cn(
-                  'flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-lg transition-all duration-200',
+                  'flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base whitespace-nowrap transition-all duration-200',
                   canProceed() && !isLoading
                     ? 'bg-primary text-primary-foreground shadow-gold hover:opacity-90'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -649,21 +649,26 @@ export const FoodTruckConfigurator = () => {
           </div>
 
           {/* Credits strip - inside bottom nav */}
-          <div className="container flex items-center justify-center gap-3 md:gap-6 pt-3 mt-3 border-t border-border/50">
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
+          <div className="container pt-3 mt-3 border-t border-border/50">
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-2 group">
+              <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors whitespace-nowrap">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
             </a>
-            <div className="w-px h-3 bg-border" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
-            </a>
-            <div className="w-px h-3 bg-border" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
-            </a>
+            <div className="flex items-center justify-center gap-3 md:gap-6">
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
+              </a>
+              <div className="w-px h-3 bg-border" />
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
+              </a>
+              <div className="w-px h-3 bg-border" />
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -671,21 +676,26 @@ export const FoodTruckConfigurator = () => {
       {/* Credits strip - when no bottom nav (step 0, 5, success) */}
       {(state.step < 1 || state.step > 4 || error) && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="container flex items-center justify-center gap-3 md:gap-6 py-2">
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
+          <div className="container py-2">
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-1.5 group">
+              <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors whitespace-nowrap">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
             </a>
-            <div className="w-px h-3 bg-border" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
-            </a>
-            <div className="w-px h-3 bg-border" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
-            </a>
+            <div className="flex items-center justify-center gap-3 md:gap-6">
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
+              </a>
+              <div className="w-px h-3 bg-border" />
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
+              </a>
+              <div className="w-px h-3 bg-border" />
+              <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
+                <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
