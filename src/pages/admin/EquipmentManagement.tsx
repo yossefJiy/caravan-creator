@@ -276,6 +276,7 @@ const EquipmentManagement = () => {
                   <DialogTitle>{editingEquipment ? 'עריכת פריט' : 'פריט חדש'}</DialogTitle>
                 </DialogHeader>
                 <EquipmentForm
+                  key={editingEquipment?.id || 'new'}
                   equipment={editingEquipment}
                   categories={categories || []}
                   defaultCategoryId={selectedCategoryId}
