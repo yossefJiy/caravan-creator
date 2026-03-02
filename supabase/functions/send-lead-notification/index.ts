@@ -35,7 +35,8 @@ interface EmailLogEntry {
   provider_message_id?: string;
 }
 
-// Helper: check if email was already sent (idempotency)
+// Helper: check if email was already processed (idempotency)
+// Returns true if there's any existing entry (sent, queued, or failed) to prevent duplicate inserts
 async function checkIdempotency(
   supabase: ReturnType<typeof createClient>,
   key: string
@@ -44,7 +45,6 @@ async function checkIdempotency(
     .from("email_logs")
     .select("id, status")
     .eq("idempotency_key", key)
-    .eq("status", "sent")
     .maybeSingle();
   return !!data;
 }

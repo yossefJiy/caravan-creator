@@ -291,16 +291,20 @@ export const FoodTruckConfigurator = () => {
         
         console.log('[DEBUG] Edge function response:', { data, error });
         
-        if (error) {
-          console.error('[DEBUG] Edge function error:', error);
-          throw error;
-        }
-        if (data?.error) {
+        // If lead was deleted/not found, fall back to creating a new one
+        if (error || data?.error === 'Lead not found') {
+          console.warn('[DEBUG] Lead not found, creating a new one instead');
+          leadId = null; // Reset so the else branch below creates a new lead
+          setState((prev) => ({ ...prev, partialLeadId: null }));
+        } else if (data?.error) {
           console.error('[DEBUG] Edge function data error:', data.error);
           throw new Error(data.error);
+        } else {
+          console.log('[DEBUG] Lead updated successfully');
         }
-        console.log('[DEBUG] Lead updated successfully');
-      } else {
+      }
+      
+      if (!leadId) {
         console.log('[DEBUG] Creating new lead via edge function (no partial exists)');
         // Create new lead via Edge Function if no partial exists
         const { data: createResult, error: createError } = await supabase.functions.invoke('create-lead', {
@@ -597,6 +601,26 @@ export const FoodTruckConfigurator = () => {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Credits strip */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-sm border-t border-slate-700/50" style={{ paddingBottom: state.step >= 1 && state.step <= 4 ? '0' : 'env(safe-area-inset-bottom)', bottom: state.step >= 1 && state.step <= 4 ? 'calc(4.5rem + env(safe-area-inset-bottom))' : '0' }}>
+        <div className="container flex items-center justify-center gap-3 md:gap-6 py-1.5">
+          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+            <span className="text-slate-500 text-[9px] md:text-xs">Marketing</span>
+            <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 opacity-50 hover:opacity-80 transition-opacity" />
+          </a>
+          <div className="w-px h-3 bg-slate-700" />
+          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+            <span className="text-slate-500 text-[9px] md:text-xs">UX/UI</span>
+            <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 opacity-50 hover:opacity-80 transition-opacity" />
+          </a>
+          <div className="w-px h-3 bg-slate-700" />
+          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+            <span className="text-slate-500 text-[9px] md:text-xs">Built by</span>
+            <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 opacity-50 hover:opacity-80 transition-opacity" />
+          </a>
+        </div>
+      </div>
 
       {/* Fixed bottom navigation - show for steps 1-4 */}
       {state.step >= 1 && state.step <= 4 && !error && (
