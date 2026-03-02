@@ -640,18 +640,18 @@ export const FoodTruckConfigurator = () => {
           {/* Credits strip - inside bottom nav */}
           <div className="container flex items-center justify-center gap-3 md:gap-6 pt-3 mt-3 border-t border-border/50">
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
               <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 opacity-40 hover:opacity-70 transition-opacity" />
             </a>
             <div className="w-px h-3 bg-border" />
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
               <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 opacity-40 hover:opacity-70 transition-opacity" />
             </a>
             <div className="w-px h-3 bg-border" />
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
               <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 opacity-40 hover:opacity-70 transition-opacity" />
             </a>
           </div>
         </div>
@@ -662,18 +662,18 @@ export const FoodTruckConfigurator = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="container flex items-center justify-center gap-3 md:gap-6 py-2">
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
               <span className="text-muted-foreground/60 text-[9px] md:text-xs">Marketing</span>
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 opacity-40 hover:opacity-70 transition-opacity" />
             </a>
             <div className="w-px h-3 bg-border" />
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
               <span className="text-muted-foreground/60 text-[9px] md:text-xs">UX/UI</span>
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-5 opacity-40 hover:opacity-70 transition-opacity" />
             </a>
             <div className="w-px h-3 bg-border" />
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
               <span className="text-muted-foreground/60 text-[9px] md:text-xs">Built by</span>
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-5 opacity-40 hover:opacity-70 transition-opacity" />
             </a>
           </div>
         </div>
