@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Minus, ZoomIn } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Plus, Minus, ZoomIn, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Equipment, EquipmentCategory } from '@/hooks/useEquipmentData';
 import {
@@ -115,11 +115,17 @@ export const EquipmentSelector = ({
         <DialogContent className="max-w-lg p-0 overflow-hidden">
           {expandedImage && (
             <div className="relative">
-              <img
-                src={expandedImage.image}
-                alt={expandedImage.name}
-                className="w-full h-auto"
-              />
+              {expandedImage.image ? (
+                <img
+                  src={expandedImage.image}
+                  alt={expandedImage.name}
+                  className="w-full h-auto"
+                />
+              ) : (
+                <div className="w-full h-48 bg-secondary/30 flex items-center justify-center">
+                  <Package className="w-16 h-16 text-muted-foreground/30" />
+                </div>
+              )}
               <div className="p-4 bg-background">
                 <h3 className="font-bold text-lg text-foreground">{expandedImage.name}</h3>
                 {expandedImage.description && (
@@ -143,6 +149,10 @@ interface EquipmentCardProps {
 
 const EquipmentCard = ({ item, quantity, onToggle, onExpandImage }: EquipmentCardProps) => {
   const isSelected = quantity > 0;
+  const [imgError, setImgError] = useState(false);
+  const hasImage = !!item.image && !imgError;
+
+  const handleImgError = useCallback(() => setImgError(true), []);
 
   return (
     <div
@@ -157,18 +167,25 @@ const EquipmentCard = ({ item, quantity, onToggle, onExpandImage }: EquipmentCar
       <div className="flex items-center gap-3 p-3">
         {/* Thumbnail */}
         <div 
-          className="w-14 h-14 rounded-lg overflow-hidden bg-secondary/30 flex-shrink-0 cursor-pointer group relative"
-          onClick={onExpandImage}
+          className="w-14 h-14 rounded-lg overflow-hidden bg-secondary/30 flex-shrink-0 cursor-pointer group relative flex items-center justify-center"
+          onClick={hasImage ? onExpandImage : undefined}
         >
-          <img
-            src={item.image}
-            alt={item.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <ZoomIn className="w-5 h-5 text-white" />
-          </div>
+          {hasImage ? (
+            <>
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={handleImgError}
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <ZoomIn className="w-5 h-5 text-white" />
+              </div>
+            </>
+          ) : (
+            <Package className="w-6 h-6 text-muted-foreground/40" />
+          )}
         </div>
 
         {/* Info */}
