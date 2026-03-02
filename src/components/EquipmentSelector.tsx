@@ -84,7 +84,7 @@ export const EquipmentSelector = ({
                 className={cn(
                   'flex flex-col items-center gap-1.5 flex-1 py-2 rounded-lg transition-all text-[11px] font-medium',
                   isActive
-                    ? 'bg-primary/10 text-primary'
+                    ? 'bg-navy/10 text-navy'
                     : 'text-muted-foreground hover:bg-secondary'
                 )}
               >
@@ -129,7 +129,7 @@ export const EquipmentSelector = ({
                 <div className="flex items-center gap-3">
                   <span className={cn(
                     'font-semibold',
-                    openCategory === category.id ? 'text-primary' : 'text-foreground'
+                    openCategory === category.id ? 'text-navy' : 'text-foreground'
                   )}>{category.nameHe}</span>
                   {selectedCount > 0 && (
                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
