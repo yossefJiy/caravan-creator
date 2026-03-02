@@ -464,9 +464,12 @@ export const FoodTruckConfigurator = () => {
             >
               <p className="text-xs text-muted-foreground/60 mb-4">{getContent('contact_title', 'פרטים אישיים')}</p>
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold text-foreground">
-                  {getContent('contact_subtitle', 'מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם')}
+                <h2 className="text-xl font-bold text-foreground mb-1">
+                  נשמח להכיר אתכם
                 </h2>
+                <p className="text-muted-foreground text-sm">
+                  {getContent('contact_subtitle', 'מלאו את הפרטים כדי שנוכל להתאים לכם את הפודטראק המושלם')}
+                </p>
               </div>
               <ContactForm
                 onSubmit={handleContactSubmit}
