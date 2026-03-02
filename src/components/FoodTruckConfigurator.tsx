@@ -420,16 +420,16 @@ export const FoodTruckConfigurator = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container py-4">
           <div className="flex items-center justify-between">
+            <img src={logo} alt="אליה קרוואנים" className="h-8" />
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>פודטראק בתהליך בנייה</span>
               <motion.div
                 animate={{ rotate: [0, -15, 15, -10, 10, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
               >
                 <Hammer className="w-4 h-4 text-primary" />
               </motion.div>
-              <span>פודטראק בתהליך בנייה</span>
             </div>
-            <img src={logo} alt="אליה קרוואנים" className="h-8" />
           </div>
           {state.step >= 1 && state.step <= 4 && (
             <ProgressIndicator currentStep={state.step} />
