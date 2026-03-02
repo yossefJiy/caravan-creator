@@ -212,7 +212,7 @@ export const SummaryStep = ({
         <textarea
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
-          placeholder="יש לכם בקשות מיוחדות? ספרו לנו..."
+          placeholder="יש לך בקשות מיוחדות? ספר/י לנו..."
           rows={3}
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-right placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
@@ -243,7 +243,7 @@ export const SummaryStep = ({
       </button>
 
       <p className="text-center text-sm text-muted-foreground">
-        נחזור אליכם תוך 24 שעות עם הצעת מחיר מותאמת אישית
+        נחזור אליך תוך 24 שעות עם הצעת מחיר מותאמת אישית
       </p>
     </div>
   );
