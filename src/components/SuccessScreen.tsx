@@ -74,26 +74,31 @@ export const SuccessScreen = ({ onReset, customerName }: SuccessScreenProps) => 
         {galleryImages.length > 0 && (
           <div className="w-full max-w-md mb-8">
             <p className="text-sm text-muted-foreground mb-3">הצצה לפרויקטים שלנו</p>
-            <Carousel opts={{ direction: 'rtl', loop: true }} className="w-full">
-              <CarouselContent>
-                {galleryImages.map((img, index) => (
-                  <CarouselItem key={index} className="basis-2/3 sm:basis-1/2">
-                    <button
-                      onClick={() => openLightbox(index)}
-                      className="w-full overflow-hidden rounded-xl border border-border hover:border-primary/50 transition-colors"
-                    >
-                      <img
-                        src={img.src}
-                        alt={img.alt}
-                        className="w-full aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </button>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="-left-3 h-8 w-8" />
-              <CarouselNext className="-right-3 h-8 w-8" />
-            </Carousel>
+            <div className="relative">
+              <Carousel opts={{ direction: 'rtl', loop: true }} className="w-full">
+                <CarouselContent>
+                  {galleryImages.map((img, index) => (
+                    <CarouselItem key={index} className="basis-2/3 sm:basis-1/2">
+                      <button
+                        onClick={() => openLightbox(index)}
+                        className="w-full overflow-hidden rounded-xl border border-border hover:border-primary/50 transition-colors"
+                      >
+                        <img
+                          src={img.src}
+                          alt={img.alt}
+                          className="w-full aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </button>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="-left-3 h-8 w-8" />
+                <CarouselNext className="-right-3 h-8 w-8" />
+              </Carousel>
+              {/* Fade edges */}
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
+            </div>
           </div>
         )}
 
@@ -158,10 +163,10 @@ export const SuccessScreen = ({ onReset, customerName }: SuccessScreenProps) => 
       </div>
 
       {/* Fixed Credits footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-700" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="container py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-700 overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="container py-3 overflow-hidden">
           <div className="block text-center mb-2">
-            <span className="text-slate-300 text-xs md:text-sm font-bold" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
+            <span className="text-slate-300 text-xs md:text-sm font-normal" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
           </div>
           <div className="flex items-center justify-center gap-4 md:gap-8">
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
