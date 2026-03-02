@@ -650,9 +650,9 @@ export const FoodTruckConfigurator = () => {
 
           {/* Credits strip - inside bottom nav */}
           <div className="container pt-3 mt-3 border-t border-border/50">
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-2 group">
-              <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors whitespace-nowrap">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
-            </a>
+            <div className="block text-center mb-2">
+              <span className="text-muted-foreground/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+            </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
                 <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
@@ -677,9 +677,9 @@ export const FoodTruckConfigurator = () => {
       {(state.step < 1 || state.step > 4 || error) && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="container py-2">
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-1.5 group">
-              <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors whitespace-nowrap">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
-            </a>
+            <div className="block text-center mb-1.5">
+              <span className="text-muted-foreground/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+            </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
                 <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
