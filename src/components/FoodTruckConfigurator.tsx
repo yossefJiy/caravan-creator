@@ -618,7 +618,7 @@ export const FoodTruckConfigurator = () => {
 
       {/* Fixed bottom navigation - show for steps 1-4 */}
       {state.step >= 1 && state.step <= 4 && !error && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 pt-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-50">
           <div className="container flex items-center justify-between gap-4">
             <button
               onClick={handleBack}
@@ -652,8 +652,8 @@ export const FoodTruckConfigurator = () => {
           </div>
 
           {/* Credits strip - inside bottom nav */}
-          <div className="container pt-3 mt-3 border-t border-slate-700/30">
-            <div className="block text-center mb-2">
+          <div className="container pt-2 mt-2 border-t border-slate-700/30">
+            <div className="block text-center mb-1">
               <span className="text-navy font-normal text-[10px] md:text-xs whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
             </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">

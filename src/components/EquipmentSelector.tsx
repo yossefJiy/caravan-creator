@@ -54,37 +54,50 @@ export const EquipmentSelector = ({
 
   const categoriesWithItems = categories.filter(c => getEquipmentByCategory(c.id).length > 0);
 
+  const handleCategoryClick = (categoryId: string) => {
+    setOpenCategory(categoryId);
+    // Scroll the accordion item into view
+    setTimeout(() => {
+      const el = document.getElementById(`eq-cat-${categoryId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Category quick-nav icons */}
-      <div className="flex items-center justify-center gap-3 flex-wrap">
-        {categoriesWithItems.map((category) => {
-          const IconComp = categoryIcons[category.name] || Package;
-          const isActive = openCategory === category.id;
-          const count = getCategoryCount(category.id);
-          return (
-            <button
-              key={category.id}
-              onClick={() => setOpenCategory(category.id)}
-              className={cn(
-                'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all text-xs font-medium',
-                isActive
-                  ? 'bg-primary/10 text-primary border border-primary/30'
-                  : 'bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent'
-              )}
-            >
-              <div className="relative">
-                <IconComp className="w-5 h-5" />
-                {count > 0 && (
-                  <span className="absolute -top-1.5 -right-2 w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                    {count}
-                  </span>
+      {/* Category quick-nav icons - sticky */}
+      <div className="sticky top-[60px] z-30 bg-background/95 backdrop-blur-sm py-2 -mx-1 px-1">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          {categoriesWithItems.map((category) => {
+            const IconComp = categoryIcons[category.name] || Package;
+            const isActive = openCategory === category.id;
+            const count = getCategoryCount(category.id);
+            return (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category.id)}
+                className={cn(
+                  'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all text-xs font-medium',
+                  isActive
+                    ? 'bg-primary/10 text-primary border border-primary/30'
+                    : 'bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent'
                 )}
-              </div>
-              <span className="whitespace-nowrap">{category.nameHe}</span>
-            </button>
-          );
-        })}
+              >
+                <div className="relative">
+                  <IconComp className="w-5 h-5" />
+                  {count > 0 && (
+                    <span className="absolute -top-1.5 -right-2 w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                      {count}
+                    </span>
+                  )}
+                </div>
+                <span className="whitespace-nowrap">{category.nameHe}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* All categories as accordion */}
@@ -105,7 +118,8 @@ export const EquipmentSelector = ({
             <AccordionItem
               key={category.id}
               value={category.id}
-              className="border border-border rounded-xl overflow-hidden bg-card"
+              id={`eq-cat-${category.id}`}
+              className="border border-border rounded-xl overflow-hidden bg-card scroll-mt-32"
             >
               <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
                 <div className="flex items-center gap-3">
