@@ -127,6 +127,9 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
       {/* Credits Strip */}
       <div className="absolute bottom-0 left-0 right-0 py-3 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50">
         <div className="container mx-auto px-4">
+          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-2 group">
+            <span className="text-slate-400 text-[10px] md:text-xs group-hover:text-slate-300 transition-colors">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+          </a>
           <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-8">
             <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
               <img src="/images/credits/jiy.svg" alt="JIY" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
