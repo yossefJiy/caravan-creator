@@ -25,7 +25,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
 
       {/* Content */}
       <div className="relative min-h-svh flex items-center justify-center p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-2xl mx-auto text-center space-y-6 pb-32">
+        <div className="max-w-2xl mx-auto text-center space-y-6 pb-16">
           {/* Logo */}
           <motion.div
             className="flex justify-center mb-2"
@@ -124,28 +124,23 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
         </div>
       </div>
 
-      {/* Credits Strip */}
-      <div className="absolute bottom-0 left-0 right-0 py-3 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50">
+      {/* Credits Strip - compact single row */}
+      <div className="absolute bottom-0 left-0 right-0 py-2 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50">
         <div className="container mx-auto px-4">
-          <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-2 group">
-            <span className="text-slate-400 text-[10px] md:text-xs group-hover:text-slate-300 transition-colors">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
-          </a>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-8">
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
-              <span className="text-slate-500 text-[10px] md:text-xs">Marketing</span>
+          <div className="flex items-center justify-center gap-3 md:gap-6">
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-4 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
+              <span className="text-slate-500 text-[9px] md:text-xs">Marketing</span>
             </a>
-            <div className="hidden md:block w-px h-5 bg-slate-700" />
-            <div className="w-12 h-px md:hidden bg-slate-700" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
-              <span className="text-slate-500 text-[10px] md:text-xs">UX/UI</span>
+            <div className="w-px h-3 bg-slate-700" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-4 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
+              <span className="text-slate-500 text-[9px] md:text-xs">UX/UI</span>
             </a>
-            <div className="hidden md:block w-px h-5 bg-slate-700" />
-            <div className="w-12 h-px md:hidden bg-slate-700" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity">
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-4 md:h-6 brightness-0 invert opacity-60 hover:opacity-90 transition-opacity" />
-              <span className="text-slate-500 text-[10px] md:text-xs">Built by</span>
+            <div className="w-px h-3 bg-slate-700" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-4 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
+              <span className="text-slate-500 text-[9px] md:text-xs">Built by</span>
             </a>
           </div>
         </div>
