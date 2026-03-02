@@ -134,9 +134,9 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
 
       {/* Credits strip */}
       <div className="mt-12 pt-6 border-t border-border/50 w-full max-w-md">
-        <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-3 group">
-          <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors whitespace-nowrap">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
-        </a>
+        <div className="block text-center mb-3">
+          <span className="text-muted-foreground/70 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+        </div>
         <div className="flex flex-row items-center justify-center gap-4 md:gap-6">
           <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
             <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-5 brightness-0 opacity-50 hover:opacity-80 transition-opacity" />
