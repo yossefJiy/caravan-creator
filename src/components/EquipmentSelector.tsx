@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Plus, Minus, ZoomIn, Package } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { Plus, Minus, ZoomIn, Package, Flame, Snowflake, Armchair, Wrench, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Equipment, EquipmentCategory } from '@/hooks/useEquipmentData';
 import {
@@ -12,6 +12,14 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+
+const categoryIcons: Record<string, React.ElementType> = {
+  cooking: Flame,
+  refrigeration: Snowflake,
+  furniture: Armchair,
+  utilities: Wrench,
+  extras: Sparkles,
+};
 
 interface EquipmentSelectorProps {
   categories: EquipmentCategory[];
@@ -29,6 +37,9 @@ export const EquipmentSelector = ({
   onClearAll
 }: EquipmentSelectorProps) => {
   const [expandedImage, setExpandedImage] = useState<Equipment | null>(null);
+  const [openCategory, setOpenCategory] = useState<string | undefined>(
+    () => categories.find(c => equipment.some(e => e.categoryId === c.id))?.id
+  );
 
   const getEquipmentByCategory = (categoryId: string) => {
     return equipment.filter(e => e.categoryId === categoryId);
@@ -41,16 +52,47 @@ export const EquipmentSelector = ({
     }, 0);
   };
 
-  // Find first category with items to auto-open
-  const firstCategoryWithItems = categories.find(c => getEquipmentByCategory(c.id).length > 0);
+  const categoriesWithItems = categories.filter(c => getEquipmentByCategory(c.id).length > 0);
 
   return (
     <div className="space-y-4">
-      {/* All categories as accordion - single open mode with first auto-opened */}
+      {/* Category quick-nav icons */}
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        {categoriesWithItems.map((category) => {
+          const IconComp = categoryIcons[category.name] || Package;
+          const isActive = openCategory === category.id;
+          const count = getCategoryCount(category.id);
+          return (
+            <button
+              key={category.id}
+              onClick={() => setOpenCategory(category.id)}
+              className={cn(
+                'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all text-xs font-medium',
+                isActive
+                  ? 'bg-primary/10 text-primary border border-primary/30'
+                  : 'bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent'
+              )}
+            >
+              <div className="relative">
+                <IconComp className="w-5 h-5" />
+                {count > 0 && (
+                  <span className="absolute -top-1.5 -right-2 w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                    {count}
+                  </span>
+                )}
+              </div>
+              <span className="whitespace-nowrap">{category.nameHe}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* All categories as accordion */}
       <Accordion 
         type="single" 
         collapsible 
-        defaultValue={firstCategoryWithItems?.id} 
+        value={openCategory}
+        onValueChange={setOpenCategory}
         className="space-y-3"
       >
         {categories.map((category) => {
