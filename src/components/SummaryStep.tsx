@@ -1,4 +1,4 @@
-import { Edit2, Check, Truck, Package, User, Eye } from 'lucide-react';
+import { Edit2, Check, Truck, Package, User, Eye, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TruckType } from '@/hooks/useTruckData';
 import type { ContactDetails } from '@/types/configurator';
@@ -25,6 +25,8 @@ interface SummaryStepProps {
   onEditStep: (step: number) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  notes: string;
+  onNotesChange: (notes: string) => void;
 }
 
 export const SummaryStep = ({
@@ -35,6 +37,8 @@ export const SummaryStep = ({
   onEditStep,
   onSubmit,
   isSubmitting,
+  notes,
+  onNotesChange,
 }: SummaryStepProps) => {
   const { getContent } = useSiteContent();
   const selectedSize = truckType.sizes.find((s) => s.id === selectedSizeId);
@@ -74,13 +78,11 @@ export const SummaryStep = ({
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          {getContent('summary_title', 'סיכום ההזמנה')}
-        </h2>
-        <p className="text-muted-foreground">
+      <div className="mb-6">
+        <p className="text-sm text-muted-foreground">{getContent('summary_title', 'סיכום')}</p>
+        <h2 className="text-xl font-bold text-foreground">
           {getContent('summary_subtitle', 'בדקו את הפרטים לפני השליחה')}
-        </p>
+        </h2>
       </div>
 
       {/* Contact Details */}
@@ -201,13 +203,20 @@ export const SummaryStep = ({
         )}
       </SummaryCard>
 
-      {/* Notes */}
-      {contactDetails.notes && (
-        <div className="bg-muted/50 border border-border rounded-xl p-4">
-          <p className="text-sm font-medium mb-1">הערות נוספות:</p>
-          <p className="text-sm text-muted-foreground">{contactDetails.notes}</p>
+      {/* Notes - editable */}
+      <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-foreground">הערות נוספות</h3>
         </div>
-      )}
+        <textarea
+          value={notes}
+          onChange={(e) => onNotesChange(e.target.value)}
+          placeholder="יש לכם בקשות מיוחדות? ספרו לנו..."
+          rows={3}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-right placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+        />
+      </div>
 
       {/* Submit Button */}
       <button
