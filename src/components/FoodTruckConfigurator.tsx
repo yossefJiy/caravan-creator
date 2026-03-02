@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2, Hammer } from 'lucide-react';
 import logo from '@/assets/eluya_nigrarim.svg';
@@ -49,6 +49,7 @@ export const FoodTruckConfigurator = () => {
     initialState
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const { toast } = useToast();
 
   // Fetch data from database
@@ -394,6 +395,25 @@ export const FoodTruckConfigurator = () => {
     window.scrollTo(0, 0);
   }, [state.step, state.isSubmitted]);
 
+  // Track header height for sticky sub-elements
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        document.documentElement.style.setProperty(
+          '--header-height',
+          `${headerRef.current.offsetHeight}px`
+        );
+      }
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    window.addEventListener('scroll', updateHeaderHeight, { passive: true });
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      window.removeEventListener('scroll', updateHeaderHeight);
+    };
+  }, [state.step]);
+
   // Welcome screen (step 0)
   if (state.step === 0) {
     return <WelcomeScreen onStart={handleStart} />;
@@ -422,7 +442,7 @@ export const FoodTruckConfigurator = () => {
   return (
     <div className="min-h-svh bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+      <header ref={headerRef} className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <img src={logo} alt="אליה קרוואנים" className="h-8" />
@@ -498,8 +518,11 @@ export const FoodTruckConfigurator = () => {
                 <p className="text-sm text-muted-foreground text-right">{getContent('type_title', 'בחירת דגם')}</p>
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, ${getContent('type_subtitle', 'בחר/י את סוג הפודטראק')}` 
-                    : getContent('type_subtitle', 'בחר/י את סוג הפודטראק המתאים לעסק שלך')}
+                    ? `${state.contactDetails.firstName},` 
+                    : ''}
+                </h2>
+                <h2 className="text-xl font-bold text-foreground text-center">
+                  {getContent('type_subtitle', 'בחר/י את סוג הפודטראק')}
                 </h2>
               </div>
 
@@ -528,8 +551,11 @@ export const FoodTruckConfigurator = () => {
                 <p className="text-sm text-muted-foreground text-right">{getContent('size_title', 'בחירת גודל')}</p>
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, מה הגודל המתאים לעסק שלך?` 
-                    : 'מה הגודל המתאים לעסק שלך?'}
+                    ? `${state.contactDetails.firstName},` 
+                    : ''}
+                </h2>
+                <h2 className="text-xl font-bold text-foreground text-center">
+                  מה הגודל המתאים לעסק שלך?
                 </h2>
               </div>
 
@@ -555,17 +581,20 @@ export const FoodTruckConfigurator = () => {
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <div className="mb-6">
+              <div className="mb-4">
                 <p className="text-sm text-muted-foreground text-right">{getContent('equipment_title', 'בחירת ציוד')}</p>
                 <h2 className="text-xl font-bold text-foreground text-center">
                   {state.contactDetails?.firstName 
-                    ? `${state.contactDetails.firstName}, נא להוסיף את הציוד הנדרש עבורך` 
-                    : 'נא להוסיף את הציוד הנדרש עבורך'}
+                    ? `${state.contactDetails.firstName},` 
+                    : ''}
+                </h2>
+                <h2 className="text-xl font-bold text-foreground text-center">
+                  נא להוסיף את הציוד הנדרש עבורך
                 </h2>
               </div>
 
               {hasSelection && selectedTruckType && (
-                <div className="mb-6">
+                <div className="mb-4">
                   <SelectedTruckSummary
                     truckType={selectedTruckType}
                     selectedSizeId={state.selectedSize!}
