@@ -68,7 +68,7 @@ export const EquipmentSelector = ({
   return (
     <div className="space-y-4">
       {/* Category quick-nav icons - sticky */}
-      <div className="sticky top-[60px] z-30 bg-background/95 backdrop-blur-sm py-2 -mx-1 px-1">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm py-2 -mx-1 px-1 -mt-2 pt-2">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {categoriesWithItems.map((category) => {
             const IconComp = categoryIcons[category.name] || Package;
