@@ -38,6 +38,7 @@ interface Lead {
   quote_total: number | null;
   quote_url: string | null;
   id_validation_error: string | null;
+  duplicate_of: string | null;
 }
 
 interface TruckType {
@@ -415,6 +416,12 @@ const LeadsManagement = () => {
                         <Badge variant="destructive" className="flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3" />
                           ח.פ. לא תקין
+                        </Badge>
+                      )}
+                      {lead.duplicate_of && (
+                        <Badge variant="outline" className="text-amber-700 border-amber-500 bg-amber-50 dark:bg-amber-900/20 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          ליד כפול ({lead.duplicate_of.slice(0, 8)})
                         </Badge>
                       )}
                     </div>

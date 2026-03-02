@@ -1,0 +1,1 @@
+ALTER TABLE public.leads ADD COLUMN duplicate_of uuid REFERENCES public.leads(id) ON DELETE SET NULL DEFAULT NULL;
