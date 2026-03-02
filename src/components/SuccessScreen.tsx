@@ -1,5 +1,15 @@
-import { CheckCircle2, ArrowRight, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, ArrowRight, ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSiteContent } from '@/hooks/useSiteContent';
+import { useTruckData } from '@/hooks/useTruckData';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
 
 interface SuccessScreenProps {
   onReset: () => void;
@@ -7,6 +17,19 @@ interface SuccessScreenProps {
 
 export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
   const { getContent } = useSiteContent();
+  const { data: truckTypes = [] } = useTruckData();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Collect all truck images for gallery
+  const galleryImages = truckTypes
+    .filter(t => t.image)
+    .map(t => ({ src: t.image, alt: t.nameHe }));
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-scale-in px-4">
@@ -21,6 +44,68 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
       <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
         {getContent('success_message', 'קיבלנו את הפרטים שלכם ונחזור אליכם בהקדם עם הצעת מחיר מותאמת אישית לפודטראק החלומות שלכם.')}
       </p>
+
+      {/* Gallery Carousel */}
+      {galleryImages.length > 0 && (
+        <div className="w-full max-w-md mb-8">
+          <p className="text-sm text-muted-foreground mb-3">🖼️ הצצה לפרויקטים שלנו</p>
+          <Carousel opts={{ direction: 'rtl', loop: true }} className="w-full">
+            <CarouselContent>
+              {galleryImages.map((img, index) => (
+                <CarouselItem key={index} className="basis-2/3 sm:basis-1/2">
+                  <button
+                    onClick={() => openLightbox(index)}
+                    className="w-full overflow-hidden rounded-xl border border-border hover:border-primary/50 transition-colors"
+                  >
+                    <img
+                      src={img.src}
+                      alt={img.alt}
+                      className="w-full aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </button>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-3 h-8 w-8" />
+            <CarouselNext className="-right-3 h-8 w-8" />
+          </Carousel>
+        </div>
+      )}
+
+      {/* Lightbox Dialog */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-3xl p-2 bg-black/95 border-none">
+          {galleryImages[lightboxIndex] && (
+            <div className="relative">
+              <img
+                src={galleryImages[lightboxIndex].src}
+                alt={galleryImages[lightboxIndex].alt}
+                className="w-full max-h-[80vh] object-contain rounded-lg"
+              />
+              <p className="text-center text-white/70 text-sm mt-2">
+                {galleryImages[lightboxIndex].alt}
+              </p>
+              {/* Nav buttons */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setLightboxIndex((lightboxIndex + 1) % galleryImages.length)}
+                    className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                  <button
+                    onClick={() => setLightboxIndex((lightboxIndex - 1 + galleryImages.length) % galleryImages.length)}
+                    className="absolute top-1/2 left-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="p-6 rounded-2xl bg-accent border border-primary/20 max-w-md mb-8">
         <p className="text-sm text-accent-foreground">
@@ -50,7 +135,7 @@ export const SuccessScreen = ({ onReset }: SuccessScreenProps) => {
       {/* Credits strip */}
       <div className="mt-12 pt-6 border-t border-border/50 w-full max-w-md">
         <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="block text-center mb-3 group">
-          <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
+          <span className="text-muted-foreground/50 text-[10px] md:text-xs group-hover:text-muted-foreground/80 transition-colors whitespace-nowrap">רוצים גם מערכת הזמנות משוכללת לעסק שלכם?</span>
         </a>
         <div className="flex flex-row items-center justify-center gap-4 md:gap-6">
           <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
