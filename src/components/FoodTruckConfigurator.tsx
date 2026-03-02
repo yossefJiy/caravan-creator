@@ -438,7 +438,7 @@ export const FoodTruckConfigurator = () => {
       </header>
 
       {/* Main content */}
-      <main className="container py-8 pb-[calc(8rem+env(safe-area-inset-bottom))]">
+      <main className="container py-8 pb-[calc(12rem+env(safe-area-inset-bottom))]">
         {/* Error state */}
         {error && (
           <div className="text-center py-12">
