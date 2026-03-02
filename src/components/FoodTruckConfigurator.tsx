@@ -655,7 +655,7 @@ export const FoodTruckConfigurator = () => {
           {/* Credits strip - inside bottom nav */}
           <div className="container pt-3 mt-3 border-t border-slate-700/30">
             <div className="block text-center mb-2">
-              <span className="text-navy font-semibold text-[10px] md:text-xs whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
+              <span className="text-navy font-normal text-[10px] md:text-xs whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
             </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
@@ -679,10 +679,10 @@ export const FoodTruckConfigurator = () => {
 
       {/* Credits strip - when no bottom nav (step 5 with summary) */}
       {(state.step === 5 || error) && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-700" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="container py-2">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-700 overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="container py-2 overflow-hidden">
             <div className="block text-center mb-1.5">
-              <span className="text-slate-300 text-[10px] md:text-xs font-semibold whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
+              <span className="text-slate-300 text-[10px] md:text-xs font-normal whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
             </div>
             <div className="flex items-center justify-center gap-3 md:gap-6">
               <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
