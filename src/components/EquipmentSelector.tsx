@@ -67,8 +67,8 @@ export const EquipmentSelector = ({
 
   return (
     <div className="space-y-3">
-      {/* Category quick-nav icons - sticky */}
-      <div className="sticky top-[56px] z-30 bg-background py-3 border-b border-border -mx-4 px-4">
+      {/* Category quick-nav icons - sticky below header */}
+      <div className="sticky top-0 z-30 bg-background py-3 border-b border-border shadow-sm" style={{ top: 'var(--header-height, 56px)' }}>
         <div className="flex items-center justify-between gap-2">
           {categoriesWithItems.map((category) => {
             const IconComp = categoryIcons[category.name] || Package;
@@ -119,11 +119,15 @@ export const EquipmentSelector = ({
               key={category.id}
               value={category.id}
               id={`eq-cat-${category.id}`}
-              className="border border-border rounded-xl overflow-hidden bg-card scroll-mt-32"
+              className="border border-border rounded-xl overflow-hidden bg-card"
+              style={{ scrollMarginTop: 'calc(var(--header-height, 56px) + 80px)' }}
             >
               <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-secondary/30">
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-foreground">{category.nameHe}</span>
+                  <span className={cn(
+                    'font-semibold',
+                    openCategory === category.id ? 'text-primary' : 'text-foreground'
+                  )}>{category.nameHe}</span>
                   {selectedCount > 0 && (
                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
                       {selectedCount}
