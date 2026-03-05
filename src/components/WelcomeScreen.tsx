@@ -22,7 +22,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
   return (
     <div className="min-h-svh flex flex-col lg:flex-row">
       {/* Right side - Navy content panel */}
-      <div className="relative flex flex-col items-center justify-center px-6 py-12 sm:px-12 lg:w-1/2 text-white order-1 lg:order-none min-h-[60svh] lg:min-h-svh" style={{ backgroundColor: '#0a1f3d' }}>
+      <div className="relative flex flex-col items-center justify-center px-6 py-12 sm:px-12 lg:w-1/2 text-white order-2 lg:order-none min-h-[60svh] lg:min-h-svh" style={{ backgroundColor: '#0a1f3d' }}>
         {/* Logo */}
         <motion.div
           className="mb-8"
@@ -131,7 +131,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
       </div>
 
       {/* Left side - Image */}
-      <div className="relative lg:w-1/2 min-h-[40svh] lg:min-h-svh order-2 lg:order-none">
+      <div className="relative lg:w-1/2 min-h-[30svh] lg:min-h-svh order-1 lg:order-none">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${welcomeBg})` }}
