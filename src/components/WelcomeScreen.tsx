@@ -20,9 +20,9 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
   ];
 
   return (
-    <div className="min-h-svh flex flex-col lg:flex-row-reverse">
+    <div className="min-h-svh flex flex-col lg:flex-row">
       {/* Right side - Navy content panel */}
-      <div className="relative flex flex-col items-center justify-center px-6 py-12 sm:px-12 lg:w-1/2 bg-navy text-white order-1 lg:order-none min-h-[60svh] lg:min-h-svh">
+      <div className="relative flex flex-col items-center justify-center px-6 py-12 sm:px-12 lg:w-1/2 text-white order-1 lg:order-none min-h-[60svh] lg:min-h-svh" style={{ backgroundColor: '#0a1f3d' }}>
         {/* Logo */}
         <motion.div
           className="mb-8"
@@ -66,7 +66,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             <div className="absolute top-5 left-[10%] right-[10%] h-px bg-white/30" />
             {steps.map(({ step, label }) => (
               <div key={step} className="relative flex flex-col items-center gap-2 z-10">
-                <div className="w-10 h-10 rounded-full border border-white/40 bg-navy flex items-center justify-center text-sm font-medium text-white">
+                <div className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-sm font-medium text-white" style={{ backgroundColor: '#0a1f3d' }}>
                   {step}
                 </div>
                 <span className="text-xs text-white/70">{label}</span>
@@ -136,6 +136,7 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${welcomeBg})` }}
         />
+        <div className="absolute inset-0 bg-black/40" />
       </div>
     </div>
   );
