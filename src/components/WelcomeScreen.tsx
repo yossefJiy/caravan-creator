@@ -12,141 +12,130 @@ interface WelcomeScreenProps {
 export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
   const { getContent } = useSiteContent();
 
+  const steps = [
+    { step: 1, label: "פרטים" },
+    { step: 2, label: "דגם" },
+    { step: 3, label: "ציוד" },
+    { step: 4, label: "סיכום" },
+  ];
+
   return (
-    <div className="min-h-svh relative overflow-hidden bg-slate-900">
-      {/* Background Image */}
-      <div className="absolute inset-0">
+    <div className="min-h-svh flex flex-col lg:flex-row-reverse">
+      {/* Right side - Navy content panel */}
+      <div className="relative flex flex-col items-center justify-center px-6 py-12 sm:px-12 lg:w-1/2 bg-navy text-white order-1 lg:order-none min-h-[60svh] lg:min-h-svh">
+        {/* Logo */}
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <img
+            src={logo}
+            alt="אליה נגררים"
+            className="h-16 sm:h-20 object-contain"
+          />
+        </motion.div>
+
+        {/* Welcome Text */}
+        <motion.div
+          className="text-center space-y-4 mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            שלום{"\n"}וברוכים הבאים!
+          </h1>
+          <p className="text-base sm:text-lg text-white/80 max-w-md mx-auto">
+            {getContent('welcome_title', 'מוכנים להרכיב את הפודטראק שלכם')}
+            <br />
+            {getContent('welcome_subtitle', 'ב-4 שלבים?')}
+          </p>
+        </motion.div>
+
+        {/* Steps */}
+        <motion.div
+          className="mb-10 w-full max-w-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="relative flex items-center justify-between">
+            {/* Connecting line */}
+            <div className="absolute top-5 left-[10%] right-[10%] h-px bg-white/30" />
+            {steps.map(({ step, label }) => (
+              <div key={step} className="relative flex flex-col items-center gap-2 z-10">
+                <div className="w-10 h-10 rounded-full border border-white/40 bg-navy flex items-center justify-center text-sm font-medium text-white">
+                  {step}
+                </div>
+                <span className="text-xs text-white/70">{label}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* CTA Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <button
+            onClick={onStart}
+            className={cn(
+              "inline-flex items-center gap-3 px-12 sm:px-16 py-4 rounded-xl",
+              "bg-primary text-primary-foreground font-bold text-lg",
+              "hover:brightness-105 transition-all duration-200",
+            )}
+          >
+            <span>{getContent('welcome_button', 'בואו נתחיל')}</span>
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </motion.div>
+
+        {/* Privacy text */}
+        <motion.p
+          className="mt-6 text-sm text-white/40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          הפרטים שלך מאובטחים ונשמרים בסודיות מלאה
+        </motion.p>
+
+        {/* Credits */}
+        <motion.div
+          className="absolute bottom-3 left-0 right-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div className="flex items-center justify-center gap-3 md:gap-6">
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-4 brightness-0 invert opacity-30 hover:opacity-60 transition-opacity" />
+              <span className="text-white/30 text-[9px] md:text-xs">Marketing</span>
+            </a>
+            <div className="w-px h-3 bg-white/20" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-4 brightness-0 invert opacity-30 hover:opacity-60 transition-opacity" />
+              <span className="text-white/30 text-[9px] md:text-xs">UX/UI</span>
+            </a>
+            <div className="w-px h-3 bg-white/20" />
+            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-4 brightness-0 invert opacity-30 hover:opacity-60 transition-opacity" />
+              <span className="text-white/30 text-[9px] md:text-xs">Built by</span>
+            </a>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Left side - Image */}
+      <div className="relative lg:w-1/2 min-h-[40svh] lg:min-h-svh order-2 lg:order-none">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${welcomeBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/60 to-slate-900/70" />
-      </div>
-
-      {/* Content */}
-      <div className="relative min-h-svh flex items-center justify-center p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-2xl mx-auto text-center space-y-6 pb-16">
-          {/* Logo */}
-          <motion.div
-            className="flex justify-center mb-2"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <img 
-              src={logo} 
-              alt="אליה נגררים" 
-              className="h-16 sm:h-20 object-contain"
-            />
-          </motion.div>
-
-          {/* Welcome Text */}
-          <motion.div
-            className="space-y-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              שלום וברוכים הבאים
-            </h1>
-            <h2 className="text-lg sm:text-xl text-primary font-medium">
-              {getContent('welcome_title', 'בוא/י נבנה את הפודטראק המושלם עבורך')}
-            </h2>
-          </motion.div>
-
-          {/* Company introduction */}
-          <motion.div
-            className="max-w-lg mx-auto space-y-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <p className="text-base sm:text-lg text-slate-300">
-              {getContent('welcome_subtitle', 'אנחנו באליה קרוואנים מומחים לייצור פודטראקים בגימור גבוה ומחומרי גלם איכותיים.')}
-            </p>
-          </motion.div>
-
-          {/* Steps Preview */}
-          <motion.div
-            className="py-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="flex justify-center items-center gap-4 sm:gap-6">
-              {[
-                { step: 1, label: "פרטים" },
-                { step: 2, label: "דגם" },
-                { step: 3, label: "ציוד" },
-                { step: 4, label: "סיכום" },
-              ].map(({ step, label }, index) => (
-                <div key={step} className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm sm:text-base font-medium text-slate-300">
-                    {step}
-                  </div>
-                  <span className="text-xs sm:text-sm text-slate-400">{label}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* CTA Button */}
-          <motion.div
-            className="pt-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <button
-              onClick={onStart}
-              className={cn(
-                "inline-flex items-center gap-3 px-10 sm:px-14 py-4 rounded-xl",
-                "bg-primary text-slate-900 font-bold text-lg",
-                "hover:brightness-105 transition-all duration-200",
-                "border border-primary/30",
-              )}
-            >
-              <span>{getContent('welcome_button', 'בואו נתחיל')}</span>
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </motion.div>
-
-          {/* Simple footer text */}
-          <motion.p
-            className="text-sm text-slate-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            הפרטים שלך מאובטחים ונשמרים בסודיות מלאה
-          </motion.p>
-        </div>
-      </div>
-
-      {/* Credits Strip - compact single row */}
-      <div className="absolute bottom-0 left-0 right-0 py-2 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50">
-        <div className="container mx-auto px-4">
-          <div className="block text-center mb-1.5">
-            <span className="text-slate-400/70 text-[10px] md:text-xs font-normal whitespace-nowrap" style={{ maxWidth: '75%', display: 'inline-block' }}>רוצה גם מערכת הזמנות משוכללת לעסק שלך?</span>
-          </div>
-          <div className="flex items-center justify-center gap-3 md:gap-6">
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/jiy.svg" alt="JIY" className="h-3 md:h-4 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-slate-500 text-[9px] md:text-xs">Marketing</span>
-            </a>
-            <div className="w-px h-3 bg-slate-700" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/storytell.svg" alt="Storytell" className="h-3 md:h-4 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-slate-500 text-[9px] md:text-xs">UX/UI</span>
-            </a>
-            <div className="w-px h-3 bg-slate-700" />
-            <a href="https://jiy.co.il" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-              <img src="/images/credits/converto.svg" alt="Converto" className="h-3 md:h-4 brightness-0 invert opacity-50 hover:opacity-80 transition-opacity" />
-              <span className="text-slate-500 text-[9px] md:text-xs">Built by</span>
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   );
