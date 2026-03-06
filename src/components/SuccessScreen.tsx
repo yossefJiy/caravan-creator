@@ -18,16 +18,16 @@ interface SuccessScreenProps {
 
 // Gallery images from the main website
 const websiteGalleryImages = [
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0010_IMG-20251118-WA0116.jpg', alt: 'פרויקט פודטראק 1' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0007_IMG-20251118-WA0121.jpg', alt: 'פרויקט פודטראק 2' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0006_IMG-20251118-WA0123.jpg', alt: 'פרויקט פודטראק 3' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0025_IMG-20251118-WA0039.jpg', alt: 'פרויקט פודטראק 4' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0016_IMG-20251118-WA0107.jpg', alt: 'פרויקט פודטראק 5' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/08/WhatsApp-Image-2025-07-24-at-11.19.27-2.jpeg', alt: 'פרויקט פודטראק 6' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/08/WhatsApp-Image-2025-07-24-at-11.19.22.jpeg', alt: 'פרויקט פודטראק 7' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0053_20240610_132346.jpg', alt: 'פרויקט פודטראק 8' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0058_20240409_094335.jpg', alt: 'פרויקט פודטראק 9' },
-  { src: 'https://eliya-caravans.co.il/wp-content/uploads/2025/11/foodtrucks_0030_20250619_121825.jpg', alt: 'פרויקט פודטראק 10' },
+  { src: '/images/gallery/gallery-01.jpg', alt: 'פרויקט פודטראק 1' },
+  { src: '/images/gallery/gallery-02.jpg', alt: 'פרויקט פודטראק 2' },
+  { src: '/images/gallery/gallery-03.jpg', alt: 'פרויקט פודטראק 3' },
+  { src: '/images/gallery/gallery-04.jpg', alt: 'פרויקט פודטראק 4' },
+  { src: '/images/gallery/gallery-05.jpg', alt: 'פרויקט פודטראק 5' },
+  { src: '/images/gallery/gallery-06.jpg', alt: 'פרויקט פודטראק 6' },
+  { src: '/images/gallery/gallery-07.jpg', alt: 'פרויקט פודטראק 7' },
+  { src: '/images/gallery/gallery-08.jpg', alt: 'פרויקט פודטראק 8' },
+  { src: '/images/gallery/gallery-09.jpg', alt: 'פרויקט פודטראק 9' },
+  { src: '/images/gallery/gallery-10.jpg', alt: 'פרויקט פודטראק 10' },
 ];
 
 export const SuccessScreen = ({ onReset, customerName }: SuccessScreenProps) => {
